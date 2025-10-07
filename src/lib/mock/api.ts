@@ -32,6 +32,40 @@ export const Trainer = z.object({
     })
     .optional(),
   gymId: z.string(),
+  stats: z
+    .object({
+      totalClients: z.number().optional(),
+      yearsExperience: z.number().optional(),
+      sessionsCompleted: z.number().optional(),
+      responseTime: z.string().optional(),
+    })
+    .optional(),
+  certifications: z
+    .array(
+      z.object({
+        name: z.string(),
+        issuer: z.string(),
+        year: z.number(),
+      })
+    )
+    .optional(),
+  availability: z
+    .object({
+      daysAvailable: z.array(z.string()).optional(),
+      timeRanges: z.array(z.string()).optional(),
+    })
+    .optional(),
+  videoIntroUrl: z.string().optional(),
+  transformations: z
+    .array(
+      z.object({
+        beforeImg: z.string(),
+        afterImg: z.string(),
+        clientName: z.string(),
+        description: z.string(),
+      })
+    )
+    .optional(),
 });
 export type Trainer = z.infer<typeof Trainer>;
 

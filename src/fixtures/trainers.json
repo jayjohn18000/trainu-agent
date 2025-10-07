@@ -16,7 +16,38 @@
       "instagram": "https://instagram.com/alexcarter", 
       "website": "https://alexcarter.fit" 
     },
-    "gymId": "gym1"
+    "gymId": "gym1",
+    "stats": {
+      "totalClients": 150,
+      "yearsExperience": 8,
+      "sessionsCompleted": 2400,
+      "responseTime": "Within 2 hours"
+    },
+    "certifications": [
+      {
+        "name": "NASM Certified Personal Trainer",
+        "issuer": "National Academy of Sports Medicine",
+        "year": 2016
+      },
+      {
+        "name": "Functional Movement Screen",
+        "issuer": "FMS",
+        "year": 2018
+      }
+    ],
+    "availability": {
+      "daysAvailable": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+      "timeRanges": ["6:00 AM - 10:00 AM", "5:00 PM - 8:00 PM"]
+    },
+    "videoIntroUrl": "https://example.com/intro.mp4",
+    "transformations": [
+      {
+        "beforeImg": "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=400",
+        "afterImg": "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400",
+        "clientName": "Mike T.",
+        "description": "Lost 45 lbs and gained functional strength in 6 months"
+      }
+    ]
   },
   {
     "id": "t2",
@@ -46,7 +77,29 @@
     "rating": 5.0,
     "reviewCount": 156,
     "bio": "National-level powerlifter. Specializing in barbell training and competition prep for strength athletes.",
-    "gymId": "gym2"
+    "gymId": "gym2",
+    "stats": {
+      "totalClients": 85,
+      "yearsExperience": 12,
+      "sessionsCompleted": 3200,
+      "responseTime": "Within 1 hour"
+    },
+    "certifications": [
+      {
+        "name": "USA Powerlifting Coach",
+        "issuer": "USA Powerlifting",
+        "year": 2015
+      },
+      {
+        "name": "USAW Level 1 Sports Performance Coach",
+        "issuer": "USA Weightlifting",
+        "year": 2017
+      }
+    ],
+    "availability": {
+      "daysAvailable": ["Monday", "Wednesday", "Friday", "Saturday"],
+      "timeRanges": ["5:00 AM - 12:00 PM", "3:00 PM - 7:00 PM"]
+    }
   },
   {
     "id": "t4",

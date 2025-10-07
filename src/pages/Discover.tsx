@@ -17,6 +17,9 @@ export default function Discover() {
   const [searchQuery, setSearchQuery] = useState("");
   const [cityFilter, setCityFilter] = useState("");
   const [specialtyFilter, setSpecialtyFilter] = useState("");
+  const [priceRange, setPriceRange] = useState<"all" | "budget" | "premium">("all");
+  const [availabilityFilter, setAvailabilityFilter] = useState<"all" | "today" | "week">("all");
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [sortBy, setSortBy] = useState<"name" | "rating" | "reviews">("rating");
   const [showFilters, setShowFilters] = useState(false);
 
@@ -52,8 +55,9 @@ export default function Discover() {
 
       const matchesCity = !cityFilter || trainer.city === cityFilter;
       const matchesSpecialty = !specialtyFilter || trainer.specialties.includes(specialtyFilter);
+      const matchesVerified = !verifiedOnly || trainer.verified === true;
 
-      return matchesSearch && matchesCity && matchesSpecialty;
+      return matchesSearch && matchesCity && matchesSpecialty && matchesVerified;
     });
 
     // Sort
@@ -73,12 +77,21 @@ export default function Discover() {
     return filtered;
   }, [trainers, searchQuery, cityFilter, specialtyFilter, sortBy]);
 
-  const activeFiltersCount = [cityFilter, specialtyFilter].filter(Boolean).length;
+  const activeFiltersCount = [
+    cityFilter, 
+    specialtyFilter, 
+    priceRange !== "all", 
+    availabilityFilter !== "all",
+    verifiedOnly
+  ].filter(Boolean).length;
 
   const clearAllFilters = () => {
     setSearchQuery("");
     setCityFilter("");
     setSpecialtyFilter("");
+    setPriceRange("all");
+    setAvailabilityFilter("all");
+    setVerifiedOnly(false);
   };
 
   return (
@@ -116,49 +129,64 @@ export default function Discover() {
         </div>
 
         {showFilters && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2 border-t border-border">
-            <div>
-              <label className="text-sm font-medium mb-2 block">City</label>
-              <Select value={cityFilter} onValueChange={setCityFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All cities" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value=" ">All cities</SelectItem>
-                  {cities.map(city => (
-                    <SelectItem key={city} value={city}>{city}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          <div className="space-y-4 pt-2 border-t border-border">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div>
+                <label className="text-sm font-medium mb-2 block">City</label>
+                <Select value={cityFilter} onValueChange={setCityFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All cities" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value=" ">All cities</SelectItem>
+                    {cities.map(city => (
+                      <SelectItem key={city} value={city}>{city}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium mb-2 block">Specialty</label>
+                <Select value={specialtyFilter} onValueChange={setSpecialtyFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All specialties" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value=" ">All specialties</SelectItem>
+                    {specialties.map(specialty => (
+                      <SelectItem key={specialty} value={specialty}>{specialty}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium mb-2 block">Sort by</label>
+                <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="rating">Highest Rating</SelectItem>
+                    <SelectItem value="reviews">Most Reviews</SelectItem>
+                    <SelectItem value="name">Name (A-Z)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
-            <div>
-              <label className="text-sm font-medium mb-2 block">Specialty</label>
-              <Select value={specialtyFilter} onValueChange={setSpecialtyFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="All specialties" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value=" ">All specialties</SelectItem>
-                  {specialties.map(specialty => (
-                    <SelectItem key={specialty} value={specialty}>{specialty}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-2 block">Sort by</label>
-              <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="rating">Highest Rating</SelectItem>
-                  <SelectItem value="reviews">Most Reviews</SelectItem>
-                  <SelectItem value="name">Name (A-Z)</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="flex items-center gap-4 pt-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={verifiedOnly}
+                  onChange={(e) => setVerifiedOnly(e.target.checked)}
+                  className="rounded border-input"
+                />
+                <span className="text-sm font-medium">Verified trainers only</span>
+                <CheckCircle2 className="h-4 w-4 text-primary" />
+              </label>
             </div>
           </div>
         )}
@@ -176,6 +204,12 @@ export default function Discover() {
               <Badge variant="secondary" className="gap-1">
                 {specialtyFilter}
                 <X className="h-3 w-3 cursor-pointer" onClick={() => setSpecialtyFilter("")} />
+              </Badge>
+            )}
+            {verifiedOnly && (
+              <Badge variant="secondary" className="gap-1">
+                Verified Only
+                <X className="h-3 w-3 cursor-pointer" onClick={() => setVerifiedOnly(false)} />
               </Badge>
             )}
             <Button variant="ghost" size="sm" onClick={clearAllFilters}>
