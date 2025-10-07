@@ -14,6 +14,7 @@ export default function EventDetail() {
   const { user } = useAuthStore();
   const [event, setEvent] = useState<Event | null>(null);
   const [registered, setRegistered] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
     loadEvent();
@@ -21,6 +22,7 @@ export default function EventDetail() {
 
   const loadEvent = async () => {
     if (!id) return;
+    setIsLoading(true);
     const eventData = await getEvent(id);
     setEvent(eventData);
     
@@ -28,6 +30,7 @@ export default function EventDetail() {
       const isReg = await isRegistered(id, user.id);
       setRegistered(isReg);
     }
+    setIsLoading(false);
   };
 
   const handleBuyTicket = async () => {
@@ -42,6 +45,29 @@ export default function EventDetail() {
       description: "You're all set for this event"
     });
   };
+
+  if (isLoading) {
+    return (
+      <div className="max-w-4xl mx-auto space-y-6 animate-pulse">
+        <div className="relative h-64 md:h-96 rounded-2xl bg-muted" />
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1 space-y-3">
+            <div className="h-10 bg-muted rounded w-3/4" />
+            <div className="h-6 bg-muted rounded w-1/4" />
+          </div>
+          <div className="space-y-3">
+            <div className="h-8 bg-muted rounded w-20" />
+            <div className="h-10 bg-muted rounded w-32" />
+          </div>
+        </div>
+        <div className="space-y-3">
+          <div className="h-6 bg-muted rounded w-full" />
+          <div className="h-6 bg-muted rounded w-full" />
+          <div className="h-6 bg-muted rounded w-2/3" />
+        </div>
+      </div>
+    );
+  }
 
   if (!event) {
     return (
