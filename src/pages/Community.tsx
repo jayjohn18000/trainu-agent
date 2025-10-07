@@ -61,7 +61,7 @@ export default function Community() {
   const handleCreatePost = async () => {
     if (!user || !newPostContent.trim()) return;
     
-    const isPrivileged = user.role === 'owner' || user.role === 'trainer' || user.role === 'gym_admin';
+    const isPrivileged = user.role === 'trainer' || user.role === 'gym_admin';
     if (!user.isMember && !isPrivileged) {
       toast({
         title: "Membership required",
@@ -72,7 +72,7 @@ export default function Community() {
     }
 
     await createPost({
-      type: (isAnnouncement && user.role === 'owner') ? 'announcement' : 'thread',
+      type: (isAnnouncement && user.role === 'gym_admin') ? 'announcement' : 'thread',
       authorId: user.id,
       content: newPostContent,
       imageUrl: newPostImage || undefined,
@@ -135,7 +135,7 @@ export default function Community() {
     loadPostComments(postId);
   };
 
-  const canPost = user && (user.isMember || user.role === 'owner' || user.role === 'trainer' || user.role === 'gym_admin');
+  const canPost = user && (user.isMember || user.role === 'trainer' || user.role === 'gym_admin');
 
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-6">
@@ -165,7 +165,7 @@ export default function Community() {
                   value={newPostImage}
                   onChange={(e) => setNewPostImage(e.target.value)}
                 />
-                {user?.role === 'owner' && (
+                {user?.role === 'gym_admin' && (
                   <label className="flex items-center gap-2 text-sm">
                     <input
                       type="checkbox"

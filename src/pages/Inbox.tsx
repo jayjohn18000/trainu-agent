@@ -19,11 +19,11 @@ export default function Inbox() {
   const [editingDraft, setEditingDraft] = useState<InboxDraft | null>(null);
   const [editedContent, setEditedContent] = useState("");
 
-  const isTrainerOrOwner = user?.role === 'trainer' || user?.role === 'owner';
+  const isTrainerOrAdmin = user?.role === 'trainer' || user?.role === 'gym_admin';
 
   useEffect(() => {
-    if (isTrainerOrOwner) loadDrafts();
-  }, [isTrainerOrOwner]);
+    if (isTrainerOrAdmin) loadDrafts();
+  }, [isTrainerOrAdmin]);
 
   const loadDrafts = async () => {
     const allDrafts = await listInboxDrafts();
@@ -164,7 +164,7 @@ export default function Inbox() {
     );
   };
 
-  if (!isTrainerOrOwner) {
+  if (!isTrainerOrAdmin) {
     return (
       <div className="max-w-3xl mx-auto">
         <EmptyState

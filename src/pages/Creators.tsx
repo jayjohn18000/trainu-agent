@@ -33,7 +33,7 @@ export default function Creators() {
     dueBy: ""
   });
 
-  const isOwner = user?.role === 'owner';
+  const isAdmin = user?.role === 'gym_admin';
 
   useEffect(() => {
     loadData();
@@ -83,7 +83,7 @@ export default function Creators() {
           <h1 className="text-3xl font-bold">Creators & UGC</h1>
           <p className="text-muted-foreground">Connect with content creators for marketing campaigns</p>
         </div>
-        {isOwner && (
+        {isAdmin && (
           <Dialog open={showNewBrief} onOpenChange={setShowNewBrief}>
             <DialogTrigger asChild>
               <Button className="gap-2">
@@ -137,7 +137,7 @@ export default function Creators() {
         )}
       </div>
 
-      {isOwner && briefs.length > 0 && (
+      {isAdmin && briefs.length > 0 && (
         <div className="space-y-4">
           <h2 className="text-2xl font-bold">Active Briefs</h2>
           <div className="grid gap-4 md:grid-cols-2">

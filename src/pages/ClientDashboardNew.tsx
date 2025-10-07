@@ -9,7 +9,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Calendar, Clock, Plus } from "lucide-react";
+import { Calendar, Clock, Plus, TrendingUp } from "lucide-react";
+import { StreakDisplay } from "@/components/ui/StreakDisplay";
+import { AIInsightCard } from "@/components/ui/AIInsightCard";
+import { WhopBadge } from "@/components/ui/WhopBadge";
+import { GHLBadge } from "@/components/ui/GHLBadge";
 import {
   getNextSession,
   getClientProgress,
@@ -78,19 +82,28 @@ export default function ClientDashboardNew() {
     : 0;
 
   return (
-    <div className="p-6 space-y-6 max-w-4xl mx-auto">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">My Dashboard</h1>
-        <p className="text-muted-foreground">Track your progress and stay consistent</p>
+    <div className="p-6 space-y-6 max-w-4xl mx-auto animate-fade-in">
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-foreground">My Dashboard</h1>
+          <p className="text-muted-foreground">Track your progress and stay consistent</p>
+        </div>
+        {user?.isMember && <WhopBadge />}
       </div>
 
-      {/* Next Session */}
+      {/* Next Session - Hero Card */}
       {nextSession && (
-        <Card className="p-6 bg-gradient-to-br from-primary/10 to-primary/5">
+        <Card className="p-6 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
           <div className="flex items-start justify-between">
-            <div className="space-y-2">
-              <Badge>Next Session</Badge>
-              <h3 className="text-xl font-semibold">{nextSession.type}</h3>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Badge className="gap-1">
+                  <Calendar className="h-3 w-3" />
+                  Next Session
+                </Badge>
+                <GHLBadge text="Managed via GHL" />
+              </div>
+              <h3 className="text-2xl font-semibold">{nextSession.type}</h3>
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                 <div className="flex items-center gap-1">
                   <Calendar className="h-4 w-4" />
@@ -105,32 +118,36 @@ export default function ClientDashboardNew() {
                   {nextSession.time}
                 </div>
               </div>
-              <p className="text-sm">with {trainerName}</p>
+              <p className="text-sm font-medium">with {trainerName}</p>
             </div>
             <div className="flex gap-2">
               <Button variant="outline" size="sm">Reschedule</Button>
-              <Button size="sm">Confirm</Button>
+              <Button size="sm" className="gap-2">
+                Confirm
+              </Button>
             </div>
           </div>
         </Card>
       )}
 
-      {/* Consistency Ring & Goal */}
+      {/* Consistency Ring & Goal - More Prominent */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">This Week</h3>
-          <div className="flex flex-col items-center gap-4">
+        <Card className="p-6 bg-gradient-to-br from-green-500/5 to-blue-500/5">
+          <h3 className="text-lg font-semibold mb-6">This Week's Progress</h3>
+          <div className="flex flex-col items-center gap-6">
             <Ring
               percentage={percentage}
-              size={140}
+              size={160}
               label={`${percentage}%`}
               sublabel={`${progress?.completedThisWeek || 0}/${progress?.weeklyTarget || 3} sessions`}
             />
             {progress && progress.streak > 0 && (
-              <div className="text-center">
-                <div className="text-2xl font-bold text-primary">🔥 {progress.streak} weeks</div>
-                <div className="text-sm text-muted-foreground">Current streak</div>
-              </div>
+              <StreakDisplay weeks={progress.streak} size="lg" />
+            )}
+            {progress && progress.streak === 0 && (
+              <p className="text-sm text-muted-foreground text-center">
+                Complete a session to start your streak! 💪
+              </p>
             )}
           </div>
         </Card>
@@ -157,18 +174,36 @@ export default function ClientDashboardNew() {
         )}
       </div>
 
+      {/* AI Insights - NEW */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold flex items-center gap-2">
+          <TrendingUp className="h-5 w-5" />
+          AI Insights
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <AIInsightCard 
+            insight="You're 2 sessions away from hitting a 4-week streak! Clients with 4+ week streaks see 3x better results."
+          />
+          <AIInsightCard 
+            insight="Your consistency on Monday/Wednesday sessions is 95%. Keep up this pattern for optimal progress!"
+          />
+        </div>
+      </div>
+
       {/* Coach Notes */}
       <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4">Coach Notes</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-4 rounded-lg bg-muted/50">
-            <p className="text-sm">
-              💪 Your squat depth has improved significantly! Keep focusing on that mobility work.
+        <h3 className="text-lg font-semibold mb-4">Recent Coach Notes</h3>
+        <div className="space-y-3">
+          <div className="p-4 rounded-lg bg-muted/50 border-l-4 border-green-500">
+            <p className="text-sm font-medium mb-1">💪 Form Improvement</p>
+            <p className="text-sm text-muted-foreground">
+              Your squat depth has improved significantly! Keep focusing on that mobility work.
             </p>
           </div>
-          <div className="p-4 rounded-lg bg-muted/50">
-            <p className="text-sm">
-              📈 Great consistency this month! You're on track to hit your strength goals.
+          <div className="p-4 rounded-lg bg-muted/50 border-l-4 border-blue-500">
+            <p className="text-sm font-medium mb-1">📈 Progress Update</p>
+            <p className="text-sm text-muted-foreground">
+              Great consistency this month! You're on track to hit your strength goals.
             </p>
           </div>
         </div>
