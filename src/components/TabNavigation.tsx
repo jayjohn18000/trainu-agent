@@ -27,7 +27,7 @@ interface TabNavigationProps {
 const getMainTabs = (userRole?: string) => {
   const tabs: { value: MainTab; label: string; icon: typeof Home; roles?: string[] }[] = [
     { value: "home", label: "Home", icon: Home },
-    { value: "inbox", label: "AI Inbox", icon: Sparkles, roles: ["trainer", "gym_admin"] },
+    { value: "inbox", label: "Nudges", icon: Sparkles, roles: ["trainer", "gym_admin"] },
     { value: "community", label: "Community", icon: Users },
     { value: "settings", label: "Settings", icon: SettingsIcon },
   ];
@@ -44,7 +44,7 @@ const subTabs: Record<MainTab, SubTab[]> = {
     { label: "Dashboard", path: "/dashboard/gym-admin", roles: ["gym_admin"] },
   ],
   inbox: [
-    { label: "AI Inbox", path: "/inbox", roles: ["trainer", "gym_admin"] },
+    { label: "Nudges", path: "/inbox", roles: ["trainer", "gym_admin"] },
     { label: "Activity", path: "/inbox/activity", roles: ["client"] },
   ],
   community: [
