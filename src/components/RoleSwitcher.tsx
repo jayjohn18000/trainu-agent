@@ -10,16 +10,18 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, Dumbbell, Building2 } from "lucide-react";
+import { User, Dumbbell, Building2, Crown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const roleIcons: Record<UserRole, typeof User> = {
+  owner: Crown,
   client: User,
   trainer: Dumbbell,
   gym_admin: Building2,
 };
 
 const roleLabels: Record<UserRole, string> = {
+  owner: "Owner",
   client: "Client",
   trainer: "Trainer",
   gym_admin: "Gym Admin",
@@ -34,7 +36,8 @@ export function RoleSwitcher() {
   const handleRoleSwitch = (role: UserRole) => {
     setRole(role);
     // Navigate to the appropriate dashboard
-    if (role === "client") navigate("/dashboard/client");
+    if (role === "owner") navigate("/dashboard/owner");
+    else if (role === "client") navigate("/dashboard/client");
     else if (role === "trainer") navigate("/dashboard/trainer");
     else if (role === "gym_admin") navigate("/dashboard/gym-admin");
   };
