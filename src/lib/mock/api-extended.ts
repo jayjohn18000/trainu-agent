@@ -127,6 +127,12 @@ export async function isRegistered(eventId: string, userId: string): Promise<boo
   return db.eventRegistrations.some(r => r.eventId === eventId && r.userId === userId);
 }
 
+export async function listEventRegistrations(userId: string): Promise<EventRegistration[]> {
+  await randomDelay();
+  const db = getDB();
+  return db.eventRegistrations.filter(r => r.userId === userId);
+}
+
 // ==================== AFFILIATE STORE ====================
 
 export async function listAffiliateProducts(): Promise<AffiliateProduct[]> {
@@ -138,6 +144,7 @@ export async function listAffiliateProducts(): Promise<AffiliateProduct[]> {
 export async function recordAffiliateClick(data: {
   productId: string;
   userId: string;
+  utmSource?: string;
 }): Promise<void> {
   await randomDelay();
   const db = getDB();
@@ -145,7 +152,7 @@ export async function recordAffiliateClick(data: {
     id: `click-${Date.now()}`,
     ...data,
     clickedAt: new Date().toISOString(),
-    utmSource: 'trainu-app',
+    utmSource: data.utmSource || 'trainu-app',
   });
   setDB(db);
 }
@@ -196,6 +203,26 @@ export async function updatePurchaseStatus(id: string, status: 'pending' | 'paid
   }
 }
 
+export async function importAffiliatePurchases(purchases: Array<{
+  externalId?: string;
+  productName: string;
+  amount: number;
+  status: 'pending' | 'paid';
+  userEmail?: string;
+  source: 'affiliate';
+}>): Promise<void> {
+  await randomDelay();
+  const db = getDB();
+  purchases.forEach((p, i) => {
+    db.purchases.push({
+      id: `purchase-${Date.now()}-${i}`,
+      ...p,
+      purchasedAt: new Date().toISOString(),
+    });
+  });
+  setDB(db);
+}
+
 // ==================== CREATORS ====================
 
 export async function listCreators(filters?: {
@@ -236,13 +263,14 @@ export async function createBrief(data: {
   budgetMin: number;
   budgetMax: number;
   dueBy: string;
+  status?: 'draft' | 'active' | 'completed';
 }): Promise<Brief> {
   await randomDelay();
   const db = getDB();
   const brief: Brief = {
     id: `brief-${Date.now()}`,
     ...data,
-    status: 'draft',
+    status: data.status || 'draft',
     createdAt: new Date().toISOString(),
   };
   db.briefs.push(brief);
@@ -336,10 +364,16 @@ export async function createPayout(data: {
 
 // ==================== GOALS & PROGRESS ====================
 
-export async function listGoals(userId: string): Promise<Goal[]> {
+export async function listGoals(userId?: string): Promise<Goal[]> {
   await randomDelay();
   const db = getDB();
-  return db.goals.filter(g => g.userId === userId);
+  return userId ? db.goals.filter(g => g.userId === userId) : db.goals;
+}
+
+export async function listSessions(): Promise<Session[]> {
+  await randomDelay();
+  const db = getDB();
+  return db.sessions;
 }
 
 export async function createGoal(data: {
@@ -361,10 +395,10 @@ export async function createGoal(data: {
   return goal;
 }
 
-export async function listGoalEntries(goalId: string): Promise<GoalEntry[]> {
+export async function listGoalEntries(goalId?: string): Promise<GoalEntry[]> {
   await randomDelay();
   const db = getDB();
-  return db.goalEntries.filter(e => e.goalId === goalId);
+  return goalId ? db.goalEntries.filter(e => e.goalId === goalId) : db.goalEntries;
 }
 
 export async function createGoalEntry(data: {
@@ -454,6 +488,49 @@ export async function updateInboxContent(id: string, content: Partial<Pick<Inbox
     Object.assign(draft, content);
     setDB(db);
   }
+}
+
+export const updateInboxDraftStatus = updateInboxStatus;
+
+export async function generateSampleDrafts(): Promise<void> {
+  await randomDelay();
+  const db = getDB();
+  
+  const sampleDrafts: InboxDraft[] = [
+    {
+      id: `draft-${Date.now()}-1`,
+      triggerType: 'welcome',
+      targetUserId: 'client-1',
+      subject: 'Welcome to TrainU! 🎉',
+      previewText: 'We\'re excited to have you start your fitness journey with us.',
+      fullContent: 'Hi there!\n\nWelcome to TrainU! We\'re thrilled to have you join our community.\n\nYour trainer is excited to work with you and help you achieve your fitness goals.\n\nBest,\nThe TrainU Team',
+      status: 'needs_review',
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: `draft-${Date.now()}-2`,
+      triggerType: 'streak_protect',
+      targetUserId: 'client-2',
+      subject: 'Don\'t break your 5-week streak! 🔥',
+      previewText: 'You\'re so close to hitting 6 weeks in a row!',
+      fullContent: 'Hey champion!\n\nYou\'ve been crushing it with a 5-week streak! That\'s incredible consistency.\n\nDon\'t let it slip now - you\'re just one week away from a major milestone.\n\nKeep it up!\nYour Trainer',
+      status: 'needs_review',
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: `draft-${Date.now()}-3`,
+      triggerType: 'pre_session',
+      targetUserId: 'client-3',
+      subject: 'Session tomorrow at 10:00 AM 📅',
+      previewText: 'Looking forward to seeing you tomorrow!',
+      fullContent: 'Hi!\n\nJust a friendly reminder about your session tomorrow at 10:00 AM.\n\nDon\'t forget to bring water and wear comfortable shoes.\n\nSee you soon!\nYour Trainer',
+      status: 'needs_review',
+      createdAt: new Date().toISOString(),
+    },
+  ];
+  
+  db.inboxDrafts.push(...sampleDrafts);
+  setDB(db);
 }
 
 export async function createInboxDraft(data: {
