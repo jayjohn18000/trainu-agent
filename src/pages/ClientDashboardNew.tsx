@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Calendar, Clock, Plus, TrendingUp } from "lucide-react";
+import { Calendar, Clock, Plus, TrendingUp, Trophy, Target, Zap, Award, Users } from "lucide-react";
 import { StreakDisplay } from "@/components/ui/StreakDisplay";
 import { AIInsightCard } from "@/components/ui/AIInsightCard";
 import { WhopBadge } from "@/components/ui/WhopBadge";
@@ -27,12 +28,14 @@ import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
 export default function ClientDashboardNew() {
+  const navigate = useNavigate();
   const { user } = useAuthStore();
   const [nextSession, setNextSession] = useState<Session | null>(null);
   const [progress, setProgress] = useState<ClientProgress | null>(null);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [showCheckInDialog, setShowCheckInDialog] = useState(false);
   const [trainerName, setTrainerName] = useState("");
+  const [showCelebration, setShowCelebration] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -81,27 +84,63 @@ export default function ClientDashboardNew() {
     ? Math.round((progress.completedThisWeek / progress.weeklyTarget) * 100)
     : 0;
 
+  // Mock achievements data
+  const recentAchievements = [
+    { id: 1, title: "3 Week Streak", icon: "🔥", date: "Today", isNew: true },
+    { id: 2, title: "10 Sessions", icon: "💪", date: "2 days ago", isNew: false },
+  ];
+
+  const communityRank = 12; // Mock rank
+  const totalMembers = 45; // Mock total
+
   return (
-    <div className="p-6 space-y-6 max-w-4xl mx-auto animate-fade-in">
+    <div className="p-6 space-y-6 max-w-6xl mx-auto animate-fade-in">
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">My Dashboard</h1>
-          <p className="text-muted-foreground">Track your progress and stay consistent</p>
+          <p className="text-muted-foreground">Keep pushing! You're doing amazing 💪</p>
         </div>
         {user?.isMember && <WhopBadge />}
       </div>
 
-      {/* Next Session - Hero Card */}
-      {nextSession && (
-        <Card className="p-6 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
-          <div className="flex items-start justify-between">
-            <div className="space-y-3">
+      {/* Stats Grid - More Gamified */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card className="p-4 text-center hover:scale-105 transition-transform cursor-pointer" onClick={() => navigate("/community")}>
+          <div className="text-3xl mb-2">🏆</div>
+          <div className="text-2xl font-bold text-foreground">#{communityRank}</div>
+          <div className="text-xs text-muted-foreground">Community Rank</div>
+        </Card>
+        
+        <Card className="p-4 text-center bg-gradient-to-br from-orange-500/10 to-red-500/10 hover:scale-105 transition-transform">
+          <div className="text-3xl mb-2">🔥</div>
+          <div className="text-2xl font-bold text-foreground">{progress?.streak || 0}</div>
+          <div className="text-xs text-muted-foreground">Week Streak</div>
+        </Card>
+        
+        <Card className="p-4 text-center bg-gradient-to-br from-green-500/10 to-blue-500/10 hover:scale-105 transition-transform">
+          <div className="text-3xl mb-2">✅</div>
+          <div className="text-2xl font-bold text-foreground">{progress?.completedThisWeek || 0}</div>
+          <div className="text-xs text-muted-foreground">This Week</div>
+        </Card>
+        
+        <Card className="p-4 text-center bg-gradient-to-br from-purple-500/10 to-pink-500/10 hover:scale-105 transition-transform">
+          <div className="text-3xl mb-2">⚡</div>
+          <div className="text-2xl font-bold text-foreground">{percentage}%</div>
+          <div className="text-xs text-muted-foreground">Progress</div>
+        </Card>
+      </div>
+
+      {/* Next Session & Progress Ring */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {nextSession ? (
+          <Card className="p-6 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 hover:shadow-lg transition-shadow">
+            <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <Badge className="gap-1">
                   <Calendar className="h-3 w-3" />
                   Next Session
                 </Badge>
-                <GHLBadge text="Managed via GHL" />
+                <GHLBadge text="via GHL" />
               </div>
               <h3 className="text-2xl font-semibold">{nextSession.type}</h3>
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -119,67 +158,98 @@ export default function ClientDashboardNew() {
                 </div>
               </div>
               <p className="text-sm font-medium">with {trainerName}</p>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm">Reschedule</Button>
-              <Button size="sm" className="gap-2">
-                Confirm
-              </Button>
-            </div>
-          </div>
-        </Card>
-      )}
-
-      {/* Consistency Ring & Goal - More Prominent */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="p-6 bg-gradient-to-br from-green-500/5 to-blue-500/5">
-          <h3 className="text-lg font-semibold mb-6">This Week's Progress</h3>
-          <div className="flex flex-col items-center gap-6">
-            <Ring
-              percentage={percentage}
-              size={160}
-              label={`${percentage}%`}
-              sublabel={`${progress?.completedThisWeek || 0}/${progress?.weeklyTarget || 3} sessions`}
-            />
-            {progress && progress.streak > 0 && (
-              <StreakDisplay weeks={progress.streak} size="lg" />
-            )}
-            {progress && progress.streak === 0 && (
-              <p className="text-sm text-muted-foreground text-center">
-                Complete a session to start your streak! 💪
-              </p>
-            )}
-          </div>
-        </Card>
-
-        {goals.length > 0 && (
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Personal Goal</h3>
-            <div className="space-y-4">
-              <div>
-                <h4 className="font-medium">{goals[0].name}</h4>
-                <p className="text-sm text-muted-foreground">
-                  Target: {goals[0].target} {goals[0].unit}/week
-                </p>
+              <div className="flex gap-2 pt-2">
+                <Button variant="outline" size="sm" className="flex-1">Reschedule</Button>
+                <Button size="sm" className="flex-1 gap-2">
+                  Confirm
+                </Button>
               </div>
-              <Button 
-                onClick={() => setShowCheckInDialog(true)}
-                className="w-full"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Check-in
-              </Button>
+            </div>
+          </Card>
+        ) : (
+          <Card className="p-6 flex items-center justify-center">
+            <div className="text-center space-y-3">
+              <Calendar className="h-12 w-12 mx-auto text-muted-foreground" />
+              <p className="text-muted-foreground">No upcoming sessions</p>
+              <Button size="sm" onClick={() => navigate("/discover")}>Book a Session</Button>
             </div>
           </Card>
         )}
+
+        <Card className="p-6 bg-gradient-to-br from-green-500/5 to-blue-500/5">
+          <h3 className="text-lg font-semibold mb-4">This Week's Progress</h3>
+          <div className="flex flex-col items-center gap-4">
+            <div className="relative">
+              <Ring
+                percentage={percentage}
+                size={140}
+                label={`${percentage}%`}
+                sublabel={`${progress?.completedThisWeek || 0}/${progress?.weeklyTarget || 3} sessions`}
+              />
+              {percentage >= 100 && (
+                <div className="absolute -top-2 -right-2 animate-bounce">
+                  <Trophy className="h-8 w-8 text-yellow-500 fill-yellow-500" />
+                </div>
+              )}
+            </div>
+            {progress && progress.streak > 0 && (
+              <StreakDisplay weeks={progress.streak} size="md" />
+            )}
+            <Button 
+              onClick={() => setShowCheckInDialog(true)}
+              className="w-full gap-2"
+              size="sm"
+            >
+              <Plus className="h-4 w-4" />
+              Quick Check-in
+            </Button>
+          </div>
+        </Card>
       </div>
 
-      {/* AI Insights - NEW */}
+      {/* Recent Achievements */}
+      <Card className="p-6 bg-gradient-to-br from-yellow-500/5 to-orange-500/5">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Award className="h-5 w-5 text-yellow-600" />
+            <h3 className="text-lg font-semibold">Recent Achievements</h3>
+          </div>
+          <Button variant="ghost" size="sm" onClick={() => navigate("/progress")}>
+            View All
+          </Button>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {recentAchievements.map((achievement) => (
+            <div 
+              key={achievement.id}
+              className={cn(
+                "p-4 rounded-lg border-2 transition-all hover:scale-105 cursor-pointer",
+                achievement.isNew 
+                  ? "border-yellow-500 bg-yellow-500/10 animate-pulse" 
+                  : "border-border bg-background"
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <div className="text-3xl">{achievement.icon}</div>
+                <div>
+                  <p className="font-semibold">{achievement.title}</p>
+                  <p className="text-xs text-muted-foreground">{achievement.date}</p>
+                </div>
+                {achievement.isNew && (
+                  <Badge className="ml-auto" variant="default">New!</Badge>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      {/* AI Insights */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold flex items-center gap-2">
-          <TrendingUp className="h-5 w-5" />
-          AI Insights
-        </h3>
+        <div className="flex items-center gap-2">
+          <Zap className="h-5 w-5 text-purple-500" />
+          <h3 className="text-lg font-semibold">AI Insights</h3>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <AIInsightCard 
             insight="You're 2 sessions away from hitting a 4-week streak! Clients with 4+ week streaks see 3x better results."
@@ -189,6 +259,54 @@ export default function ClientDashboardNew() {
           />
         </div>
       </div>
+
+      {/* Community Leaderboard Preview */}
+      <Card className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Users className="h-5 w-5 text-blue-500" />
+            <h3 className="text-lg font-semibold">Community Leaderboard</h3>
+          </div>
+          <Button variant="ghost" size="sm" onClick={() => navigate("/community")}>
+            View Full
+          </Button>
+        </div>
+        <div className="space-y-2">
+          {[
+            { rank: 10, name: "Jordan Lee", streak: 8, isYou: false },
+            { rank: 11, name: "Alex Chen", streak: 5, isYou: false },
+            { rank: 12, name: "You", streak: progress?.streak || 0, isYou: true },
+            { rank: 13, name: "Sarah Kim", streak: 3, isYou: false },
+            { rank: 14, name: "Mike Ross", streak: 2, isYou: false },
+          ].map((member) => (
+            <div 
+              key={member.rank}
+              className={cn(
+                "flex items-center justify-between p-3 rounded-lg transition-colors",
+                member.isYou 
+                  ? "bg-primary/10 border-2 border-primary" 
+                  : "bg-muted/50 hover:bg-muted"
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <div className={cn(
+                  "w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm",
+                  member.rank <= 3 ? "bg-yellow-500 text-yellow-950" : "bg-muted text-muted-foreground"
+                )}>
+                  {member.rank}
+                </div>
+                <span className={cn("font-medium", member.isYou && "font-bold")}>
+                  {member.name}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm">🔥</span>
+                <span className="font-semibold">{member.streak} weeks</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
 
       {/* Coach Notes */}
       <Card className="p-6">
@@ -220,7 +338,7 @@ export default function ClientDashboardNew() {
             <div className="grid grid-cols-3 gap-3">
               <Button
                 variant="outline"
-                className="h-auto py-4 flex flex-col gap-2"
+                className="h-auto py-4 flex flex-col gap-2 hover:scale-105 transition-transform"
                 onClick={() => handleCheckIn('completed', 'right')}
               >
                 <span className="text-2xl">✅</span>
@@ -228,7 +346,7 @@ export default function ClientDashboardNew() {
               </Button>
               <Button
                 variant="outline"
-                className="h-auto py-4 flex flex-col gap-2"
+                className="h-auto py-4 flex flex-col gap-2 hover:scale-105 transition-transform"
                 onClick={() => handleCheckIn('partial')}
               >
                 <span className="text-2xl">⚠️</span>
@@ -236,7 +354,7 @@ export default function ClientDashboardNew() {
               </Button>
               <Button
                 variant="outline"
-                className="h-auto py-4 flex flex-col gap-2"
+                className="h-auto py-4 flex flex-col gap-2 hover:scale-105 transition-transform"
                 onClick={() => handleCheckIn('missed')}
               >
                 <span className="text-2xl">❌</span>
@@ -252,6 +370,7 @@ export default function ClientDashboardNew() {
                     key={rpe}
                     variant="outline"
                     size="sm"
+                    className="hover:scale-105 transition-transform"
                     onClick={() => handleCheckIn('completed', rpe)}
                   >
                     {rpe === 'hard' && '🔥 Hard'}

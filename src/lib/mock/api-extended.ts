@@ -8,7 +8,7 @@ import type {
 } from './types';
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-const randomDelay = () => sleep(200 + Math.random() * 300);
+const randomDelay = () => sleep(50 + Math.random() * 100); // Reduced for snappier feel
 
 // ==================== COMMUNITY ====================
 

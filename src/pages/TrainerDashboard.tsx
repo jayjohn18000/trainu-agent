@@ -28,83 +28,6 @@ export default function TrainerDashboard() {
         </p>
       </div>
 
-      {/* AI Activity Feed - HERO SECTION */}
-      <Card className="p-6 bg-gradient-to-br from-purple-500/5 to-blue-500/5 border-purple-500/20">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-3 rounded-full bg-purple-500/10">
-            <Sparkles className="h-6 w-6 text-purple-500" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold">AI Activity Feed</h2>
-            <p className="text-sm text-muted-foreground">Real-time AI insights and automated actions</p>
-          </div>
-        </div>
-        
-        <div className="space-y-3">
-          {[
-            { 
-              icon: Clock, 
-              color: "text-blue-500", 
-              bg: "bg-blue-500/10",
-              action: "AI drafting pre-session reminder",
-              client: "Mike Johnson",
-              time: "2 min ago",
-              status: "needs_review"
-            },
-            { 
-              icon: Send, 
-              color: "text-green-500", 
-              bg: "bg-green-500/10",
-              action: "Streak protection message sent",
-              client: "Sarah Williams",
-              time: "15 min ago",
-              status: "sent"
-            },
-            { 
-              icon: MessageSquare, 
-              color: "text-purple-500", 
-              bg: "bg-purple-500/10",
-              action: "Milestone celebration queued",
-              client: "Alex Chen",
-              time: "1 hour ago",
-              status: "scheduled"
-            },
-          ].map((activity, idx) => {
-            const Icon = activity.icon;
-            return (
-              <div 
-                key={idx}
-                className="flex items-center gap-4 p-4 rounded-lg bg-background border hover:border-purple-500/30 transition-colors cursor-pointer"
-                onClick={() => navigate("/inbox")}
-              >
-                <div className={`p-2 rounded-full ${activity.bg}`}>
-                  <Icon className={`h-4 w-4 ${activity.color}`} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm">{activity.action}</p>
-                  <p className="text-xs text-muted-foreground">for {activity.client}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="text-xs">
-                    {activity.status.replace('_', ' ')}
-                  </Badge>
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">{activity.time}</span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-        
-        <Button 
-          variant="outline" 
-          className="w-full mt-4 gap-2"
-          onClick={() => navigate("/inbox")}
-        >
-          <Sparkles className="h-4 w-4" />
-          View AI Inbox
-        </Button>
-      </Card>
-
       {/* KPI Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
@@ -194,6 +117,65 @@ export default function TrainerDashboard() {
           </Button>
         </div>
       </div>
+
+      {/* AI Activity Feed - MOVED TO BOTTOM & COMPACT */}
+      <Card className="p-4 bg-gradient-to-br from-purple-500/5 to-blue-500/5 border-purple-500/20">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div className="p-2 rounded-full bg-purple-500/10">
+              <Sparkles className="h-4 w-4 text-purple-500" />
+            </div>
+            <div>
+              <h3 className="font-semibold">AI Activity</h3>
+              <p className="text-xs text-muted-foreground">Latest automated actions</p>
+            </div>
+          </div>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            className="gap-1 text-xs"
+            onClick={() => navigate("/inbox")}
+          >
+            <Sparkles className="h-3 w-3" />
+            View All
+          </Button>
+        </div>
+        
+        <div className="space-y-2">
+          {[
+            { 
+              icon: Clock, 
+              color: "text-blue-500", 
+              action: "Pre-session reminder",
+              client: "Mike Johnson",
+              time: "2m",
+            },
+            { 
+              icon: Send, 
+              color: "text-green-500", 
+              action: "Streak protection sent",
+              client: "Sarah Williams",
+              time: "15m",
+            },
+          ].map((activity, idx) => {
+            const Icon = activity.icon;
+            return (
+              <div 
+                key={idx}
+                className="flex items-center gap-3 p-2 rounded-lg hover:bg-background/50 transition-colors cursor-pointer text-sm"
+                onClick={() => navigate("/inbox")}
+              >
+                <Icon className={`h-3 w-3 ${activity.color}`} />
+                <div className="flex-1 min-w-0">
+                  <span className="font-medium">{activity.action}</span>
+                  <span className="text-muted-foreground"> · {activity.client}</span>
+                </div>
+                <span className="text-xs text-muted-foreground">{activity.time}</span>
+              </div>
+            );
+          })}
+        </div>
+      </Card>
     </div>
   );
 }
