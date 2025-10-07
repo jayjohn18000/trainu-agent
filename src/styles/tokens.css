@@ -1,0 +1,16 @@
+:root{
+  /* TrainU portable UI tokens */
+  --tu-bg: 222 47% 4%;
+  --tu-fg: 210 40% 98%;
+  --tu-muted: 215 20% 55%;
+  --tu-primary: 189 94% 55%;
+  --tu-primary-fg: 222 47% 4%;
+  --tu-card: 217 33% 8%;
+
+  /* spacing */
+  --tu-gap: 1rem;
+  --tu-radius: 1rem;
+
+  /* sizing */
+  --tu-avatar: 72px;
+}

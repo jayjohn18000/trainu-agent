@@ -1,0 +1,368 @@
+@import "./styles/tokens.css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Prevent horizontal scroll on mobile */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* === COLORS - TrainU Enterprise Design System === */
+    
+    /* Base */
+    --background: 222 47% 4%;
+    --foreground: 210 40% 98%;
+    
+    /* Surface variations */
+    --card: 217 33% 8%;
+    --card-foreground: 210 40% 98%;
+    --card-hover: 217 33% 10%;
+    
+    --popover: 217 33% 8%;
+    --popover-foreground: 210 40% 98%;
+    
+    /* Primary - Vibrant cyan */
+    --primary: 189 94% 55%;
+    --primary-foreground: 222 47% 4%;
+    --primary-hover: 189 94% 60%;
+    --primary-muted: 189 94% 55% / 0.1;
+    
+    /* Secondary */
+    --secondary: 217 33% 12%;
+    --secondary-foreground: 210 40% 98%;
+    --secondary-hover: 217 33% 15%;
+    
+    /* Muted */
+    --muted: 217 33% 12%;
+    --muted-foreground: 215 20% 55%;
+    --muted-hover: 217 33% 14%;
+    
+    /* Accent */
+    --accent: 189 94% 55%;
+    --accent-foreground: 222 47% 4%;
+    --accent-hover: 189 94% 60%;
+    
+    /* Status Colors */
+    --success: 142 76% 45%;
+    --success-foreground: 210 40% 98%;
+    --success-muted: 142 76% 45% / 0.15;
+    
+    --warning: 38 92% 50%;
+    --warning-foreground: 222 47% 4%;
+    --warning-muted: 38 92% 50% / 0.15;
+    
+    --danger: 0 84% 60%;
+    --danger-foreground: 210 40% 98%;
+    --danger-muted: 0 84% 60% / 0.15;
+    
+    --info: 217 91% 60%;
+    --info-foreground: 210 40% 98%;
+    --info-muted: 217 91% 60% / 0.15;
+    
+    /* Destructive (alias for danger) */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    
+    /* Borders & Inputs */
+    --border: 217 33% 15%;
+    --border-hover: 217 33% 20%;
+    --input: 217 33% 12%;
+    --input-border: 217 33% 18%;
+    --ring: 189 94% 55%;
+    
+    /* === ELEVATION SHADOWS === */
+    --shadow-sm: 0 1px 2px 0 hsl(222 47% 4% / 0.2);
+    --shadow-md: 0 4px 12px -2px hsl(222 47% 4% / 0.3);
+    --shadow-lg: 0 10px 30px -5px hsl(222 47% 4% / 0.4);
+    --shadow-xl: 0 20px 50px -10px hsl(222 47% 4% / 0.5);
+    --shadow-glow: 0 0 40px -8px hsl(189 94% 55% / 0.3);
+    --shadow-glow-intense: 0 0 60px -8px hsl(189 94% 55% / 0.5);
+    
+    /* Legacy shadow aliases */
+    --shadow-card: 0 4px 24px -4px hsl(222 47% 4% / 0.4);
+    --shadow-elevated: 0 8px 40px -8px hsl(189 94% 55% / 0.15);
+    
+    /* === GRADIENTS === */
+    --gradient-primary: linear-gradient(135deg, hsl(189 94% 55%), hsl(189 94% 65%));
+    --gradient-primary-intense: linear-gradient(135deg, hsl(189 94% 50%), hsl(217 91% 60%));
+    --gradient-surface: linear-gradient(180deg, hsl(217 33% 8%), hsl(217 33% 6%));
+    --gradient-overlay: linear-gradient(180deg, hsl(222 47% 4% / 0), hsl(222 47% 4% / 0.8));
+    
+    /* === BORDERS & RADIUS === */
+    --radius: 1rem;
+    --radius-sm: 0.5rem;
+    --radius-md: 0.75rem;
+    --radius-lg: 1rem;
+    --radius-xl: 1.5rem;
+    
+    /* === CHART COLORS === */
+    --chart-1: 189 94% 55%;
+    --chart-2: 270 70% 65%;
+    --chart-3: 142 76% 45%;
+    --chart-4: 38 92% 50%;
+    --chart-5: 340 75% 55%;
+    
+    /* === SIDEBAR === */
+    --sidebar-background: 222 47% 4%;
+    --sidebar-foreground: 215 20% 65%;
+    --sidebar-primary: 189 94% 55%;
+    --sidebar-primary-foreground: 222 47% 4%;
+    --sidebar-accent: 217 33% 12%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217 33% 15%;
+    --sidebar-ring: 189 94% 55%;
+    
+    /* === TYPOGRAPHY === */
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    
+    /* Font sizes - using modular scale */
+    --text-xs: 0.75rem;      /* 12px */
+    --text-sm: 0.875rem;     /* 14px */
+    --text-base: 1rem;       /* 16px */
+    --text-lg: 1.125rem;     /* 18px */
+    --text-xl: 1.25rem;      /* 20px */
+    --text-2xl: 1.5rem;      /* 24px */
+    --text-3xl: 1.875rem;    /* 30px */
+    --text-4xl: 2.25rem;     /* 36px */
+    --text-5xl: 3rem;        /* 48px */
+    
+    /* === SPACING === */
+    --spacing-xs: 0.25rem;   /* 4px */
+    --spacing-sm: 0.5rem;    /* 8px */
+    --spacing-md: 1rem;      /* 16px */
+    --spacing-lg: 1.5rem;    /* 24px */
+    --spacing-xl: 2rem;      /* 32px */
+    --spacing-2xl: 3rem;     /* 48px */
+    --spacing-3xl: 4rem;     /* 64px */
+    
+    /* === TRANSITIONS === */
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-sans);
+    font-feature-settings: "rlig" 1, "calt" 1, "ss01" 1, "ss02" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Typography Hierarchy */
+  h1 {
+    @apply text-4xl md:text-5xl font-bold tracking-tight;
+    line-height: 1.1;
+  }
+  
+  h2 {
+    @apply text-3xl md:text-4xl font-bold tracking-tight;
+    line-height: 1.2;
+  }
+  
+  h3 {
+    @apply text-2xl md:text-3xl font-semibold tracking-tight;
+    line-height: 1.3;
+  }
+  
+  h4 {
+    @apply text-xl md:text-2xl font-semibold tracking-tight;
+    line-height: 1.4;
+  }
+  
+  h5 {
+    @apply text-lg md:text-xl font-semibold;
+    line-height: 1.5;
+  }
+  
+  h6 {
+    @apply text-base md:text-lg font-semibold;
+    line-height: 1.5;
+  }
+  
+  p {
+    line-height: 1.6;
+  }
+  
+  /* Focus styles */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+}
+
+@layer components {
+  /* === ELEVATION UTILITIES === */
+  .shadow-sm {
+    box-shadow: var(--shadow-sm);
+  }
+  
+  .shadow-md {
+    box-shadow: var(--shadow-md);
+  }
+  
+  .shadow-lg {
+    box-shadow: var(--shadow-lg);
+  }
+  
+  .shadow-xl {
+    box-shadow: var(--shadow-xl);
+  }
+  
+  .shadow-glow {
+    box-shadow: var(--shadow-glow);
+  }
+  
+  .shadow-glow-intense {
+    box-shadow: var(--shadow-glow-intense);
+  }
+  
+  /* Legacy aliases */
+  .card-shadow {
+    box-shadow: var(--shadow-card);
+  }
+
+  .card-elevated {
+    box-shadow: var(--shadow-elevated);
+  }
+
+  /* === CARD VARIANTS === */
+  .card-base {
+    @apply rounded-xl border border-border bg-card;
+  }
+  
+  .card-interactive {
+    @apply card-base shadow-md transition-all duration-base;
+    @apply hover:shadow-lg hover:border-border-hover hover:-translate-y-0.5;
+  }
+  
+  .card-elevated {
+    @apply card-base shadow-lg;
+  }
+  
+  .card-glow {
+    @apply card-base shadow-glow;
+  }
+
+  .metric-card {
+    @apply rounded-2xl border border-border bg-card p-6 shadow-md;
+    @apply transition-all duration-base;
+    @apply hover:shadow-lg hover:border-primary/20;
+  }
+
+  .chart-grid {
+    @apply rounded-2xl border border-border bg-card p-6 shadow-md;
+  }
+  
+  /* === BUTTON ENHANCEMENTS === */
+  .btn-glow {
+    box-shadow: 0 0 20px -4px hsl(var(--primary) / 0.4);
+    @apply transition-all duration-base;
+  }
+  
+  .btn-glow:hover {
+    box-shadow: 0 0 30px -4px hsl(var(--primary) / 0.6);
+  }
+  
+  /* === GRADIENT UTILITIES === */
+  .gradient-primary {
+    background: var(--gradient-primary);
+  }
+  
+  .gradient-primary-intense {
+    background: var(--gradient-primary-intense);
+  }
+  
+  .gradient-surface {
+    background: var(--gradient-surface);
+  }
+  
+  .gradient-overlay {
+    background: var(--gradient-overlay);
+  }
+  
+  /* === STATUS COLORS === */
+  .status-success {
+    @apply bg-[hsl(var(--success-muted))] text-[hsl(var(--success))] border-[hsl(var(--success))]/30;
+  }
+  
+  .status-warning {
+    @apply bg-[hsl(var(--warning-muted))] text-[hsl(var(--warning))] border-[hsl(var(--warning))]/30;
+  }
+  
+  .status-danger {
+    @apply bg-[hsl(var(--danger-muted))] text-[hsl(var(--danger))] border-[hsl(var(--danger))]/30;
+  }
+  
+  .status-info {
+    @apply bg-[hsl(var(--info-muted))] text-[hsl(var(--info))] border-[hsl(var(--info))]/30;
+  }
+  
+  /* === CONTAINER === */
+  .container-custom {
+    @apply mx-auto px-4 sm:px-6 lg:px-8;
+    max-width: 1400px;
+  }
+  
+  /* === GLASS EFFECT === */
+  .glass {
+    @apply backdrop-blur-xl bg-card/80 border-border/50;
+  }
+  
+  /* === SMOOTH TRANSITIONS === */
+  .transition-smooth {
+    @apply transition-all duration-base;
+  }
+  
+  .transition-fast {
+    @apply transition-all duration-fast;
+  }
+  
+  .transition-slow {
+    @apply transition-all duration-slow;
+  }
+}
+
+@layer utilities {
+  /* === ACCESSIBILITY === */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+  
+  .not-sr-only {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: 0;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+  }
+  
+  /* Focus visible for keyboard navigation */
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+  }
+}

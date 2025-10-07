@@ -1,0 +1,26 @@
+[
+  {
+    "id": "gym1",
+    "name": "Iron District",
+    "city": "Chicago",
+    "state": "IL",
+    "address": "123 W Madison St, Chicago, IL 60602",
+    "description": "Premier strength training facility in downtown Chicago"
+  },
+  {
+    "id": "gym2",
+    "name": "Peak Performance",
+    "city": "Evanston",
+    "state": "IL",
+    "address": "456 Chicago Ave, Evanston, IL 60201",
+    "description": "Full-service fitness center with Olympic lifting platforms"
+  },
+  {
+    "id": "gym3",
+    "name": "FitLab Chicago",
+    "city": "Chicago",
+    "state": "IL",
+    "address": "789 N State St, Chicago, IL 60654",
+    "description": "Boutique studio specializing in functional fitness and group classes"
+  }
+]

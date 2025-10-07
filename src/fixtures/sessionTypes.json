@@ -1,0 +1,82 @@
+[
+  {
+    "id": "st1",
+    "trainerId": "t1",
+    "title": "1-on-1 Strength Training",
+    "duration": 60,
+    "price": 8500,
+    "capacity": 1,
+    "mode": "in_person",
+    "description": "Personalized strength training session focused on your goals"
+  },
+  {
+    "id": "st2",
+    "trainerId": "t1",
+    "title": "Mobility & Recovery",
+    "duration": 45,
+    "price": 6500,
+    "capacity": 1,
+    "mode": "in_person",
+    "description": "Focused mobility work and recovery techniques"
+  },
+  {
+    "id": "st3",
+    "trainerId": "t2",
+    "title": "HIIT Bootcamp",
+    "duration": 45,
+    "price": 3500,
+    "capacity": 12,
+    "mode": "in_person",
+    "description": "High-intensity interval training in a group setting"
+  },
+  {
+    "id": "st4",
+    "trainerId": "t2",
+    "title": "Nutrition Consultation",
+    "duration": 30,
+    "price": 7500,
+    "capacity": 1,
+    "mode": "virtual",
+    "description": "One-on-one nutrition planning and coaching session"
+  },
+  {
+    "id": "st5",
+    "trainerId": "t3",
+    "title": "Powerlifting Coaching",
+    "duration": 90,
+    "price": 12000,
+    "capacity": 1,
+    "mode": "in_person",
+    "description": "Advanced powerlifting technique and programming"
+  },
+  {
+    "id": "st6",
+    "trainerId": "t4",
+    "title": "Vinyasa Flow",
+    "duration": 60,
+    "price": 2500,
+    "capacity": 15,
+    "mode": "in_person",
+    "description": "Dynamic yoga flow for all levels"
+  },
+  {
+    "id": "st7",
+    "trainerId": "t5",
+    "title": "CrossFit Class",
+    "duration": 60,
+    "price": 2800,
+    "capacity": 18,
+    "mode": "in_person",
+    "description": "WOD-based functional fitness class"
+  },
+  {
+    "id": "st8",
+    "trainerId": "t6",
+    "title": "Corrective Exercise",
+    "duration": 60,
+    "price": 9000,
+    "capacity": 1,
+    "mode": "in_person",
+    "description": "Assessment and corrective exercise programming"
+  }
+]
