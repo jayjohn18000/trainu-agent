@@ -2,10 +2,18 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Calendar, MessageSquare } from "lucide-react";
+import { 
+  LayoutDashboard, 
+  Calendar, 
+  MessageSquare, 
+  ShoppingBag, 
+  Users, 
+  Mail,
+  Settings as SettingsIcon
+} from "lucide-react";
 import { ScreenReaderOnly } from "./system/ScreenReaderOnly";
 
-type MainTab = "dashboard" | "schedule" | "communication";
+type MainTab = "dashboard" | "schedule" | "community" | "business";
 
 interface SubTab {
   label: string;
@@ -21,28 +29,37 @@ interface TabNavigationProps {
 const mainTabs: { value: MainTab; label: string; icon: typeof LayoutDashboard }[] = [
   { value: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { value: "schedule", label: "Schedule", icon: Calendar },
-  { value: "communication", label: "Communication", icon: MessageSquare },
+  { value: "community", label: "Community", icon: MessageSquare },
+  { value: "business", label: "Business", icon: ShoppingBag },
 ];
 
 const subTabs: Record<MainTab, SubTab[]> = {
   dashboard: [
-    { label: "Overview", path: "/dashboard/client", roles: ["client"] },
+    { label: "Overview", path: "/me", roles: ["client"] },
     { label: "Discover", path: "/discover", roles: ["client"] },
+    { label: "Analytics", path: "/dashboard/owner", roles: ["owner"] },
     { label: "Overview", path: "/dashboard/trainer", roles: ["trainer"] },
+    { label: "My Clients", path: "/dashboard/clients", roles: ["trainer"] },
     { label: "Overview", path: "/dashboard/gym-admin", roles: ["gym_admin"] },
   ],
   schedule: [
     { label: "Calendar", path: "/calendar" },
-    { label: "Events", path: "/community/events", roles: ["client"] },
-    { label: "Clients", path: "/clients", roles: ["trainer", "gym_admin"] },
     { label: "Workouts", path: "/workout", roles: ["client"] },
-    { label: "Programs", path: "/programs", roles: ["trainer", "gym_admin"] },
     { label: "Progress", path: "/progress", roles: ["client"] },
+    { label: "Clients", path: "/clients", roles: ["trainer", "gym_admin"] },
+    { label: "Programs", path: "/programs", roles: ["trainer", "gym_admin"] },
   ],
-  communication: [
-    { label: "Messages", path: "/messages" },
+  community: [
+    { label: "Feed", path: "/community" },
+    { label: "Events", path: "/events" },
     { label: "People", path: "/community/people" },
     { label: "Groups", path: "/community/groups" },
+  ],
+  business: [
+    { label: "Store", path: "/store" },
+    { label: "Creators", path: "/creators", roles: ["owner", "trainer"] },
+    { label: "AI Inbox", path: "/inbox", roles: ["owner", "trainer"] },
+    { label: "Dev Tools", path: "/dev/flags", roles: ["owner"] },
   ],
 };
 
@@ -54,23 +71,28 @@ export function TabNavigation({ isMobile = false, onNavigate }: TabNavigationPro
   // Determine active main tab based on current path
   const getActiveMainTab = (): MainTab => {
     const path = location.pathname;
-    if (path.startsWith("/dashboard") || path.startsWith("/discover")) return "dashboard";
+    if (path.startsWith("/dashboard") || path.startsWith("/discover") || path.startsWith("/me")) 
+      return "dashboard";
     if (
       path.startsWith("/calendar") ||
       path.startsWith("/workout") ||
       path.startsWith("/progress") ||
       path.startsWith("/clients") ||
-      path.startsWith("/programs") ||
-      path.startsWith("/community/events") ||
-      path.startsWith("/events")
+      path.startsWith("/programs")
     )
       return "schedule";
     if (
-      path.startsWith("/messages") ||
-      path.startsWith("/community/people") ||
-      path.startsWith("/community/groups")
+      path.startsWith("/community") ||
+      path.startsWith("/events")
     )
-      return "communication";
+      return "community";
+    if (
+      path.startsWith("/store") ||
+      path.startsWith("/creators") ||
+      path.startsWith("/inbox") ||
+      path.startsWith("/dev/flags")
+    )
+      return "business";
     return "dashboard";
   };
 
