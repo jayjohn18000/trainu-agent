@@ -566,3 +566,61 @@ export async function listUsers(): Promise<User[]> {
   const db = getDB();
   return db.users;
 }
+
+// ==================== GAMIFICATION ====================
+
+export async function listAchievements(): Promise<import('./types').Achievement[]> {
+  await randomDelay();
+  const db = getDB();
+  return (db as any).achievements || [];
+}
+
+export async function getUserAchievements(userId: string): Promise<import('./types').Achievement[]> {
+  await randomDelay();
+  const db = getDB();
+  const userProgress = db.clientProgress.find(p => p.userId === userId);
+  if (!userProgress) return [];
+  
+  const allAchievements = (db as any).achievements || [];
+  // Return unlocked achievements based on user progress
+  return allAchievements.filter((a: any) => {
+    if (a.category === 'consistency') {
+      return userProgress.streak >= a.milestone;
+    }
+    if (a.category === 'strength') {
+      return userProgress.completedThisWeek >= a.milestone;
+    }
+    return false;
+  });
+}
+
+export async function listChallenges(userId?: string): Promise<import('./types').Challenge[]> {
+  await randomDelay();
+  const db = getDB();
+  return (db as any).challenges || [];
+}
+
+export async function awardXP(userId: string, amount: number, source: string): Promise<void> {
+  await randomDelay();
+  const db = getDB();
+  const progress = db.clientProgress.find(p => p.userId === userId);
+  if (!progress) return;
+  
+  progress.xp += amount;
+  
+  // Level up logic
+  while (progress.xp >= progress.xpToNextLevel) {
+    progress.xp -= progress.xpToNextLevel;
+    progress.level += 1;
+    progress.xpToNextLevel = Math.floor(progress.xpToNextLevel * 1.2); // 20% increase per level
+    
+    // Update title based on level
+    if (progress.level >= 50) progress.title = 'Legend';
+    else if (progress.level >= 20) progress.title = 'Champion';
+    else if (progress.level >= 10) progress.title = 'Athlete';
+    else if (progress.level >= 5) progress.title = 'Rising Star';
+    else progress.title = 'Beginner';
+  }
+  
+  setDB(db);
+}

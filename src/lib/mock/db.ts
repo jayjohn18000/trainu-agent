@@ -29,9 +29,14 @@ export interface MockDB {
   clientProgress: ClientProgress[];
   inboxDrafts: InboxDraft[];
   metrics: MetricSnapshot[];
+  achievements?: any[];
+  challenges?: any[];
 }
 
 function getInitialDB(): MockDB {
+  // Lazy load gamification data
+  const gamificationData = require('./gamificationData');
+  
   return {
     users: [...seed.seedUsers],
     posts: [...seed.seedPosts],
@@ -53,6 +58,8 @@ function getInitialDB(): MockDB {
     clientProgress: [...seed.seedClientProgress],
     inboxDrafts: [...seed.seedInboxDrafts],
     metrics: [...seed.seedMetrics],
+    achievements: [...gamificationData.seedAchievements],
+    challenges: [...gamificationData.seedChallenges],
   };
 }
 

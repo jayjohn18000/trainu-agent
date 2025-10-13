@@ -335,6 +335,10 @@ export const seedClientProgress: ClientProgress[] = [
     completedThisWeek: 2,
     streak: 4,
     lastCheckIn: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    level: 8,
+    xp: 350,
+    xpToNextLevel: 500,
+    title: 'Rising Star',
   },
   {
     userId: 'user-client-2',
@@ -342,6 +346,10 @@ export const seedClientProgress: ClientProgress[] = [
     completedThisWeek: 3,
     streak: 2,
     lastCheckIn: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    level: 5,
+    xp: 120,
+    xpToNextLevel: 400,
+    title: 'Rising Star',
   },
   {
     userId: 'user-client-3',
@@ -349,6 +357,10 @@ export const seedClientProgress: ClientProgress[] = [
     completedThisWeek: 1,
     streak: 1,
     lastCheckIn: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    level: 3,
+    xp: 85,
+    xpToNextLevel: 300,
+    title: 'Beginner',
   },
 ];
 

@@ -195,6 +195,53 @@ export interface ClientProgress {
   completedThisWeek: number;
   streak: number;
   lastCheckIn?: string;
+  // Gamification fields
+  level: number;
+  xp: number;
+  xpToNextLevel: number;
+  title: 'Beginner' | 'Rising Star' | 'Athlete' | 'Champion' | 'Legend';
+}
+
+export interface Achievement {
+  id: string;
+  name: string;
+  description: string;
+  category: 'consistency' | 'strength' | 'social' | 'transformation';
+  tier: 'bronze' | 'silver' | 'gold' | 'platinum';
+  icon: string; // emoji or icon name
+  unlockedAt?: string;
+  progress?: number; // 0-100 for locked achievements
+  milestone: number; // e.g., "10 sessions" = 10
+}
+
+export interface Challenge {
+  id: string;
+  type: 'daily' | 'weekly' | 'monthly';
+  title: string;
+  description: string;
+  steps: Array<{ id: string; description: string; completed: boolean }>;
+  xpReward: number;
+  badgeReward?: string; // achievement ID
+  expiresAt: string;
+  progress: number; // 0-100
+}
+
+export interface LeaderboardEntry {
+  userId: string;
+  rank: number;
+  previousRank?: number;
+  value: number; // streak count, session count, etc.
+  percentile: number; // top 10%, 25%, etc.
+}
+
+export interface Milestone {
+  id: string;
+  userId: string;
+  type: 'session_count' | 'streak' | 'pr' | 'goal_completion';
+  value: number; // e.g., 10 for "10th session"
+  celebrationType: 'confetti' | 'toast' | 'modal';
+  achievementUnlocked?: string;
+  triggeredAt: string;
 }
 
 // ==================== AI INBOX ====================

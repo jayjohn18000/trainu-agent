@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/dialog";
 import { Calendar, Clock, Plus, TrendingUp, Trophy, Target, Zap, Award, Users } from "lucide-react";
 import { StreakDisplay } from "@/components/ui/StreakDisplay";
+import { LevelDisplay } from "@/components/ui/LevelDisplay";
+import { ChallengeCard } from "@/components/ui/ChallengeCard";
 import { AIInsightCard } from "@/components/ui/AIInsightCard";
 import { WhopBadge } from "@/components/ui/WhopBadge";
 import { GHLBadge } from "@/components/ui/GHLBadge";
@@ -21,8 +23,9 @@ import {
   listGoals,
   createGoalEntry,
   getUser,
+  listChallenges,
 } from "@/lib/mock/api-extended";
-import type { Session, ClientProgress, Goal, CheckInType, RPELevel } from "@/lib/mock/types";
+import type { Session, ClientProgress, Goal, CheckInType, RPELevel, Challenge } from "@/lib/mock/types";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -33,6 +36,7 @@ export default function ClientDashboardNew() {
   const [nextSession, setNextSession] = useState<Session | null>(null);
   const [progress, setProgress] = useState<ClientProgress | null>(null);
   const [goals, setGoals] = useState<Goal[]>([]);
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [showCheckInDialog, setShowCheckInDialog] = useState(false);
   const [trainerName, setTrainerName] = useState("");
   const [showCelebration, setShowCelebration] = useState(false);
@@ -44,15 +48,17 @@ export default function ClientDashboardNew() {
 
   const loadData = async () => {
     if (!user) return;
-    const [session, prog, userGoals] = await Promise.all([
+    const [session, prog, userGoals, userChallenges] = await Promise.all([
       getNextSession(user.id),
       getClientProgress(user.id),
       listGoals(user.id),
+      listChallenges(user.id),
     ]);
     
     setNextSession(session);
     setProgress(prog || null);
     setGoals(userGoals.filter(g => g.isActive));
+    setChallenges(userChallenges);
     
     if (session) {
       const trainer = await getUser(session.trainerId);
@@ -95,12 +101,23 @@ export default function ClientDashboardNew() {
 
   return (
     <div className="p-6 space-y-6 max-w-6xl mx-auto animate-fade-in">
-      <div className="flex items-start justify-between">
-        <div>
+      <div className="flex flex-col md:flex-row items-start justify-between gap-4">
+        <div className="flex-1">
           <h1 className="text-3xl font-bold text-foreground">My Dashboard</h1>
           <p className="text-muted-foreground">Keep pushing! You're doing amazing 💪</p>
         </div>
-        {user?.isMember && <WhopBadge />}
+        <div className="flex items-center gap-3 flex-wrap">
+          {progress && (
+            <LevelDisplay
+              level={progress.level}
+              xp={progress.xp}
+              xpToNextLevel={progress.xpToNextLevel}
+              title={progress.title}
+              compact
+            />
+          )}
+          {user?.isMember && <WhopBadge />}
+        </div>
       </div>
 
       {/* Stats Grid - More Gamified */}
@@ -129,6 +146,20 @@ export default function ClientDashboardNew() {
           <div className="text-xs text-muted-foreground">Progress</div>
         </Card>
       </div>
+
+      {/* Daily Challenge (if available) */}
+      {challenges.filter(c => c.type === 'daily' && c.progress < 100).slice(0, 1).map(challenge => (
+        <ChallengeCard
+          key={challenge.id}
+          title={challenge.title}
+          description={challenge.description}
+          type={challenge.type}
+          progress={challenge.progress}
+          xpReward={challenge.xpReward}
+          expiresAt={challenge.expiresAt}
+          compact
+        />
+      ))}
 
       {/* Next Session & Progress Ring */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
