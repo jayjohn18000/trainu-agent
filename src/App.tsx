@@ -41,8 +41,8 @@ export default function App() {
           <Route path="/" element={<Landing />} />
           <Route element={<AppLayout><Outlet /></AppLayout>}>
             <Route path="/discover" element={<Discover />} />
-            <Route path="/dashboard/client" element={<ClientDashboard />} />
-            <Route path="/me" element={<ClientDashboard />} />
+            <Route path="/dashboard/client" element={<ClientDashboardNew />} />
+            <Route path="/me" element={<ClientDashboardNew />} />
             <Route path="/dashboard/trainer" element={<TrainerDashboard />} />
             <Route path="/dashboard/owner" element={<OwnerDashboard />} />
             <Route path="/dashboard/gym-admin" element={<GymAdminDashboard />} />
