@@ -42,10 +42,10 @@ export default function App() {
           <Route element={<AppLayout><Outlet /></AppLayout>}>
             <Route path="/discover" element={<Discover />} />
             <Route path="/dashboard/client" element={<ClientDashboard />} />
+            <Route path="/me" element={<ClientDashboard />} />
             <Route path="/dashboard/trainer" element={<TrainerDashboard />} />
             <Route path="/dashboard/owner" element={<OwnerDashboard />} />
             <Route path="/dashboard/gym-admin" element={<GymAdminDashboard />} />
-            <Route path="/me" element={<ClientDashboardNew />} />
             <Route path="/directory" element={<Directory />} />
             <Route path="/trainers/:slug" element={<TrainerProfile />} />
             <Route path="/calendar" element={<Calendar />} />

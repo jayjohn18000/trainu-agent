@@ -38,6 +38,8 @@ const getMainTabs = (userRole?: string) => {
 const subTabs: Record<MainTab, SubTab[]> = {
   home: [
     { label: "Dashboard", path: "/me", roles: ["client"] },
+    { label: "Progress", path: "/progress", roles: ["client"] },
+    { label: "Calendar", path: "/calendar", roles: ["client"] },
     { label: "Discover", path: "/discover", roles: ["client"] },
     { label: "Dashboard", path: "/dashboard/trainer", roles: ["trainer"] },
     { label: "My Clients", path: "/dashboard/clients", roles: ["trainer"] },
@@ -70,6 +72,7 @@ export function TabNavigation({ isMobile = false, onNavigate }: TabNavigationPro
     if (path.startsWith("/inbox")) return "inbox";
     if (path.startsWith("/community") || path.startsWith("/events") || path.startsWith("/store")) return "community";
     if (path.startsWith("/settings") || path.startsWith("/dev/flags")) return "settings";
+    if (path.startsWith("/progress") || path.startsWith("/calendar") || path.startsWith("/me") || path.startsWith("/discover")) return "home";
     return "home";
   };
 
