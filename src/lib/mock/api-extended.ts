@@ -624,3 +624,94 @@ export async function awardXP(userId: string, amount: number, source: string): P
   
   setDB(db);
 }
+
+export async function listLeaderboard(
+  category: 'overall' | 'strength' | 'consistency' | 'social' = 'overall',
+  period: 'weekly' | 'monthly' | 'all-time' = 'all-time'
+): Promise<import('./types').LeaderboardEntry[]> {
+  await randomDelay();
+  const db = getDB();
+  
+  const users = db.users.filter(u => u.role === 'client');
+  const entries: import('./types').LeaderboardEntry[] = [];
+
+  for (const user of users) {
+    const progress = db.clientProgress.find(p => p.userId === user.id);
+    if (!progress) continue;
+
+    let score = 0;
+    switch (category) {
+      case 'overall':
+        score = progress.xp || 0;
+        break;
+      case 'strength':
+        // Use completed this week as proxy for session count
+        score = progress.completedThisWeek || 0;
+        break;
+      case 'consistency':
+        score = progress.streak || 0;
+        break;
+      case 'social':
+        // Mock social score based on user engagement
+        score = Math.floor(Math.random() * 500);
+        break;
+    }
+
+    entries.push({
+      userId: user.id,
+      userName: user.name,
+      userAvatar: user.avatarUrl,
+      score,
+      rank: 0, // Will be set after sorting
+      change: Math.floor(Math.random() * 20) - 10, // Mock change
+      period
+    });
+  }
+
+  // Sort by score descending and assign ranks
+  entries.sort((a, b) => b.score - a.score);
+  entries.forEach((entry, index) => {
+    entry.rank = index + 1;
+  });
+
+  return entries.slice(0, 50); // Top 50
+}
+
+export async function listMilestones(userId: string): Promise<import('./types').Milestone[]> {
+  await randomDelay();
+  const db = getDB();
+  
+  const { seedMilestones } = await import('./gamificationData');
+  const progress = db.clientProgress.find(p => p.userId === userId);
+  
+  if (!progress) return seedMilestones;
+
+  // Update milestone achievement status based on actual progress
+  return seedMilestones.map(milestone => {
+    let achieved = milestone.achieved;
+    
+    if (!achieved) {
+      switch (milestone.type) {
+        case 'sessions':
+        case 'session_count':
+          // Use completedThisWeek as proxy for total session count
+          achieved = (progress.completedThisWeek || 0) >= milestone.value;
+          break;
+        case 'streak':
+          achieved = (progress.streak || 0) >= milestone.value;
+          break;
+        case 'xp':
+          achieved = (progress.xp || 0) >= milestone.value;
+          break;
+      }
+    }
+
+    return {
+      ...milestone,
+      achieved,
+      achievedAt: achieved && !milestone.achievedAt 
+        ? new Date().toISOString() 
+        : milestone.achievedAt
+    };
+  });
+}

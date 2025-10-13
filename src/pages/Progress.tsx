@@ -3,6 +3,7 @@ import { MeasurementsTab } from "@/components/progress/MeasurementsTab";
 import { ProgressPhotosTab } from "@/components/progress/ProgressPhotosTab";
 import { PersonalRecordsTab } from "@/components/progress/PersonalRecordsTab";
 import { AchievementsTab } from "@/components/progress/AchievementsTab";
+import { LeaderboardsTab } from "@/components/progress/LeaderboardsTab";
 
 export default function Progress() {
   return (
@@ -13,11 +14,12 @@ export default function Progress() {
       </div>
 
       <Tabs defaultValue="measurements" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="measurements" className="min-h-[44px]">Measurements</TabsTrigger>
-          <TabsTrigger value="photos" className="min-h-[44px]">Progress Photos</TabsTrigger>
-          <TabsTrigger value="records" className="min-h-[44px]">Personal Records</TabsTrigger>
+          <TabsTrigger value="photos" className="min-h-[44px]">Photos</TabsTrigger>
+          <TabsTrigger value="records" className="min-h-[44px]">Records</TabsTrigger>
           <TabsTrigger value="achievements" className="min-h-[44px]">Achievements</TabsTrigger>
+          <TabsTrigger value="leaderboards" className="min-h-[44px]">Leaderboards</TabsTrigger>
         </TabsList>
         
         <TabsContent value="measurements" className="mt-6">
@@ -34,6 +36,10 @@ export default function Progress() {
         
         <TabsContent value="achievements" className="mt-6">
           <AchievementsTab />
+        </TabsContent>
+        
+        <TabsContent value="leaderboards" className="mt-6">
+          <LeaderboardsTab />
         </TabsContent>
       </Tabs>
     </div>

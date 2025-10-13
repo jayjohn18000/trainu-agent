@@ -228,20 +228,26 @@ export interface Challenge {
 
 export interface LeaderboardEntry {
   userId: string;
+  userName: string;
+  userAvatar?: string;
   rank: number;
   previousRank?: number;
-  value: number; // streak count, session count, etc.
-  percentile: number; // top 10%, 25%, etc.
+  score: number; // XP, session count, streak count, etc.
+  change?: number; // change from previous period
+  period: 'weekly' | 'monthly' | 'all-time';
+  percentile?: number; // top 10%, 25%, etc.
 }
 
 export interface Milestone {
   id: string;
-  userId: string;
-  type: 'session_count' | 'streak' | 'pr' | 'goal_completion';
-  value: number; // e.g., 10 for "10th session"
-  celebrationType: 'confetti' | 'toast' | 'modal';
+  type: 'sessions' | 'streak' | 'xp' | 'session_count' | 'pr' | 'goal_completion';
+  value: number; // e.g., 10 for "10th session", 1000 for "1000 XP"
+  title: string;
+  description: string;
+  achieved: boolean;
+  achievedAt?: string;
+  celebrationType?: 'confetti' | 'toast' | 'modal';
   achievementUnlocked?: string;
-  triggeredAt: string;
 }
 
 // ==================== AI INBOX ====================
