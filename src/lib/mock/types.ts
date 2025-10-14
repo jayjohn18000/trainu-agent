@@ -194,6 +194,7 @@ export interface ClientProgress {
   weeklyTarget: number;
   completedThisWeek: number;
   streak: number;
+  longestStreak: number;
   lastCheckIn?: string;
   // Gamification fields
   level: number;

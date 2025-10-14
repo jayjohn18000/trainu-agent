@@ -600,12 +600,13 @@ export async function listChallenges(userId?: string): Promise<import('./types')
   return (db as any).challenges || [];
 }
 
-export async function awardXP(userId: string, amount: number, source: string): Promise<void> {
+export async function awardXP(userId: string, amount: number, source: string): Promise<{ leveledUp: boolean; newLevel: number; xpGained: number }> {
   await randomDelay();
   const db = getDB();
   const progress = db.clientProgress.find(p => p.userId === userId);
-  if (!progress) return;
+  if (!progress) return { leveledUp: false, newLevel: 1, xpGained: amount };
   
+  const oldLevel = progress.level;
   progress.xp += amount;
   
   // Level up logic
@@ -623,6 +624,12 @@ export async function awardXP(userId: string, amount: number, source: string): P
   }
   
   setDB(db);
+  
+  return {
+    leveledUp: progress.level > oldLevel,
+    newLevel: progress.level,
+    xpGained: amount
+  };
 }
 
 export async function listLeaderboard(

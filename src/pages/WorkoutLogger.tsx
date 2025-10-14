@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { XPNotification, LevelUpNotification } from "@/components/ui/XPNotification";
+import { useGamification } from "@/hooks/useGamification";
 import { ExerciseRow } from "@/components/workout/ExerciseRow";
 import { RestTimer } from "@/components/workout/RestTimer";
 import { WorkoutSummary } from "@/components/workout/WorkoutSummary";
@@ -22,6 +24,7 @@ export type Exercise = {
 };
 
 export default function WorkoutLogger() {
+  const { grantXP, xpNotification, levelUpNotification, clearXPNotification, clearLevelUpNotification } = useGamification();
   const [exercises, setExercises] = useState<Exercise[]>([
     {
       id: "1",
@@ -70,6 +73,9 @@ export default function WorkoutLogger() {
 
   const handleCompleteWorkout = () => {
     setIsWorkoutComplete(true);
+    // Award XP for completing workout
+    const completedSets = exercises.reduce((acc, ex) => acc + ex.sets.filter(s => s.completed).length, 0);
+    grantXP(completedSets * 10, "Workout Completed");
   };
 
   const handleSaveAndExit = () => {
@@ -151,6 +157,19 @@ export default function WorkoutLogger() {
       {showRestTimer && (
         <RestTimer open={showRestTimer} onOpenChange={setShowRestTimer} />
       )}
+      
+      <XPNotification
+        amount={xpNotification?.amount || 0}
+        reason={xpNotification?.reason}
+        show={!!xpNotification}
+        onComplete={clearXPNotification}
+      />
+      
+      <LevelUpNotification
+        level={levelUpNotification || 1}
+        show={!!levelUpNotification}
+        onComplete={clearLevelUpNotification}
+      />
     </div>
   );
 }

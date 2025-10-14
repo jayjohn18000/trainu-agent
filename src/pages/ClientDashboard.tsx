@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { KPICard } from "@/components/KPICard";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Upload, MessageSquare, Calendar, TrendingUp } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import { toast } from "@/hooks/use-toast";
+import { LevelDisplay } from "@/components/ui/LevelDisplay";
+import { StreakDisplay } from "@/components/ui/StreakDisplay";
+import { useGamification } from "@/hooks/useGamification";
+import { XPNotification, LevelUpNotification } from "@/components/ui/XPNotification";
+import { ClientProgress } from "@/lib/mock/types";
 
 const goals = [
   { id: "1", name: "Weight Loss", metric: "Weight (lbs)", current: 175, target: 160 },
@@ -48,15 +53,26 @@ const goalData = {
 
 export default function ClientDashboard() {
   const navigate = useNavigate();
+  const { grantXP, getProgress, xpNotification, levelUpNotification, clearXPNotification, clearLevelUpNotification } = useGamification();
   const [selectedGoal, setSelectedGoal] = useState("1");
   const [loading, setLoading] = useState<string | null>(null);
+  const [userProgress, setUserProgress] = useState<ClientProgress | null>(null);
   const currentGoal = goals.find((g) => g.id === selectedGoal)!;
   const chartData = goalData[selectedGoal as keyof typeof goalData];
   const progress = Math.round(((currentGoal.current - 185) / (currentGoal.target - 185)) * 100);
 
+  useEffect(() => {
+    const loadProgress = async () => {
+      const prog = await getProgress();
+      setUserProgress(prog);
+    };
+    loadProgress();
+  }, [getProgress]);
+
   const handleLogProgress = async () => {
     setLoading("progress");
     await new Promise(resolve => setTimeout(resolve, 1000));
+    await grantXP(25, "Progress Logged");
     toast({ title: "Progress logged!", description: "Your measurements have been updated." });
     setLoading(null);
   };
@@ -64,6 +80,7 @@ export default function ClientDashboard() {
   const handleUploadCheckIn = async () => {
     setLoading("checkin");
     await new Promise(resolve => setTimeout(resolve, 1000));
+    await grantXP(50, "Check-In Photo Uploaded");
     toast({ title: "Check-in uploaded!", description: "Your progress photos have been saved." });
     setLoading(null);
   };
@@ -82,6 +99,22 @@ export default function ClientDashboard() {
         <h1 className="text-3xl font-bold text-foreground mb-2">My Dashboard</h1>
         <p className="text-muted-foreground">Track your progress and stay on top of your goals</p>
       </div>
+
+      {/* Gamification Stats */}
+      {userProgress && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <LevelDisplay
+            level={userProgress.level}
+            xp={userProgress.xp}
+            xpToNextLevel={userProgress.xpToNextLevel}
+            title={userProgress.title}
+          />
+          <StreakDisplay
+            currentStreak={userProgress.streak}
+            longestStreak={userProgress.longestStreak || userProgress.streak}
+          />
+        </div>
+      )}
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -229,6 +262,19 @@ export default function ClientDashboard() {
           </Button>
         </div>
       </div>
+      
+      <XPNotification
+        amount={xpNotification?.amount || 0}
+        reason={xpNotification?.reason}
+        show={!!xpNotification}
+        onComplete={clearXPNotification}
+      />
+      
+      <LevelUpNotification
+        level={levelUpNotification || 1}
+        show={!!levelUpNotification}
+        onComplete={clearLevelUpNotification}
+      />
     </div>
   );
 }
