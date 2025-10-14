@@ -31,6 +31,7 @@ import Growth from "@/pages/Growth";
 import Settings from "@/pages/Settings";
 import Admin from "@/pages/Admin";
 import DevFlags from "@/pages/DevFlags";
+import Challenges from "@/pages/Challenges";
 import NotFound from "@/pages/NotFound";
 
 export default function App() {
@@ -51,6 +52,7 @@ export default function App() {
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/workout" element={<WorkoutLogger />} />
             <Route path="/progress" element={<Progress />} />
+            <Route path="/challenges" element={<Challenges />} />
             <Route path="/programs" element={<Programs />} />
             <Route path="/clients" element={<Clients />} />
             <Route path="/dashboard/clients" element={<TrainerClients />} />

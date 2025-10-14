@@ -29,7 +29,7 @@ export default function Landing() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted">
+    <div className="min-h-screen bg-gradient-to-b from-background to-background/80">
       {/* Hero Section */}
       <div className="container mx-auto px-4 pt-20 pb-16">
         <div className="text-center max-w-3xl mx-auto">
