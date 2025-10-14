@@ -5,6 +5,7 @@ import type {
   ClientProgress, InboxDraft, MetricSnapshot
 } from './types';
 import * as seed from './seed';
+import * as gamificationData from './gamificationData';
 
 const STORAGE_KEY = 'trainu-mock-db';
 
@@ -34,9 +35,6 @@ export interface MockDB {
 }
 
 function getInitialDB(): MockDB {
-  // Lazy load gamification data
-  const gamificationData = require('./gamificationData');
-  
   return {
     users: [...seed.seedUsers],
     posts: [...seed.seedPosts],
