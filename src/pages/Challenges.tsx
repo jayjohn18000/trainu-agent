@@ -3,6 +3,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChallengeCard } from "@/components/ui/ChallengeCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StreakDisplay } from "@/components/ui/StreakDisplay";
+import { XPNotification, LevelUpNotification } from "@/components/ui/XPNotification";
+import { AchievementUnlockNotification } from "@/components/ui/AchievementUnlockNotification";
+import { useGamification } from "@/hooks/useGamification";
 import { Calendar, Flame, Target } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -72,6 +75,7 @@ const monthlyQuests = [
 
 export default function Challenges() {
   const { toast } = useToast();
+  const { grantXP, xpNotification, levelUpNotification, achievementUnlock, clearXPNotification, clearLevelUpNotification, clearAchievementUnlock } = useGamification();
   const [challenges, setChallenges] = useState({
     daily: dailyChallenges,
     weekly: weeklyChallenges,
@@ -143,6 +147,25 @@ export default function Challenges() {
           </div>
         </TabsContent>
       </Tabs>
+      
+      <XPNotification
+        amount={xpNotification?.amount || 0}
+        reason={xpNotification?.reason}
+        show={!!xpNotification}
+        onComplete={clearXPNotification}
+      />
+      
+      <LevelUpNotification
+        level={levelUpNotification || 1}
+        show={!!levelUpNotification}
+        onComplete={clearLevelUpNotification}
+      />
+      
+      <AchievementUnlockNotification
+        achievement={achievementUnlock}
+        show={!!achievementUnlock}
+        onComplete={clearAchievementUnlock}
+      />
     </div>
   );
 }

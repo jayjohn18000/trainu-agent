@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Trophy, TrendingUp, Plus, Dumbbell } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { useGamification } from "@/hooks/useGamification";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 type PersonalRecord = {
@@ -18,6 +19,7 @@ type PersonalRecord = {
 };
 
 export function PersonalRecordsTab() {
+  const { grantXP } = useGamification();
   const [records, setRecords] = useState<PersonalRecord[]>([
     { id: "1", exercise: "Barbell Bench Press", weight: 225, reps: 5, date: "2025-10-01", category: "strength" },
     { id: "2", exercise: "Barbell Squat", weight: 315, reps: 5, date: "2025-09-28", category: "strength" },
@@ -56,6 +58,9 @@ export function PersonalRecordsTab() {
     setRecords(prev => [record, ...prev]);
     setNewRecord({ exercise: "", weight: "", reps: "" });
     setIsDialogOpen(false);
+    
+    // Award XP for setting a personal record
+    grantXP(75, "Personal Record Set");
     
     toast({
       title: "Personal Record Added! 🎉",

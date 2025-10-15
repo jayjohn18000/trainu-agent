@@ -3,6 +3,9 @@ import { Card } from "@/components/ui/card";
 import { ConversationList } from "@/components/messages/ConversationList";
 import { ChatWindow } from "@/components/messages/ChatWindow";
 import { ConversationSkeletonList } from "@/components/skeletons/ConversationSkeleton";
+import { XPNotification, LevelUpNotification } from "@/components/ui/XPNotification";
+import { AchievementUnlockNotification } from "@/components/ui/AchievementUnlockNotification";
+import { useGamification } from "@/hooks/useGamification";
 import { toast } from "@/hooks/use-toast";
 
 const mockConversations = [
@@ -117,6 +120,7 @@ const mockMessages = {
 };
 
 export default function Messages() {
+  const { grantXP, xpNotification, levelUpNotification, achievementUnlock, clearXPNotification, clearLevelUpNotification, clearAchievementUnlock } = useGamification();
   const [isLoading, setIsLoading] = useState(true);
   const [selectedConvId, setSelectedConvId] = useState(mockConversations[0].id);
   const [messages, setMessages] = useState(mockMessages);
@@ -145,6 +149,9 @@ export default function Messages() {
       ...prev,
       [selectedConvId]: [...(prev[selectedConvId as keyof typeof prev] || []), newMessage],
     }));
+
+    // Award XP for messaging
+    grantXP(10, "Message Sent");
 
     toast({
       title: "Message sent",
@@ -185,6 +192,25 @@ export default function Messages() {
           )}
         </div>
       </Card>
+      
+      <XPNotification
+        amount={xpNotification?.amount || 0}
+        reason={xpNotification?.reason}
+        show={!!xpNotification}
+        onComplete={clearXPNotification}
+      />
+      
+      <LevelUpNotification
+        level={levelUpNotification || 1}
+        show={!!levelUpNotification}
+        onComplete={clearLevelUpNotification}
+      />
+      
+      <AchievementUnlockNotification
+        achievement={achievementUnlock}
+        show={!!achievementUnlock}
+        onComplete={clearAchievementUnlock}
+      />
     </div>
   );
 }
