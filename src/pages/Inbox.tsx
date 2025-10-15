@@ -12,12 +12,24 @@ import { useAuthStore } from "@/lib/store/useAuthStore";
 import { toast } from "@/hooks/use-toast";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { format } from "date-fns";
+import { useGamification } from "@/hooks/useGamification";
+import { XPNotification, LevelUpNotification } from "@/components/ui/XPNotification";
+import { AchievementUnlockNotification } from "@/components/ui/AchievementUnlockNotification";
 
 export default function Inbox() {
   const { user } = useAuthStore();
   const [drafts, setDrafts] = useState<InboxDraft[]>([]);
   const [editingDraft, setEditingDraft] = useState<InboxDraft | null>(null);
   const [editedContent, setEditedContent] = useState("");
+  const { 
+    grantXP, 
+    xpNotification, 
+    levelUpNotification, 
+    achievementUnlock,
+    clearXPNotification, 
+    clearLevelUpNotification,
+    clearAchievementUnlock
+  } = useGamification();
 
   const isTrainerOrAdmin = user?.role === 'trainer' || user?.role === 'gym_admin';
 
@@ -60,6 +72,7 @@ export default function Inbox() {
   const handleSend = async (draft: InboxDraft) => {
     await updateInboxDraftStatus(draft.id, 'sent');
     loadDrafts();
+    grantXP(15, "Client Message Sent");
     toast({
       title: "Message sent",
       description: "Sent via Go High Level"
@@ -249,6 +262,25 @@ export default function Inbox() {
           </DialogContent>
         </Dialog>
       )}
+
+      <XPNotification 
+        amount={xpNotification?.amount || 0}
+        reason={xpNotification?.reason}
+        show={!!xpNotification}
+        onComplete={clearXPNotification}
+      />
+      
+      <LevelUpNotification 
+        level={levelUpNotification || 0}
+        show={!!levelUpNotification}
+        onComplete={clearLevelUpNotification}
+      />
+
+      <AchievementUnlockNotification
+        achievement={achievementUnlock}
+        show={!!achievementUnlock}
+        onComplete={clearAchievementUnlock}
+      />
     </div>
   );
 }

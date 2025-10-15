@@ -3,6 +3,8 @@ import { CheckCircle, Calendar, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { BookingData } from "./BookingWizard";
 import { useNavigate } from "react-router-dom";
+import { useGamification } from "@/hooks/useGamification";
+import { useEffect } from "react";
 
 type Props = {
   bookingData: BookingData;
@@ -12,6 +14,11 @@ type Props = {
 export function SuccessStep({ bookingData, onClose }: Props) {
   const navigate = useNavigate();
   const { sessionType, trainer, date, time } = bookingData;
+  const { grantXP } = useGamification();
+
+  useEffect(() => {
+    grantXP(20, "Session Booked");
+  }, [grantXP]);
 
   const handleViewCalendar = () => {
     onClose();

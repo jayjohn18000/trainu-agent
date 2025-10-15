@@ -4,8 +4,20 @@ import { ProgressPhotosTab } from "@/components/progress/ProgressPhotosTab";
 import { PersonalRecordsTab } from "@/components/progress/PersonalRecordsTab";
 import { AchievementsTab } from "@/components/progress/AchievementsTab";
 import { LeaderboardsTab } from "@/components/progress/LeaderboardsTab";
+import { useGamification } from "@/hooks/useGamification";
+import { XPNotification, LevelUpNotification } from "@/components/ui/XPNotification";
+import { AchievementUnlockNotification } from "@/components/ui/AchievementUnlockNotification";
 
 export default function Progress() {
+  const { 
+    xpNotification, 
+    levelUpNotification, 
+    achievementUnlock,
+    clearXPNotification, 
+    clearLevelUpNotification,
+    clearAchievementUnlock
+  } = useGamification();
+
   return (
     <div className="space-y-6">
       <div>
@@ -42,6 +54,25 @@ export default function Progress() {
           <LeaderboardsTab />
         </TabsContent>
       </Tabs>
+
+      <XPNotification 
+        amount={xpNotification?.amount || 0}
+        reason={xpNotification?.reason}
+        show={!!xpNotification}
+        onComplete={clearXPNotification}
+      />
+      
+      <LevelUpNotification 
+        level={levelUpNotification || 0}
+        show={!!levelUpNotification}
+        onComplete={clearLevelUpNotification}
+      />
+
+      <AchievementUnlockNotification
+        achievement={achievementUnlock}
+        show={!!achievementUnlock}
+        onComplete={clearAchievementUnlock}
+      />
     </div>
   );
 }
