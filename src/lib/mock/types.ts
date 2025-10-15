@@ -205,14 +205,16 @@ export interface ClientProgress {
 
 export interface Achievement {
   id: string;
+  userId?: string;
   name: string;
   description: string;
-  category: 'consistency' | 'strength' | 'social' | 'transformation';
+  category?: 'consistency' | 'strength' | 'social' | 'transformation';
   tier: 'bronze' | 'silver' | 'gold' | 'platinum';
   icon: string; // emoji or icon name
   unlockedAt?: string;
   progress?: number; // 0-100 for locked achievements
-  milestone: number; // e.g., "10 sessions" = 10
+  milestone?: number; // e.g., "10 sessions" = 10
+  xpReward?: number; // XP awarded when unlocked
 }
 
 export interface Challenge {
