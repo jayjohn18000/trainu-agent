@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { ScreenReaderOnly } from "./system/ScreenReaderOnly";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
+import { NotificationCenter } from "./NotificationCenter";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
@@ -42,6 +43,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           <h2 className="text-lg sm:text-xl font-bold text-primary">TrainU</h2>
         </div>
         <div className="flex items-center gap-2 sm:gap-4">
+          <NotificationCenter />
           <Button
             variant="ghost"
             size="icon"

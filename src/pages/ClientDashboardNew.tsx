@@ -10,7 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Calendar, Clock, Plus, TrendingUp, Trophy, Target, Zap, Award, Users } from "lucide-react";
+import { Calendar, Clock, Plus, TrendingUp, Trophy, Target, Zap, Award, Users, Dumbbell, Camera, ArrowRight } from "lucide-react";
 import { StreakDisplay } from "@/components/ui/StreakDisplay";
 import { LevelDisplay } from "@/components/ui/LevelDisplay";
 import { ChallengeCard } from "@/components/ui/ChallengeCard";
@@ -257,6 +257,57 @@ export default function ClientDashboardNew() {
         </Card>
       </div>
 
+      {/* Quick Actions - Deep Link Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card 
+          className="p-5 hover:shadow-lg transition-all cursor-pointer group hover:border-primary/50"
+          onClick={() => navigate("/progress?tab=challenges")}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="h-10 w-10 rounded-full bg-orange-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Target className="h-5 w-5 text-orange-500" />
+            </div>
+            <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+          </div>
+          <h4 className="font-semibold mb-1">Active Challenges</h4>
+          <p className="text-sm text-muted-foreground">
+            {challenges.filter(c => c.progress < 100).length} active · Earn XP & rewards
+          </p>
+        </Card>
+
+        <Card 
+          className="p-5 hover:shadow-lg transition-all cursor-pointer group hover:border-primary/50"
+          onClick={() => navigate("/progress?tab=measurements")}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <TrendingUp className="h-5 w-5 text-blue-500" />
+            </div>
+            <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+          </div>
+          <h4 className="font-semibold mb-1">Track Progress</h4>
+          <p className="text-sm text-muted-foreground">
+            Log measurements & view trends
+          </p>
+        </Card>
+
+        <Card 
+          className="p-5 hover:shadow-lg transition-all cursor-pointer group hover:border-primary/50"
+          onClick={() => navigate("/workout-logger")}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="h-10 w-10 rounded-full bg-green-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Dumbbell className="h-5 w-5 text-green-500" />
+            </div>
+            <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+          </div>
+          <h4 className="font-semibold mb-1">Log Workout</h4>
+          <p className="text-sm text-muted-foreground">
+            Record today's session
+          </p>
+        </Card>
+      </div>
+
       {/* Recent Achievements */}
       <Card className="p-6 bg-gradient-to-br from-yellow-500/5 to-orange-500/5">
         <div className="flex items-center justify-between mb-4">
@@ -264,8 +315,14 @@ export default function ClientDashboardNew() {
             <Award className="h-5 w-5 text-yellow-600" />
             <h3 className="text-lg font-semibold">Recent Achievements</h3>
           </div>
-          <Button variant="ghost" size="sm" onClick={() => navigate("/progress")}>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => navigate("/progress?tab=achievements")}
+            className="gap-1"
+          >
             View All
+            <ArrowRight className="h-3 w-3" />
           </Button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -317,8 +374,14 @@ export default function ClientDashboardNew() {
             <Users className="h-5 w-5 text-blue-500" />
             <h3 className="text-lg font-semibold">Community Leaderboard</h3>
           </div>
-          <Button variant="ghost" size="sm" onClick={() => navigate("/community")}>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => navigate("/progress?tab=leaderboards")}
+            className="gap-1"
+          >
             View Full
+            <ArrowRight className="h-3 w-3" />
           </Button>
         </div>
         <div className="space-y-2">

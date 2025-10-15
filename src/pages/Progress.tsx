@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChallengesTab } from "@/components/progress/ChallengesTab";
 import { MeasurementsTab } from "@/components/progress/MeasurementsTab";
@@ -10,6 +12,9 @@ import { XPNotification, LevelUpNotification } from "@/components/ui/XPNotificat
 import { AchievementUnlockNotification } from "@/components/ui/AchievementUnlockNotification";
 
 export default function Progress() {
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "challenges");
+  
   const { 
     xpNotification, 
     levelUpNotification, 
@@ -19,6 +24,11 @@ export default function Progress() {
     clearAchievementUnlock
   } = useGamification();
 
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab) setActiveTab(tab);
+  }, [searchParams]);
+
   return (
     <div className="space-y-6">
       <div>
@@ -26,15 +36,36 @@ export default function Progress() {
         <p className="text-sm sm:text-base text-muted-foreground">Track measurements, photos, and personal records</p>
       </div>
 
-      <Tabs defaultValue="challenges" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6">
-          <TabsTrigger value="challenges" className="min-h-[44px]">Challenges</TabsTrigger>
-          <TabsTrigger value="measurements" className="min-h-[44px]">Measurements</TabsTrigger>
-          <TabsTrigger value="photos" className="min-h-[44px]">Photos</TabsTrigger>
-          <TabsTrigger value="records" className="min-h-[44px]">Records</TabsTrigger>
-          <TabsTrigger value="achievements" className="min-h-[44px]">Achievements</TabsTrigger>
-          <TabsTrigger value="leaderboards" className="min-h-[44px]">Leaderboards</TabsTrigger>
-        </TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <div className="mb-4">
+          <div className="text-sm font-medium text-muted-foreground mb-3">TRACK YOUR JOURNEY</div>
+          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 gap-1">
+            <TabsTrigger value="challenges" className="min-h-[44px] gap-2">
+              <span className="hidden sm:inline">🎯</span>
+              Challenges
+            </TabsTrigger>
+            <TabsTrigger value="measurements" className="min-h-[44px] gap-2">
+              <span className="hidden sm:inline">📏</span>
+              Measurements
+            </TabsTrigger>
+            <TabsTrigger value="photos" className="min-h-[44px] gap-2">
+              <span className="hidden sm:inline">📷</span>
+              Photos
+            </TabsTrigger>
+            <TabsTrigger value="records" className="min-h-[44px] gap-2">
+              <span className="hidden sm:inline">🏋️</span>
+              Records
+            </TabsTrigger>
+            <TabsTrigger value="achievements" className="min-h-[44px] gap-2">
+              <span className="hidden sm:inline">🏆</span>
+              Achievements
+            </TabsTrigger>
+            <TabsTrigger value="leaderboards" className="min-h-[44px] gap-2">
+              <span className="hidden sm:inline">👥</span>
+              Leaderboards
+            </TabsTrigger>
+          </TabsList>
+        </div>
         
         <TabsContent value="challenges" className="mt-6">
           <ChallengesTab />
