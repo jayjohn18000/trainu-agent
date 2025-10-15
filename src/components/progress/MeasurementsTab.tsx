@@ -6,8 +6,10 @@ import { Label } from "@/components/ui/label";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { TrendingUp, TrendingDown, Calendar } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { useGamification } from "@/hooks/useGamification";
 
 export function MeasurementsTab() {
+  const { grantXP } = useGamification();
   const [measurements, setMeasurements] = useState({
     weight: "",
     bodyFat: "",
@@ -33,7 +35,7 @@ export function MeasurementsTab() {
     { date: "2025-09-17", weight: 175, bodyFat: 20.5, waist: 34.5 },
   ];
 
-  const handleLogMeasurement = () => {
+  const handleLogMeasurement = async () => {
     const hasData = Object.values(measurements).some(val => val !== "");
     if (!hasData) {
       toast({ 
@@ -43,6 +45,8 @@ export function MeasurementsTab() {
       });
       return;
     }
+    
+    await grantXP(35, "Measurements Logged");
     
     toast({
       title: "Measurements Logged",

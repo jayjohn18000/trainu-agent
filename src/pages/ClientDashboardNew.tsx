@@ -29,10 +29,22 @@ import type { Session, ClientProgress, Goal, CheckInType, RPELevel, Challenge } 
 import { useAuthStore } from "@/lib/store/useAuthStore";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { useGamification } from "@/hooks/useGamification";
+import { XPNotification, LevelUpNotification } from "@/components/ui/XPNotification";
+import { AchievementUnlockNotification } from "@/components/ui/AchievementUnlockNotification";
 
 export default function ClientDashboardNew() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const { 
+    grantXP, 
+    xpNotification, 
+    levelUpNotification, 
+    achievementUnlock,
+    clearXPNotification, 
+    clearLevelUpNotification,
+    clearAchievementUnlock
+  } = useGamification();
   const [nextSession, setNextSession] = useState<Session | null>(null);
   const [progress, setProgress] = useState<ClientProgress | null>(null);
   const [goals, setGoals] = useState<Goal[]>([]);
@@ -76,6 +88,13 @@ export default function ClientDashboardNew() {
       type,
       rpe,
     });
+    
+    // Award XP based on check-in type
+    if (type === 'completed') {
+      await grantXP(30, "Session Completed");
+    } else if (type === 'partial') {
+      await grantXP(15, "Partial Session");
+    }
     
     toast({
       title: "Check-in recorded!",
@@ -414,6 +433,25 @@ export default function ClientDashboardNew() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <XPNotification 
+        amount={xpNotification?.amount || 0}
+        reason={xpNotification?.reason}
+        show={!!xpNotification}
+        onComplete={clearXPNotification}
+      />
+      
+      <LevelUpNotification 
+        level={levelUpNotification || 0}
+        show={!!levelUpNotification}
+        onComplete={clearLevelUpNotification}
+      />
+
+      <AchievementUnlockNotification
+        achievement={achievementUnlock}
+        show={!!achievementUnlock}
+        onComplete={clearAchievementUnlock}
+      />
     </div>
   );
 }

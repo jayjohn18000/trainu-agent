@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Camera, Upload, Trash2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { useGamification } from "@/hooks/useGamification";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,6 +23,7 @@ type ProgressPhoto = {
 };
 
 export function ProgressPhotosTab() {
+  const { grantXP } = useGamification();
   const [photos, setPhotos] = useState<ProgressPhoto[]>([
     { id: "1", date: "2025-10-01", url: "/placeholder.svg", angle: "front" },
     { id: "2", date: "2025-10-01", url: "/placeholder.svg", angle: "side" },
@@ -33,7 +35,8 @@ export function ProgressPhotosTab() {
   
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  const handleUpload = () => {
+  const handleUpload = async () => {
+    await grantXP(40, "Progress Photo Uploaded");
     toast({
       title: "Upload Photo",
       description: "Photo upload functionality will be implemented",
