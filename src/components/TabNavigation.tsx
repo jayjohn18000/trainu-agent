@@ -39,8 +39,6 @@ const subTabs: Record<MainTab, SubTab[]> = {
   home: [
     { label: "Dashboard", path: "/me", roles: ["client"] },
     { label: "Progress", path: "/progress", roles: ["client"] },
-    { label: "Challenges", path: "/challenges", roles: ["client"] },
-    { label: "Calendar", path: "/calendar", roles: ["client"] },
     { label: "Discover", path: "/discover", roles: ["client"] },
     { label: "Dashboard", path: "/dashboard/trainer", roles: ["trainer"] },
     { label: "My Clients", path: "/dashboard/clients", roles: ["trainer"] },
@@ -54,7 +52,6 @@ const subTabs: Record<MainTab, SubTab[]> = {
     { label: "Feed", path: "/community" },
     { label: "Events", path: "/events" },
     { label: "People", path: "/community/people" },
-    { label: "Store", path: "/store" },
   ],
   settings: [
     { label: "Profile", path: "/settings" },

@@ -5,10 +5,30 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, MapPin, Star, CheckCircle2, SlidersHorizontal, X } from "lucide-react";
+import { Search, MapPin, Star, CheckCircle2, SlidersHorizontal, X, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { listTrainers, type Trainer } from "@/lib/mock/api";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+// Mock data for my trainers
+const MY_TRAINERS: Trainer[] = [
+  {
+    id: "t1",
+    name: "Alex Carter",
+    slug: "alex-carter",
+    email: "alex@example.com",
+    city: "Chicago",
+    state: "IL",
+    avatarUrl: "https://i.pravatar.cc/150?img=1",
+    specialties: ["Strength", "Mobility"],
+    verified: true,
+    bio: "Former collegiate athlete focused on sustainable strength training",
+    rating: 4.8,
+    reviewCount: 45,
+    gymId: "gym1"
+  }
+];
 
 export default function Discover() {
   const navigate = useNavigate();
@@ -101,6 +121,77 @@ export default function Discover() {
         <p className="text-muted-foreground">Find the perfect trainer for your fitness goals</p>
       </div>
 
+      <Tabs defaultValue="all" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 max-w-md">
+          <TabsTrigger value="my-trainers" className="gap-2">
+            <Users className="h-4 w-4" />
+            My Trainers
+          </TabsTrigger>
+          <TabsTrigger value="all" className="gap-2">
+            <Search className="h-4 w-4" />
+            All Trainers
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="my-trainers" className="mt-6 space-y-6">
+          {MY_TRAINERS.length === 0 ? (
+            <Card className="p-12 text-center">
+              <Users className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+              <h3 className="text-lg font-semibold mb-2">No trainers yet</h3>
+              <p className="text-muted-foreground mb-4">
+                Book your first session to add a trainer to this list
+              </p>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {MY_TRAINERS.map((trainer) => (
+                <Card key={trainer.id} className="p-6 hover:border-primary/50 transition-colors">
+                  <div className="flex items-center gap-4 mb-4">
+                    <Avatar className="h-16 w-16">
+                      <AvatarImage src={trainer.avatarUrl} alt={trainer.name} />
+                      <AvatarFallback>{trainer.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold">{trainer.name}</h3>
+                        {trainer.verified && <CheckCircle2 className="h-4 w-4 text-primary" />}
+                      </div>
+                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                        <MapPin className="h-3 w-3" />
+                        {trainer.city}, {trainer.state}
+                      </div>
+                      {trainer.rating && (
+                        <div className="flex items-center gap-1 text-sm">
+                          <Star className="h-3 w-3 fill-yellow-500 text-yellow-500" />
+                          <span className="font-medium">{trainer.rating}</span>
+                          <span className="text-muted-foreground">({trainer.reviewCount})</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-1 mb-4">
+                    {trainer.specialties.slice(0, 3).map((specialty) => (
+                      <Badge key={specialty} variant="secondary" className="text-xs">
+                        {specialty}
+                      </Badge>
+                    ))}
+                  </div>
+
+                  {trainer.bio && (
+                    <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{trainer.bio}</p>
+                  )}
+
+                  <Button className="w-full" onClick={() => navigate(`/trainers/${trainer.slug}`)}>
+                    View Profile
+                  </Button>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="all" className="mt-6 space-y-6">
       {/* Search & Filters */}
       <Card className="p-4 space-y-4">
         <div className="flex flex-col md:flex-row gap-3">
@@ -297,6 +388,8 @@ export default function Discover() {
           </Button>
         </Card>
       )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

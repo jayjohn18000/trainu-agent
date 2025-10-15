@@ -1,4 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ChallengesTab } from "@/components/progress/ChallengesTab";
 import { MeasurementsTab } from "@/components/progress/MeasurementsTab";
 import { ProgressPhotosTab } from "@/components/progress/ProgressPhotosTab";
 import { PersonalRecordsTab } from "@/components/progress/PersonalRecordsTab";
@@ -25,14 +26,19 @@ export default function Progress() {
         <p className="text-sm sm:text-base text-muted-foreground">Track measurements, photos, and personal records</p>
       </div>
 
-      <Tabs defaultValue="measurements" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+      <Tabs defaultValue="challenges" className="w-full">
+        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6">
+          <TabsTrigger value="challenges" className="min-h-[44px]">Challenges</TabsTrigger>
           <TabsTrigger value="measurements" className="min-h-[44px]">Measurements</TabsTrigger>
           <TabsTrigger value="photos" className="min-h-[44px]">Photos</TabsTrigger>
           <TabsTrigger value="records" className="min-h-[44px]">Records</TabsTrigger>
           <TabsTrigger value="achievements" className="min-h-[44px]">Achievements</TabsTrigger>
           <TabsTrigger value="leaderboards" className="min-h-[44px]">Leaderboards</TabsTrigger>
         </TabsList>
+        
+        <TabsContent value="challenges" className="mt-6">
+          <ChallengesTab />
+        </TabsContent>
         
         <TabsContent value="measurements" className="mt-6">
           <MeasurementsTab />

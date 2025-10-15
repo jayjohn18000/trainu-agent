@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { useNavigate } from "react-router-dom";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +13,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { MessageSquare, Heart, Image as ImageIcon, Pin } from "lucide-react";
+import { MessageSquare, Heart, Image as ImageIcon, Pin, ShoppingBag } from "lucide-react";
 import {
   listPosts,
   createPost,
@@ -29,6 +30,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { formatDistanceToNow } from "date-fns";
 
 export default function Community() {
+  const navigate = useNavigate();
   const { user } = useAuthStore();
   const [posts, setPosts] = useState<Post[]>([]);
   const [newPostContent, setNewPostContent] = useState("");
@@ -192,6 +194,20 @@ export default function Community() {
           </p>
         </Card>
       )}
+
+      {/* Store Card */}
+      <Card className="p-6 bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20 hover:border-primary/40 transition-colors cursor-pointer" onClick={() => navigate("/store")}>
+        <div className="flex items-center gap-4">
+          <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+            <ShoppingBag className="h-6 w-6 text-primary" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-semibold text-lg">Community Store</h3>
+            <p className="text-sm text-muted-foreground">Browse exclusive merchandise and member perks</p>
+          </div>
+          <Button variant="outline">Browse</Button>
+        </div>
+      </Card>
 
       {posts.length === 0 && (
         <EmptyState

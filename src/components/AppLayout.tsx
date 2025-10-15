@@ -1,7 +1,7 @@
 import { RoleSwitcher } from "./RoleSwitcher";
 import { TabNavigation } from "./TabNavigation";
 import { Button } from "./ui/button";
-import { ArrowLeft, Settings, Menu } from "lucide-react";
+import { ArrowLeft, Settings, Menu, Calendar } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ScreenReaderOnly } from "./system/ScreenReaderOnly";
 import { useState } from "react";
@@ -42,6 +42,15 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           <h2 className="text-lg sm:text-xl font-bold text-primary">TrainU</h2>
         </div>
         <div className="flex items-center gap-2 sm:gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate("/calendar")}
+            aria-label="Open calendar"
+          >
+            <Calendar className="h-5 w-5" />
+            <ScreenReaderOnly>Calendar</ScreenReaderOnly>
+          </Button>
           <Button
             variant="ghost"
             size="icon"
