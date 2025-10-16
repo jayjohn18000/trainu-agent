@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
 import { ChallengesTab } from "@/components/progress/ChallengesTab";
 import { MeasurementsTab } from "@/components/progress/MeasurementsTab";
 import { ProgressPhotosTab } from "@/components/progress/ProgressPhotosTab";
@@ -38,44 +37,34 @@ export default function Progress() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="space-y-6">
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <span className="text-lg">🎯</span>
-              <h2 className="text-sm font-semibold">Track Your Journey</h2>
-            </div>
-            <TabsList className="grid w-full grid-cols-3 gap-1">
-              <TabsTrigger value="challenges" className="min-h-[44px]">
-                Challenges
-              </TabsTrigger>
-              <TabsTrigger value="measurements" className="min-h-[44px]">
-                Measurements
-              </TabsTrigger>
-              <TabsTrigger value="photos" className="min-h-[44px]">
-                Photos
-              </TabsTrigger>
-            </TabsList>
-          </div>
-          
-          <Separator />
-          
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <span className="text-lg">🏆</span>
-              <h2 className="text-sm font-semibold">Compete & Achieve</h2>
-            </div>
-            <TabsList className="grid w-full grid-cols-3 gap-1">
-              <TabsTrigger value="records" className="min-h-[44px]">
-                Records
-              </TabsTrigger>
-              <TabsTrigger value="achievements" className="min-h-[44px]">
-                Achievements
-              </TabsTrigger>
-              <TabsTrigger value="leaderboards" className="min-h-[44px]">
-                Leaderboards
-              </TabsTrigger>
-            </TabsList>
-          </div>
+        <div className="mb-4">
+          <div className="text-sm font-medium text-muted-foreground mb-3">TRACK YOUR JOURNEY</div>
+          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 gap-1">
+            <TabsTrigger value="challenges" className="min-h-[44px] gap-2">
+              <span className="hidden sm:inline">🎯</span>
+              Challenges
+            </TabsTrigger>
+            <TabsTrigger value="measurements" className="min-h-[44px] gap-2">
+              <span className="hidden sm:inline">📏</span>
+              Measurements
+            </TabsTrigger>
+            <TabsTrigger value="photos" className="min-h-[44px] gap-2">
+              <span className="hidden sm:inline">📷</span>
+              Photos
+            </TabsTrigger>
+            <TabsTrigger value="records" className="min-h-[44px] gap-2">
+              <span className="hidden sm:inline">🏋️</span>
+              Records
+            </TabsTrigger>
+            <TabsTrigger value="achievements" className="min-h-[44px] gap-2">
+              <span className="hidden sm:inline">🏆</span>
+              Achievements
+            </TabsTrigger>
+            <TabsTrigger value="leaderboards" className="min-h-[44px] gap-2">
+              <span className="hidden sm:inline">👥</span>
+              Leaderboards
+            </TabsTrigger>
+          </TabsList>
         </div>
         
         <TabsContent value="challenges" className="mt-6">
