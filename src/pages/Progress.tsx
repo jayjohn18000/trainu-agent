@@ -37,34 +37,36 @@ export default function Progress() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="mb-4">
-          <div className="text-sm font-medium text-muted-foreground mb-3">TRACK YOUR JOURNEY</div>
-          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 gap-1">
-            <TabsTrigger value="challenges" className="min-h-[44px] gap-2">
-              <span className="hidden sm:inline">🎯</span>
-              Challenges
-            </TabsTrigger>
-            <TabsTrigger value="measurements" className="min-h-[44px] gap-2">
-              <span className="hidden sm:inline">📏</span>
-              Measurements
-            </TabsTrigger>
-            <TabsTrigger value="photos" className="min-h-[44px] gap-2">
-              <span className="hidden sm:inline">📷</span>
-              Photos
-            </TabsTrigger>
-            <TabsTrigger value="records" className="min-h-[44px] gap-2">
-              <span className="hidden sm:inline">🏋️</span>
-              Records
-            </TabsTrigger>
-            <TabsTrigger value="achievements" className="min-h-[44px] gap-2">
-              <span className="hidden sm:inline">🏆</span>
-              Achievements
-            </TabsTrigger>
-            <TabsTrigger value="leaderboards" className="min-h-[44px] gap-2">
-              <span className="hidden sm:inline">👥</span>
-              Leaderboards
-            </TabsTrigger>
-          </TabsList>
+        <div className="mb-4 space-y-4">
+          <div>
+            <div className="text-xs font-medium text-muted-foreground mb-2">🎯 TRACK</div>
+            <TabsList className="grid w-full grid-cols-3 gap-1">
+              <TabsTrigger value="challenges" className="min-h-[44px]">
+                Challenges
+              </TabsTrigger>
+              <TabsTrigger value="measurements" className="min-h-[44px]">
+                Measurements
+              </TabsTrigger>
+              <TabsTrigger value="photos" className="min-h-[44px]">
+                Photos
+              </TabsTrigger>
+            </TabsList>
+          </div>
+          
+          <div>
+            <div className="text-xs font-medium text-muted-foreground mb-2">🏆 COMPETE</div>
+            <TabsList className="grid w-full grid-cols-3 gap-1">
+              <TabsTrigger value="records" className="min-h-[44px]">
+                Records
+              </TabsTrigger>
+              <TabsTrigger value="achievements" className="min-h-[44px]">
+                Achievements
+              </TabsTrigger>
+              <TabsTrigger value="leaderboards" className="min-h-[44px]">
+                Leaderboards
+              </TabsTrigger>
+            </TabsList>
+          </div>
         </div>
         
         <TabsContent value="challenges" className="mt-6">
