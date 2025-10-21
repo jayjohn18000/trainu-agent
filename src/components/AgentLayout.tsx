@@ -1,10 +1,14 @@
-import { ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
+import { ReactNode, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Avatar, AvatarFallback } from "./ui/avatar";
-import { Badge } from "./ui/badge";
-import { Search } from "lucide-react";
+import { AgentStatusBar } from "./agent/AgentStatusBar";
+import { CommandPalette } from "./agent/CommandPalette";
+import { fixtures } from "@/lib/fixtures";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { cn } from "@/lib/utils";
+import { Home, Users, Settings as SettingsIcon } from "lucide-react";
 
 interface AgentLayoutProps {
   children: ReactNode;
@@ -12,6 +16,25 @@ interface AgentLayoutProps {
 
 export function AgentLayout({ children }: AgentLayoutProps) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [commandOpen, setCommandOpen] = useState(false);
+  const [agentState, setAgentState] = useState<"active" | "paused">("active");
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts([
+    {
+      key: "/",
+      callback: () => setCommandOpen(true),
+      description: "Open command palette",
+    },
+    {
+      key: "p",
+      callback: () => setAgentState((s) => (s === "active" ? "paused" : "active")),
+      description: "Pause/Resume agent",
+    },
+  ]);
+
+  const isActive = (path: string) => location.pathname === path;
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -28,24 +51,26 @@ export function AgentLayout({ children }: AgentLayoutProps) {
 
           {/* Search - Cmd/Ctrl+K */}
           <div className="hidden md:flex flex-1 max-w-md mx-8">
-            <div className="relative w-full">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search (Cmd+K)"
-                className="pl-8 pr-4"
-                onClick={() => {
-                  // TODO: Open command palette
-                }}
-              />
-            </div>
+            <Button
+              variant="outline"
+              className="w-full justify-start text-muted-foreground"
+              onClick={() => setCommandOpen(true)}
+            >
+              <span className="text-sm">Search (Cmd+K)</span>
+            </Button>
           </div>
 
           {/* Right Side */}
           <div className="flex items-center gap-3">
-            {/* Agent Status Pill */}
-            <Badge variant="outline" className="bg-green-500/10 text-green-700 border-green-500/20">
-              Active
-            </Badge>
+            {/* Agent Status */}
+            <AgentStatusBar
+              state={agentState}
+              currentAction="Monitoring 12 clients"
+              lastUpdate={new Date(Date.now() - 5 * 60 * 1000)}
+              onToggle={() =>
+                setAgentState((s) => (s === "active" ? "paused" : "active"))
+              }
+            />
 
             {/* User Menu */}
             <Button variant="ghost" size="icon" className="rounded-full">
@@ -68,26 +93,53 @@ export function AgentLayout({ children }: AgentLayoutProps) {
           <Button
             variant="ghost"
             onClick={() => navigate("/today")}
-            className="flex flex-col items-center gap-1 h-auto py-2"
+            className={cn(
+              "flex flex-col items-center gap-1 h-auto py-2",
+              isActive("/today") && "text-primary bg-primary/10"
+            )}
           >
+            <Home className="h-5 w-5" />
             <span className="text-xs font-medium">Today</span>
           </Button>
           <Button
             variant="ghost"
             onClick={() => navigate("/clients")}
-            className="flex flex-col items-center gap-1 h-auto py-2"
+            className={cn(
+              "flex flex-col items-center gap-1 h-auto py-2",
+              isActive("/clients") && "text-primary bg-primary/10"
+            )}
           >
+            <Users className="h-5 w-5" />
             <span className="text-xs font-medium">Clients</span>
           </Button>
           <Button
             variant="ghost"
             onClick={() => navigate("/settings")}
-            className="flex flex-col items-center gap-1 h-auto py-2"
+            className={cn(
+              "flex flex-col items-center gap-1 h-auto py-2",
+              isActive("/settings") && "text-primary bg-primary/10"
+            )}
           >
+            <SettingsIcon className="h-5 w-5" />
             <span className="text-xs font-medium">Settings</span>
           </Button>
         </div>
       </nav>
+
+      {/* Command Palette */}
+      <CommandPalette
+        open={commandOpen}
+        onOpenChange={setCommandOpen}
+        clients={fixtures.clients}
+        isPaused={agentState === "paused"}
+        onPauseAgent={() =>
+          setAgentState((s) => (s === "active" ? "paused" : "active"))
+        }
+        onApproveAllSafe={() => {
+          // TODO: Implement approve all safe
+          console.log("Approve all safe");
+        }}
+      />
     </div>
   );
 }

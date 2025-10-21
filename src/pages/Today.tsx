@@ -1,92 +1,127 @@
+import { useState } from "react";
 import { fixtures } from "@/lib/fixtures";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { QueueCard } from "@/components/agent/QueueCard";
+import { ActivityFeed } from "@/components/agent/ActivityFeed";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 
 export default function Today() {
-  const queue = fixtures.queue;
-  const feed = fixtures.feed;
+  const [queue, setQueue] = useState(fixtures.queue);
+  const [feed, setFeed] = useState(fixtures.feed);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const { toast } = useToast();
+
+  const handleApprove = (id: string) => {
+    const item = queue.find((q) => q.id === id);
+    if (!item) return;
+
+    // Remove from queue
+    setQueue((prev) => prev.filter((q) => q.id !== id));
+
+    // Add to feed
+    const feedItem = {
+      ts: new Date().toISOString(),
+      action: "sent" as const,
+      client: item.clientName,
+      status: "success" as const,
+      why: item.why.join(", "),
+    };
+    setFeed((prev) => [feedItem, ...prev]);
+
+    toast({
+      title: "Message approved",
+      description: `Draft to ${item.clientName} will be sent.`,
+    });
+  };
+
+  const handleEdit = (id: string) => {
+    toast({
+      title: "Edit draft",
+      description: "Opening editor...",
+    });
+    // TODO: Open edit drawer
+  };
+
+  const handleUndo = (id: string) => {
+    // TODO: Implement undo logic
+    toast({
+      title: "Action undone",
+      description: "Draft returned to queue.",
+    });
+  };
+
+  // Keyboard shortcuts for current item
+  useKeyboardShortcuts([
+    {
+      key: "a",
+      callback: () => {
+        if (queue.length > 0 && queue[selectedIndex]) {
+          handleApprove(queue[selectedIndex].id);
+        }
+      },
+      description: "Approve current item",
+    },
+    {
+      key: "e",
+      callback: () => {
+        if (queue.length > 0 && queue[selectedIndex]) {
+          handleEdit(queue[selectedIndex].id);
+        }
+      },
+      description: "Edit current item",
+    },
+  ]);
 
   return (
     <div className="container py-6">
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Main Queue */}
         <div className="flex-1">
-          <h1 className="text-3xl font-bold mb-6">Today</h1>
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-3xl font-bold">Today</h1>
+            {queue.length > 0 && (
+              <Button variant="outline" size="sm">
+                Approve All Safe
+              </Button>
+            )}
+          </div>
 
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold">Queue</h2>
+            <h2 className="text-lg font-semibold">
+              Queue {queue.length > 0 && `(${queue.length})`}
+            </h2>
             {queue.length === 0 ? (
               <Card>
-                <CardContent className="py-8 text-center text-muted-foreground">
-                  All caught up! 🎉
+                <CardContent className="py-12 text-center">
+                  <p className="text-lg font-medium mb-2">All caught up!</p>
+                  <p className="text-sm text-muted-foreground">
+                    No pending drafts at the moment.
+                  </p>
                 </CardContent>
               </Card>
             ) : (
-              queue.map((item) => (
-                <Card key={item.id}>
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="text-base">{item.clientName}</CardTitle>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {item.preview}
-                        </p>
-                      </div>
-                      <Badge
-                        variant={
-                          item.confidence >= 0.8
-                            ? "default"
-                            : item.confidence >= 0.5
-                            ? "secondary"
-                            : "destructive"
-                        }
-                      >
-                        {Math.round(item.confidence * 100)}%
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-sm text-muted-foreground">
-                      <strong>Why suggested:</strong>
-                      <ul className="list-disc list-inside mt-1">
-                        {item.why.map((reason, idx) => (
-                          <li key={idx}>{reason}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  </CardContent>
-                </Card>
+              queue.map((item, idx) => (
+                <div
+                  key={item.id}
+                  onClick={() => setSelectedIndex(idx)}
+                  className={selectedIndex === idx ? "ring-2 ring-primary rounded-lg" : ""}
+                >
+                  <QueueCard
+                    item={item}
+                    onApprove={handleApprove}
+                    onEdit={handleEdit}
+                  />
+                </div>
               ))
             )}
           </div>
         </div>
 
         {/* Activity Feed Sidebar */}
-        <aside className="lg:w-80">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Activity Feed</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {feed.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No recent activity</p>
-              ) : (
-                <div className="space-y-3">
-                  {feed.map((item, idx) => (
-                    <div key={idx} className="text-sm">
-                      <div className="font-medium">{item.client}</div>
-                      <div className="text-muted-foreground">
-                        {item.action} • {item.why}
-                      </div>
-                      <div className="text-xs text-muted-foreground mt-1">
-                        {new Date(item.ts).toLocaleTimeString()}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        <aside className="lg:w-80 hidden lg:block">
+          <ActivityFeed items={feed} />
         </aside>
       </div>
     </div>
