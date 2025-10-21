@@ -7,16 +7,18 @@ import { ValueMetricsWidget } from "@/components/agent/ValueMetricsWidget";
 import { MessagesWidget } from "@/components/agent/MessagesWidget";
 import { CalendarWidget } from "@/components/agent/CalendarWidget";
 import { AtRiskWidget } from "@/components/agent/AtRiskWidget";
+import { ProgramBuilderCard } from "@/components/agent/ProgramBuilderCard";
 import { SettingsModal } from "@/components/modals/SettingsModal";
 import { CalendarModal } from "@/components/modals/CalendarModal";
 import { MessagesModal } from "@/components/modals/MessagesModal";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useTrainerGamification } from "@/hooks/useTrainerGamification";
 import { TrainerXPNotification } from "@/components/gamification/TrainerXPNotification";
-import { Zap, CheckCircle } from "lucide-react";
+import { Zap, CheckCircle, TrendingUp } from "lucide-react";
 import type { QueueItem } from "@/types/agent";
 
 export default function Today() {
@@ -235,19 +237,29 @@ export default function Today() {
                 </div>
               </Card>
             ) : (
-              queue.map((item) => (
-                <QueueCard
-                  key={item.id}
-                  item={item}
-                  onApprove={() => handleApprove(item.id)}
-                  onEdit={() => handleEdit(item.id)}
-                />
-              ))
+              <>
+                {queue.map((item) => (
+                  <QueueCard
+                    key={item.id}
+                    item={item}
+                    onApprove={() => handleApprove(item.id)}
+                    onEdit={() => handleEdit(item.id)}
+                  />
+                ))}
+                <ProgramBuilderCard />
+              </>
             )}
           </div>
 
-          {/* Right Column: Your Impact + Messages */}
+          {/* Right Column: Overview */}
           <div className="space-y-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold">Overview</h2>
+              <Badge variant="outline" className="text-xs">
+                <TrendingUp className="h-3 w-3 mr-1" />
+                ↑ 15%
+              </Badge>
+            </div>
             <ValueMetricsWidget />
             <MessagesWidget onOpenMessages={() => setMessagesOpen(true)} />
           </div>

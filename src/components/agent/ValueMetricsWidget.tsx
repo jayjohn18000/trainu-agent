@@ -62,16 +62,7 @@ export function ValueMetricsWidget() {
 
   return (
     <Card>
-      <CardHeader className="pb-4">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base">Your Impact</CardTitle>
-          <Badge variant="outline" className="text-xs">
-            <TrendingUp className="h-3 w-3 mr-1" />
-            +15% vs last week
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent className="pt-0">
+      <CardContent className="pt-6">
         <div className="grid grid-cols-2 gap-6">
           {metricCards.map((metric) => {
             const Icon = metric.icon;
