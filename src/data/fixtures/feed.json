@@ -1,0 +1,16 @@
+[
+  {
+    "ts": "2025-10-21T13:59:00Z",
+    "action": "drafted",
+    "client": "Emily K",
+    "status": "review",
+    "why": "Missed 2 sessions"
+  },
+  {
+    "ts": "2025-10-21T13:45:00Z",
+    "action": "sent",
+    "client": "Jordan M",
+    "status": "success",
+    "why": "Streak 10"
+  }
+]

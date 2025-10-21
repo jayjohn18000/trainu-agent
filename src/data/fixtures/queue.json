@@ -1,0 +1,22 @@
+[
+  {
+    "id": "q1",
+    "clientId": "c1",
+    "clientName": "Emily K",
+    "preview": "Hey Emily…",
+    "confidence": 0.86,
+    "status": "review",
+    "why": ["Missed 2 sessions", "5K goal"],
+    "createdAt": "2025-10-21T14:00:00Z"
+  },
+  {
+    "id": "q2",
+    "clientId": "c2",
+    "clientName": "Jordan M",
+    "preview": "Congrats on 10-workout streak…",
+    "confidence": 0.92,
+    "status": "autosend",
+    "why": ["Streak 10"],
+    "createdAt": "2025-10-21T13:55:00Z"
+  }
+]

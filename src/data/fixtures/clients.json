@@ -1,0 +1,20 @@
+[
+  {
+    "id": "c1",
+    "name": "Emily K",
+    "risk": 72,
+    "nextAction": "Review draft",
+    "aiInsight": "Missed 2 sessions. Mentions 5K goal.",
+    "lastSeen": "5d",
+    "tags": ["run"]
+  },
+  {
+    "id": "c2",
+    "name": "Jordan M",
+    "risk": 18,
+    "nextAction": "Send congrats",
+    "aiInsight": "Hit 10-workout streak.",
+    "lastSeen": "1d",
+    "tags": ["strength"]
+  }
+]
