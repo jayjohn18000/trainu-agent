@@ -214,23 +214,8 @@ export default function Today() {
           )}
         </div>
 
-        {/* Widgets Bar */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
-          {/* Left Column: Your Impact + Messages */}
-          <div className="space-y-4">
-            <ValueMetricsWidget />
-            <MessagesWidget onOpenMessages={() => setMessagesOpen(true)} />
-          </div>
-          
-          {/* Right Column: Calendar + AtRisk */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-4">
-            <CalendarWidget onOpenCalendar={() => setCalendarOpen(true)} />
-            <AtRiskWidget />
-          </div>
-        </div>
-
         {/* 2-Column Layout: Queue + Activity Feed */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 mb-8">
           {/* Queue Column */}
           <div className="space-y-4">
             <h2 className="text-lg font-semibold">
@@ -261,11 +246,29 @@ export default function Today() {
             )}
           </div>
 
-          {/* Activity Feed Column */}
+          {/* Activity Feed Column - Truncated to match queue */}
           <div className="hidden lg:block">
             <div className="border border-border rounded-lg p-6 bg-card/50 h-full">
-              <ActivityFeed items={feed} onUndo={handleUndo} />
+              <ActivityFeed 
+                items={feed.slice(0, Math.max(8, queue.length))} 
+                onUndo={handleUndo} 
+              />
             </div>
+          </div>
+        </div>
+
+        {/* Widgets Bar */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Left Column: Your Impact + Messages */}
+          <div className="space-y-4">
+            <ValueMetricsWidget />
+            <MessagesWidget onOpenMessages={() => setMessagesOpen(true)} />
+          </div>
+          
+          {/* Right Column: Calendar + AtRisk */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-4">
+            <CalendarWidget onOpenCalendar={() => setCalendarOpen(true)} />
+            <AtRiskWidget />
           </div>
         </div>
       </div>
