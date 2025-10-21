@@ -69,31 +69,37 @@ npm run dev
 1. **Navigate to Today** (`/today`)
    - Review queue items with confidence badges
    - Expand "Why suggested" accordion
-   - Click approve on 2-3 drafts
-   - Observe activity feed update
+   - Press `A` to approve first draft (or click Approve button)
+   - Observe activity feed update in real-time
+   - Approve 2 more drafts
 
-2. **Test Undo**
-   - Click undo on most recent approval
-   - Verify item returns to queue
-   - Re-approve if desired
+2. **Test Keyboard Shortcuts**
+   - Press `Cmd/Ctrl + K` to open command palette
+   - Search for "Emily" to find a client
+   - Press `P` to pause agent (observe status change)
+   - Press `P` again to resume
 
 3. **Client Management** (`/clients`)
-   - View client risk scores
-   - Read AI insights
+   - Use search bar to filter clients
+   - Click on a client card to open Inspector
+   - Review Timeline, Programs, Progress tabs
    - Click "Nudge" button
-   - See success toast and feed update
+   - See success toast
+   - Close Inspector and notice feed updated
 
 4. **Settings** (`/settings`)
    - Change autonomy to "Auto-send Low Risk"
-   - Adjust tone/length preferences
-   - Set quiet hours
-   - Return to Today to see changes reflected
+   - Adjust tone to "Professional"
+   - Set length to "Medium"
+   - Update quiet hours (e.g., 22:00 - 08:00)
+   - Click "Save Changes"
+   - See success toast
 
-5. **Command Palette**
-   - Press `Cmd/Ctrl + K`
-   - Search for a client
-   - Try action: "Pause agent"
-   - Verify AgentStatusBar shows paused state
+5. **Mobile Experience**
+   - Resize browser to mobile width
+   - Test bottom navigation (Today, Clients, Settings)
+   - Open command palette with menu button
+   - Verify responsiveness across all pages
 
 ## Fixtures
 
@@ -106,27 +112,32 @@ Mock data is stored in `src/data/fixtures/`:
 ## Architecture
 
 ### Components
-- `AgentLayout.tsx` - Top bar + mobile nav for agent routes
-- `RedirectHandler.tsx` - Implements 301/410 redirects
-- `AgentStatusBar.tsx` - ⚠️ TODO: Agent state pill with toggle
-- `ActivityFeed.tsx` - ⚠️ TODO: Timeline with virtualized scroll
-- `QueueCard.tsx` - ⚠️ TODO: Draft preview with actions
-- `CommandPalette.tsx` - ⚠️ TODO: Cmd+K quick actions
+- ✅ `AgentLayout.tsx` - Top bar + mobile nav for agent routes
+- ✅ `RedirectHandler.tsx` - Implements 301/410 redirects
+- ✅ `AgentStatusBar.tsx` - Agent state pill with toggle
+- ✅ `ActivityFeed.tsx` - Timeline with real-time updates
+- ✅ `QueueCard.tsx` - Draft preview with actions
+- ✅ `CommandPalette.tsx` - Cmd+K quick actions
+- ✅ `Inspector.tsx` - Client detail tabs with quick actions
+
+### API Integration
+- ✅ Edge functions for all endpoints
+- ✅ Mock mode with AGENT_MOCK=1
+- ✅ Real-time feed updates
+- ✅ Approve/undo/nudge actions
 
 ### Pages
-- `Today.tsx` - Main queue view
-- `ClientsAgent.tsx` - Client management
-- `SettingsAgent.tsx` - Configuration
+- ✅ `Today.tsx` - Queue + feed with interactions
+- ✅ `ClientsAgent.tsx` - Searchable client list + Inspector
+- ✅ `SettingsAgent.tsx` - Agent configuration
 
-### API Stubs (TODO)
-All stubs return fixtures when `AGENT_MOCK=1`:
-- `GET /api/agent/status`
-- `GET /api/agent/feed`
-- `GET /api/agent/queue`
-- `POST /api/agent/queue`
-- `GET/POST /api/agent/settings`
-- `GET /api/clients/list`
-- `POST /api/clients/:id/nudge`
+## Next Steps
 
-## Next Steps (Phase 2-5)
-See main spec for detailed component requirements, Storybook stories, and full interaction patterns.
+To continue development:
+1. Implement database tables for queue, feed, clients
+2. Add authentication for trainer accounts
+3. Connect real GHL booking links
+4. Implement "Approve All Safe" logic with quiet hours check
+5. Add message editor for "Edit" action
+6. Implement 60-minute undo window with expiry
+7. Add Storybook stories for all components

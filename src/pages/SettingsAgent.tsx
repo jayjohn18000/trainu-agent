@@ -1,18 +1,32 @@
+import { useState } from "react";
 import { fixtures } from "@/lib/fixtures";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import type { AgentSettings } from "@/types/agent";
 
 export default function SettingsAgent() {
-  const settings = fixtures.settings;
+  const [settings, setSettings] = useState<AgentSettings | null>(
+    fixtures.settings
+  );
+  const { toast } = useToast();
+
+  const handleSave = () => {
+    toast({
+      title: "Settings saved",
+      description: "Your preferences have been updated.",
+    });
+  };
 
   if (!settings) {
     return (
       <div className="container py-6">
         <h1 className="text-3xl font-bold mb-6">Settings</h1>
         <Card>
-          <CardContent className="py-8 text-center text-muted-foreground">
+          <CardContent className="py-12 text-center text-muted-foreground">
             Settings not available
           </CardContent>
         </Card>
@@ -35,7 +49,12 @@ export default function SettingsAgent() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="autonomy">Autonomy Level</Label>
-              <Select defaultValue={settings.autonomy}>
+              <Select
+                value={settings.autonomy}
+                onValueChange={(value: any) =>
+                  setSettings({ ...settings, autonomy: value })
+                }
+              >
                 <SelectTrigger id="autonomy">
                   <SelectValue />
                 </SelectTrigger>
@@ -45,11 +64,21 @@ export default function SettingsAgent() {
                   <SelectItem value="full">Full Auto</SelectItem>
                 </SelectContent>
               </Select>
+              <p className="text-xs text-muted-foreground">
+                Review All: You approve every message. Auto-send: Messages with
+                80%+ confidence are sent automatically. Full Auto: All messages
+                sent automatically.
+              </p>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="tone">Message Tone</Label>
-              <Select defaultValue={settings.tone}>
+              <Select
+                value={settings.tone}
+                onValueChange={(value: any) =>
+                  setSettings({ ...settings, tone: value })
+                }
+              >
                 <SelectTrigger id="tone">
                   <SelectValue />
                 </SelectTrigger>
@@ -63,7 +92,12 @@ export default function SettingsAgent() {
 
             <div className="space-y-2">
               <Label htmlFor="length">Message Length</Label>
-              <Select defaultValue={settings.length}>
+              <Select
+                value={settings.length}
+                onValueChange={(value: any) =>
+                  setSettings({ ...settings, length: value })
+                }
+              >
                 <SelectTrigger id="length">
                   <SelectValue />
                 </SelectTrigger>
@@ -77,7 +111,12 @@ export default function SettingsAgent() {
 
             <div className="space-y-2">
               <Label htmlFor="emoji">Emoji Usage</Label>
-              <Select defaultValue={settings.emoji}>
+              <Select
+                value={settings.emoji}
+                onValueChange={(value: any) =>
+                  setSettings({ ...settings, emoji: value })
+                }
+              >
                 <SelectTrigger id="emoji">
                   <SelectValue />
                 </SelectTrigger>
@@ -105,7 +144,10 @@ export default function SettingsAgent() {
                 <Input
                   id="quietStart"
                   type="time"
-                  defaultValue={settings.quietStart}
+                  value={settings.quietStart}
+                  onChange={(e) =>
+                    setSettings({ ...settings, quietStart: e.target.value })
+                  }
                 />
               </div>
               <div className="space-y-2">
@@ -113,12 +155,19 @@ export default function SettingsAgent() {
                 <Input
                   id="quietEnd"
                   type="time"
-                  defaultValue={settings.quietEnd}
+                  value={settings.quietEnd}
+                  onChange={(e) =>
+                    setSettings({ ...settings, quietEnd: e.target.value })
+                  }
                 />
               </div>
             </div>
           </CardContent>
         </Card>
+
+        <div className="flex justify-end">
+          <Button onClick={handleSave}>Save Changes</Button>
+        </div>
       </div>
     </div>
   );
