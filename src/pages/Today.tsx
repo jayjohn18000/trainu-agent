@@ -214,7 +214,7 @@ export default function Today() {
           )}
         </div>
 
-        {/* 2-Column Layout: Queue + Activity Feed */}
+        {/* 2-Column Layout: Queue + Your Impact/Messages */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 mb-8">
           {/* Queue Column */}
           <div className="space-y-4">
@@ -246,23 +246,21 @@ export default function Today() {
             )}
           </div>
 
-          {/* Activity Feed Column - Truncated to match queue */}
-          <div className="hidden lg:block">
-            <div className="border border-border rounded-lg p-6 bg-card/50 h-full">
-              <ActivityFeed 
-                items={feed.slice(0, Math.max(8, queue.length))} 
-                onUndo={handleUndo} 
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Widgets Bar */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Left Column: Your Impact + Messages */}
+          {/* Right Column: Your Impact + Messages */}
           <div className="space-y-4">
             <ValueMetricsWidget />
             <MessagesWidget onOpenMessages={() => setMessagesOpen(true)} />
+          </div>
+        </div>
+
+        {/* Bottom Widgets Bar */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Left Column: Activity Feed */}
+          <div className="border border-border rounded-lg p-6 bg-card/50">
+            <ActivityFeed 
+              items={feed.slice(0, Math.max(8, queue.length))} 
+              onUndo={handleUndo} 
+            />
           </div>
           
           {/* Right Column: Calendar + AtRisk */}
