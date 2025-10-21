@@ -20,14 +20,15 @@ export function TrainerLevelDisplay() {
 
   return (
     <div className="flex items-center gap-3 p-3 rounded-lg bg-card border border-border">
-      <Ring
-        value={progressPercentage}
-        size={48}
-        thickness={4}
-        color={color}
-      >
-        <span className="text-sm font-bold">{progress.level}</span>
-      </Ring>
+      <div className="relative">
+        <Ring
+          percentage={progressPercentage}
+          size={48}
+          strokeWidth={4}
+          label={String(progress.level)}
+          className="text-xs"
+        />
+      </div>
       
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
@@ -35,9 +36,9 @@ export function TrainerLevelDisplay() {
             variant="secondary" 
             className="text-xs font-semibold"
             style={{ 
-              backgroundColor: `${color}/10`,
+              backgroundColor: `${color}15`,
               color: color,
-              borderColor: `${color}/30`
+              borderColor: `${color}50`
             }}
           >
             {progress.title}
