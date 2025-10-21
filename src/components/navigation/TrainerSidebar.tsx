@@ -3,8 +3,12 @@ import { Home, Users, MessageSquare, Calendar, Settings, ChevronLeft, ChevronRig
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { TrainerLevelDisplay } from "@/components/gamification/TrainerLevelDisplay";
+import { SettingsModal } from "@/components/modals/SettingsModal";
+import { CalendarModal } from "@/components/modals/CalendarModal";
+import { MessagesModal } from "@/components/modals/MessagesModal";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 interface TrainerSidebarProps {
   collapsed: boolean;
@@ -12,15 +16,26 @@ interface TrainerSidebarProps {
 }
 
 const navItems = [
-  { label: 'Today', path: '/today', icon: Home, shortcut: '1' },
-  { label: 'Clients', path: '/clients', icon: Users, shortcut: '2' },
-  { label: 'Messages', path: '/messages', icon: MessageSquare, shortcut: '3' },
-  { label: 'Calendar', path: '/calendar', icon: Calendar, shortcut: '4' },
-  { label: 'Settings', path: '/settings', icon: Settings, shortcut: '5' },
+  { label: 'Today', path: '/today', icon: Home, shortcut: '1', isModal: false },
+  { label: 'Clients', path: '/clients', icon: Users, shortcut: '2', isModal: false },
+  { label: 'Messages', icon: MessageSquare, shortcut: '3', isModal: true },
+  { label: 'Calendar', icon: Calendar, shortcut: '4', isModal: true },
+  { label: 'Settings', icon: Settings, shortcut: '5', isModal: true },
 ];
 
 export function TrainerSidebar({ collapsed, onToggle }: TrainerSidebarProps) {
   const location = useLocation();
+  const [messagesOpen, setMessagesOpen] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  const handleNavClick = (item: typeof navItems[0]) => {
+    if (item.isModal) {
+      if (item.label === 'Messages') setMessagesOpen(true);
+      if (item.label === 'Calendar') setCalendarOpen(true);
+      if (item.label === 'Settings') setSettingsOpen(true);
+    }
+  };
 
   return (
     <TooltipProvider>
@@ -47,25 +62,36 @@ export function TrainerSidebar({ collapsed, onToggle }: TrainerSidebarProps) {
           {/* Navigation */}
           <nav className="flex-1 p-2 space-y-1">
             {navItems.map((item) => {
-              const isActive = location.pathname === item.path;
+              const isActive = item.path && location.pathname === item.path;
               const Icon = item.icon;
 
               if (collapsed) {
                 return (
-                  <Tooltip key={item.path} delayDuration={0}>
+                  <Tooltip key={item.label} delayDuration={0}>
                     <TooltipTrigger asChild>
-                      <Link to={item.path}>
+                      {item.isModal ? (
                         <Button
-                          variant={isActive ? "secondary" : "ghost"}
+                          variant="ghost"
                           size="icon"
-                          className={cn(
-                            "w-10 h-10 mx-auto",
-                            isActive && "border-l-2 border-primary rounded-l-none"
-                          )}
+                          className="w-10 h-10 mx-auto"
+                          onClick={() => handleNavClick(item)}
                         >
                           <Icon className="h-5 w-5" />
                         </Button>
-                      </Link>
+                      ) : (
+                        <Link to={item.path!}>
+                          <Button
+                            variant={isActive ? "secondary" : "ghost"}
+                            size="icon"
+                            className={cn(
+                              "w-10 h-10 mx-auto",
+                              isActive && "border-l-2 border-primary rounded-l-none"
+                            )}
+                          >
+                            <Icon className="h-5 w-5" />
+                          </Button>
+                        </Link>
+                      )}
                     </TooltipTrigger>
                     <TooltipContent side="right">
                       <p>{item.label} ({item.shortcut})</p>
@@ -74,8 +100,25 @@ export function TrainerSidebar({ collapsed, onToggle }: TrainerSidebarProps) {
                 );
               }
 
+              if (item.isModal) {
+                return (
+                  <Button
+                    key={item.label}
+                    variant="ghost"
+                    className="w-full justify-start"
+                    onClick={() => handleNavClick(item)}
+                  >
+                    <Icon className="h-5 w-5 mr-3" />
+                    <span>{item.label}</span>
+                    <Badge variant="outline" className="ml-auto text-xs">
+                      {item.shortcut}
+                    </Badge>
+                  </Button>
+                );
+              }
+
               return (
-                <Link key={item.path} to={item.path}>
+                <Link key={item.label} to={item.path!}>
                   <Button
                     variant={isActive ? "secondary" : "ghost"}
                     className={cn(
@@ -115,6 +158,11 @@ export function TrainerSidebar({ collapsed, onToggle }: TrainerSidebarProps) {
           </div>
         </div>
       </aside>
+
+      {/* Modals */}
+      <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
+      <CalendarModal open={calendarOpen} onOpenChange={setCalendarOpen} />
+      <MessagesModal open={messagesOpen} onOpenChange={setMessagesOpen} />
     </TooltipProvider>
   );
 }

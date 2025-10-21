@@ -3,6 +3,13 @@ import { fixtures } from "@/lib/fixtures";
 import { QueueCard } from "@/components/agent/QueueCard";
 import { ActivityFeed } from "@/components/agent/ActivityFeed";
 import { MessageEditor } from "@/components/agent/MessageEditor";
+import { ValueMetricsWidget } from "@/components/agent/ValueMetricsWidget";
+import { MessagesWidget } from "@/components/agent/MessagesWidget";
+import { CalendarWidget } from "@/components/agent/CalendarWidget";
+import { AtRiskWidget } from "@/components/agent/AtRiskWidget";
+import { SettingsModal } from "@/components/modals/SettingsModal";
+import { CalendarModal } from "@/components/modals/CalendarModal";
+import { MessagesModal } from "@/components/modals/MessagesModal";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -17,6 +24,9 @@ export default function Today() {
   const [feed, setFeed] = useState(fixtures.feed);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [editingItem, setEditingItem] = useState<any | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [messagesOpen, setMessagesOpen] = useState(false);
   const { toast } = useToast();
   const { awardXP } = useTrainerGamification();
 
@@ -165,6 +175,21 @@ export default function Today() {
       callback: handleApproveAllSafe,
       description: "Approve all safe items",
     },
+    {
+      key: "3",
+      callback: () => setMessagesOpen(true),
+      description: "Open messages",
+    },
+    {
+      key: "4",
+      callback: () => setCalendarOpen(true),
+      description: "Open calendar",
+    },
+    {
+      key: "5",
+      callback: () => setSettingsOpen(true),
+      description: "Open settings",
+    },
   ]);
 
   const safeItemsCount = queue.filter(item => item.confidence >= 0.8).length;
@@ -174,27 +199,29 @@ export default function Today() {
       <TrainerXPNotification />
       
       <div className="container py-6">
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Main Queue */}
-          <div className="flex-1">
-            <div className="flex items-center justify-between mb-6">
-              <h1 className="text-3xl font-bold">Today</h1>
-              {safeItemsCount > 0 && (
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={handleApproveAllSafe}
-                >
-                  <Zap className="h-4 w-4 mr-2" />
-                  Approve {safeItemsCount} Safe
-                </Button>
-              )}
-            </div>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold">Today</h1>
+          {safeItemsCount > 0 && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={handleApproveAllSafe}
+            >
+              <Zap className="h-4 w-4 mr-2" />
+              Approve {safeItemsCount} Safe
+            </Button>
+          )}
+        </div>
 
-          <div className="space-y-4">
+        {/* 3-Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Queue Column (40%) */}
+          <div className="lg:col-span-5 space-y-4">
             <h2 className="text-lg font-semibold">
               Queue {queue.length > 0 && `(${queue.length})`}
             </h2>
+
             {queue.length === 0 ? (
               <Card>
                 <CardContent className="py-12 text-center">
@@ -220,24 +247,36 @@ export default function Today() {
               ))
             )}
           </div>
+
+          {/* Activity Feed Column (35%) */}
+          <div className="lg:col-span-4 hidden lg:block">
+            <ActivityFeed items={feed} onUndo={handleUndo} />
+          </div>
+
+          {/* Widgets Column (25%) */}
+          <div className="lg:col-span-3 space-y-4">
+            <ValueMetricsWidget />
+            <MessagesWidget onOpenMessages={() => setMessagesOpen(true)} />
+            <CalendarWidget onOpenCalendar={() => setCalendarOpen(true)} />
+            <AtRiskWidget />
+          </div>
         </div>
-
-        {/* Activity Feed Sidebar */}
-        <aside className="lg:w-80 hidden lg:block">
-          <ActivityFeed items={feed} onUndo={handleUndo} />
-        </aside>
       </div>
-    </div>
 
-    {/* Message Editor */}
-    {editingItem && (
-      <MessageEditor
-        open={!!editingItem}
-        onOpenChange={(open) => !open && setEditingItem(null)}
-        queueItem={editingItem}
-        onSave={handleSaveEdit}
-      />
-    )}
-  </>
+      {/* Message Editor */}
+      {editingItem && (
+        <MessageEditor
+          open={!!editingItem}
+          onOpenChange={(open) => !open && setEditingItem(null)}
+          queueItem={editingItem}
+          onSave={handleSaveEdit}
+        />
+      )}
+
+      {/* Modals */}
+      <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
+      <CalendarModal open={calendarOpen} onOpenChange={setCalendarOpen} />
+      <MessagesModal open={messagesOpen} onOpenChange={setMessagesOpen} />
+    </>
   );
 }

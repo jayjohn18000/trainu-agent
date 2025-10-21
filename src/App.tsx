@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
-import { AgentLayout } from "@/components/AgentLayout";
+import { UnifiedLayout } from "@/components/layouts/UnifiedLayout";
 import { RedirectHandler } from "@/components/RedirectHandler";
 import { Toaster } from "@/components/ui/toaster";
 import { ErrorBoundary } from "@/components/system/ErrorBoundary";
@@ -36,8 +36,6 @@ import DevFlags from "@/pages/DevFlags";
 import Challenges from "@/pages/Challenges";
 import NotFound from "@/pages/NotFound";
 import Today from "@/pages/Today";
-import ClientsAgent from "@/pages/ClientsAgent";
-import SettingsAgent from "@/pages/SettingsAgent";
 import Gone410 from "@/pages/Gone410";
 
 export default function App() {
@@ -51,11 +49,10 @@ export default function App() {
           <Route path="/directory" element={<Directory />} />
           <Route path="/trainers/:slug" element={<TrainerProfile />} />
 
-          {/* Agent Console routes - new layout */}
-          <Route element={<AgentLayout><Outlet /></AgentLayout>}>
+          {/* Agent Console routes - unified layout */}
+          <Route element={<UnifiedLayout />}>
             <Route path="/today" element={<Today />} />
-            <Route path="/clients" element={<ClientsAgent />} />
-            <Route path="/settings" element={<SettingsAgent />} />
+            <Route path="/clients" element={<Clients />} />
           </Route>
 
           {/* Legacy routes - old layout (will be phased out) */}
@@ -71,8 +68,10 @@ export default function App() {
             <Route path="/progress" element={<Progress />} />
             <Route path="/challenges" element={<Challenges />} />
             <Route path="/programs" element={<Programs />} />
+            <Route path="/clients" element={<Clients />} />
             <Route path="/dashboard/clients" element={<TrainerClients />} />
             <Route path="/messages" element={<Messages />} />
+            <Route path="/settings" element={<Settings />} />
             <Route path="/community" element={<Community />} />
             <Route path="/events" element={<Events />} />
             <Route path="/community/events" element={<CommunityEvents />} />
@@ -88,6 +87,10 @@ export default function App() {
             <Route path="/admin/classes" element={<Admin />} />
             <Route path="/dev/flags" element={<DevFlags />} />
           </Route>
+
+          {/* Redirects for old agent routes */}
+          <Route path="/dashboard/trainer" element={<Navigate to="/today" replace />} />
+          <Route path="/inbox" element={<Navigate to="/today" replace />} />
 
           {/* Error routes */}
           <Route path="/410" element={<Gone410 />} />
