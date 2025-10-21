@@ -157,13 +157,35 @@ export default {
           from: { transform: "translateX(-100%)" },
           to: { transform: "translateX(0)" },
         },
+        "slide-out-left": {
+          "0%": { transform: "translateX(0)", opacity: "1" },
+          "100%": { transform: "translateX(-100%)", opacity: "0" },
+        },
+        "slide-in-from-left": {
+          "0%": { transform: "translateX(-100%)", opacity: "0" },
+          "100%": { transform: "translateX(0)", opacity: "1" },
+        },
         "pulse-glow": {
           "0%, 100%": { boxShadow: "0 0 20px -4px hsl(var(--primary) / 0.3)" },
           "50%": { boxShadow: "0 0 30px -4px hsl(var(--primary) / 0.5)" },
         },
+        "glow-pulse": {
+          "0%, 100%": { boxShadow: "0 0 10px rgba(var(--primary), 0.5)" },
+          "50%": { boxShadow: "0 0 20px rgba(var(--primary), 0.8)" },
+        },
         "scale-in": {
           from: { transform: "scale(0.95)", opacity: "0" },
           to: { transform: "scale(1)", opacity: "1" },
+        },
+        "count-up": {
+          "0%": { transform: "scale(0.8)", opacity: "0" },
+          "50%": { transform: "scale(1.1)" },
+          "100%": { transform: "scale(1)", opacity: "1" },
+        },
+        "achievement-bounce": {
+          "0%": { transform: "scale(0) rotate(-10deg)" },
+          "50%": { transform: "scale(1.2) rotate(10deg)" },
+          "100%": { transform: "scale(1) rotate(0deg)" },
         },
       },
       animation: {
@@ -171,8 +193,13 @@ export default {
         "accordion-up": "accordion-up 0.3s ease-out",
         "fade-in": "fade-in 0.4s ease-out",
         "slide-in": "slide-in 0.3s ease-out",
+        "slide-out-left": "slide-out-left 0.3s ease-out",
+        "slide-in-from-left": "slide-in-from-left 0.3s ease-out",
         "pulse-glow": "pulse-glow 2s ease-in-out infinite",
+        "glow-pulse": "glow-pulse 2s ease-in-out infinite",
         "scale-in": "scale-in 0.2s ease-out",
+        "count-up": "count-up 0.6s ease-out",
+        "achievement-bounce": "achievement-bounce 0.6s ease-out",
       },
     },
   },

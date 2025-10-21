@@ -10,11 +10,16 @@ export interface QueueItem {
 }
 
 export interface FeedItem {
+  id?: string;
   ts: string;
+  approvedAt?: string;
   action: "drafted" | "sent" | "edited" | "undone";
   client: string;
+  clientId?: string;
   status: "review" | "success" | "error" | "undone";
   why: string;
+  messagePreview?: string;
+  confidence?: number;
 }
 
 export interface Client {

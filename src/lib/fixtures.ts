@@ -2,6 +2,7 @@
 import queueData from '@/data/fixtures/queue.json';
 import feedData from '@/data/fixtures/feed.json';
 import clientsData from '@/data/fixtures/clients.json';
+import clientDetailsData from '@/data/fixtures/clientDetails.json';
 import settingsData from '@/data/fixtures/settings.json';
 import type { QueueItem, FeedItem, Client, AgentSettings } from '@/types/agent';
 
@@ -14,6 +15,7 @@ export const fixtures = {
   queue: (isAgentMock ? queueData : []) as QueueItem[],
   feed: (isAgentMock ? feedData : []) as FeedItem[],
   clients: (isAgentMock ? clientsData : []) as Client[],
+  clientDetails: (isAgentMock ? clientDetailsData : {}) as Record<string, any>,
   settings: (isAgentMock ? settingsData : null) as AgentSettings | null,
 };
 

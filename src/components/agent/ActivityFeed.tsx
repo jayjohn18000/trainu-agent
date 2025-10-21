@@ -1,16 +1,30 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { formatDistanceToNow } from "date-fns";
-import { Send, Edit, CheckCircle, XCircle } from "lucide-react";
+import { formatDistanceToNow, differenceInMinutes } from "date-fns";
+import { Send, Edit, CheckCircle, XCircle, Undo } from "lucide-react";
 import type { FeedItem } from "@/types/agent";
 
 interface ActivityFeedProps {
   items: FeedItem[];
+  onUndo?: (feedItemId: string) => void;
   className?: string;
 }
 
-export function ActivityFeed({ items, className }: ActivityFeedProps) {
+export function ActivityFeed({ items, onUndo, className }: ActivityFeedProps) {
+  const canUndo = (item: any) => {
+    if (!item.approvedAt || item.action !== "sent") return false;
+    const minutesSince = differenceInMinutes(new Date(), new Date(item.approvedAt));
+    return minutesSince < 60;
+  };
+
+  const getUndoTimeLeft = (item: any) => {
+    if (!item.approvedAt) return null;
+    const minutesSince = differenceInMinutes(new Date(), new Date(item.approvedAt));
+    const minutesLeft = 60 - minutesSince;
+    return minutesLeft > 0 ? minutesLeft : null;
+  };
   const getActionIcon = (action: string) => {
     switch (action) {
       case "sent":
@@ -78,11 +92,24 @@ export function ActivityFeed({ items, className }: ActivityFeedProps) {
                     <p className="text-sm text-muted-foreground mb-1">
                       {item.why}
                     </p>
-                    <time className="text-xs text-muted-foreground">
-                      {formatDistanceToNow(new Date(item.ts), {
-                        addSuffix: true,
-                      })}
-                    </time>
+                    <div className="flex items-center justify-between gap-2">
+                      <time className="text-xs text-muted-foreground">
+                        {formatDistanceToNow(new Date(item.ts), {
+                          addSuffix: true,
+                        })}
+                      </time>
+                      {canUndo(item) && onUndo && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => onUndo(item.id)}
+                          className="h-6 px-2 text-xs"
+                        >
+                          <Undo className="h-3 w-3 mr-1" />
+                          Undo ({getUndoTimeLeft(item)}m)
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
