@@ -1,363 +1,306 @@
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, MessageSquare, Eye, Users, SlidersHorizontal } from "lucide-react";
 import { useState, useEffect } from "react";
-import { toast } from "@/hooks/use-toast";
-import { ClientDetailModal } from "@/components/clients/ClientDetailModal";
-import { useNavigate } from "react-router-dom";
-import { ClientCardSkeletonList } from "@/components/skeletons/ClientCardSkeleton";
+import { useSearchParams } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { ClientTable } from "@/components/clients/ClientTable";
+import { ClientSearch } from "@/components/clients/ClientSearch";
+import { ClientFilters, ClientFiltersState } from "@/components/clients/ClientFilters";
+import { ClientInspector } from "@/components/clients/ClientInspector";
+import { NudgeDialog } from "@/components/clients/NudgeDialog";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Client, ClientDetail } from "@/lib/data/clients/types";
+import { clientProvider } from "@/lib/data/clients/provider";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { Users, Loader2 } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 export default function Clients() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedClient, setSelectedClient] = useState<typeof clients[0] | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "at_risk" | "prospect">("all");
-  const [sortBy, setSortBy] = useState<"name" | "progress" | "revenue">("name");
-  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [clients, setClients] = useState<Client[]>([]);
+  const [selectedClient, setSelectedClient] = useState<ClientDetail | null>(null);
+  const [nudgeClient, setNudgeClient] = useState<Client | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [inspectorLoading, setInspectorLoading] = useState(false);
+  const [total, setTotal] = useState(0);
 
-  const clients = [
-    {
-      id: "c1",
-      name: "John Doe",
-      avatar: "https://i.pravatar.cc/150?img=10",
-      program: "12-Week Strength Building",
-      lastSession: "2025-10-01",
-      nextSession: "2025-10-05",
-      progress: 85,
-      status: "active" as const,
-      revenue: 1200,
-    },
-    {
-      id: "c2",
-      name: "Jane Smith",
-      avatar: "https://i.pravatar.cc/150?img=11",
-      program: "Fat Loss & Conditioning",
-      lastSession: "2025-09-30",
-      nextSession: "2025-10-04",
-      progress: 72,
-      status: "active" as const,
-      revenue: 980,
-    },
-    {
-      id: "c3",
-      name: "Mike Johnson",
-      avatar: "https://i.pravatar.cc/150?img=12",
-      program: "Beginner Strength",
-      lastSession: "2025-09-15",
-      nextSession: null,
-      progress: 45,
-      status: "at_risk" as const,
-      revenue: 450,
-    },
-    {
-      id: "c4",
-      name: "Sarah Williams",
-      avatar: "https://i.pravatar.cc/150?img=13",
-      program: "Advanced Powerlifting",
-      lastSession: "2025-10-02",
-      nextSession: "2025-10-06",
-      progress: 92,
-      status: "active" as const,
-      revenue: 1500,
-    },
-    {
-      id: "c5",
-      name: "David Chen",
-      avatar: "https://i.pravatar.cc/150?img=14",
-      program: "Consultation Requested",
-      lastSession: null,
-      nextSession: "2025-10-07",
-      progress: 0,
-      status: "prospect" as const,
-      revenue: 0,
-      rating: 4.5,
-      goal: "Weight Loss",
-    },
-    {
-      id: "c6",
-      name: "Emily Rodriguez",
-      avatar: "https://i.pravatar.cc/150?img=15",
-      program: "Initial Assessment Booked",
-      lastSession: null,
-      nextSession: "2025-10-08",
-      progress: 0,
-      status: "prospect" as const,
-      revenue: 0,
-      rating: 5.0,
-      goal: "Strength Building",
-    },
-  ];
+  const query = searchParams.get("q") || "";
+  const selectedId = searchParams.get("id") || undefined;
+  const sortBy = (searchParams.get("sort") as "name" | "risk" | "lastActivity") || "name";
+  const sortDir = (searchParams.get("dir") as "asc" | "desc") || "asc";
+  
+  const [filters, setFilters] = useState<ClientFiltersState>({
+    tags: searchParams.get("tags")?.split(",").filter(Boolean) || [],
+    status: searchParams.get("status") || undefined,
+    riskMin: searchParams.get("riskMin") ? Number(searchParams.get("riskMin")) : undefined,
+    riskMax: searchParams.get("riskMax") ? Number(searchParams.get("riskMax")) : undefined,
+    hasNext: searchParams.get("hasNext") === "true" ? true : undefined,
+  });
 
-  const filteredClients = clients
-    .filter((client) => {
-      const matchesSearch = client.name.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesStatus = statusFilter === "all" || client.status === statusFilter;
-      return matchesSearch && matchesStatus;
-    })
-    .sort((a, b) => {
-      switch (sortBy) {
-        case "name":
-          return a.name.localeCompare(b.name);
-        case "progress":
-          return b.progress - a.progress;
-        case "revenue":
-          return b.revenue - a.revenue;
-        default:
-          return 0;
+  const updateURL = (updates: Record<string, string | undefined>) => {
+    const newParams = new URLSearchParams(searchParams);
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value) {
+        newParams.set(key, value);
+      } else {
+        newParams.delete(key);
       }
     });
+    setSearchParams(newParams);
+  };
 
-  // Simulate loading data
+  const loadClients = async () => {
+    setLoading(true);
+    try {
+      const result = await clientProvider.list({
+        q: query || undefined,
+        tags: filters.tags.length > 0 ? filters.tags : undefined,
+        status: filters.status,
+        riskMin: filters.riskMin,
+        riskMax: filters.riskMax,
+        hasNext: filters.hasNext,
+        sort: sortBy,
+        dir: sortDir,
+      });
+      setClients(result.items);
+      setTotal(result.total);
+    } catch (error) {
+      console.error("Failed to load clients:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load clients",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, []);
+    loadClients();
+  }, [query, filters, sortBy, sortDir]);
+
+  useEffect(() => {
+    if (selectedId) {
+      setInspectorLoading(true);
+      clientProvider
+        .get(selectedId)
+        .then(setSelectedClient)
+        .catch((error) => {
+          console.error("Failed to load client:", error);
+          toast({
+            title: "Error",
+            description: "Failed to load client details",
+            variant: "destructive",
+          });
+        })
+        .finally(() => setInspectorLoading(false));
+    } else {
+      setSelectedClient(null);
+    }
+  }, [selectedId]);
+
+  const handleSelectClient = (client: Client) => {
+    updateURL({ id: client.id });
+  };
+
+  const handleCloseInspector = () => {
+    updateURL({ id: undefined });
+  };
+
+  const handleSearchChange = (value: string) => {
+    updateURL({ q: value || undefined });
+  };
+
+  const handleFiltersChange = (newFilters: ClientFiltersState) => {
+    setFilters(newFilters);
+    updateURL({
+      tags: newFilters.tags.length > 0 ? newFilters.tags.join(",") : undefined,
+      status: newFilters.status,
+      riskMin: newFilters.riskMin?.toString(),
+      riskMax: newFilters.riskMax?.toString(),
+      hasNext: newFilters.hasNext?.toString(),
+    });
+  };
+
+  const handleSort = (field: string) => {
+    const newDir = sortBy === field && sortDir === "asc" ? "desc" : "asc";
+    updateURL({ sort: field, dir: newDir });
+  };
+
+  const handleNudge = async (templateId: string, preview: string) => {
+    if (!nudgeClient) return;
+    try {
+      await clientProvider.nudge(nudgeClient.id, { templateId, preview });
+      toast({
+        title: "Nudge sent",
+        description: `Message sent to ${nudgeClient.name}`,
+      });
+    } catch (error) {
+      console.error("Failed to send nudge:", error);
+      toast({
+        title: "Error",
+        description: "Failed to send nudge",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUpdateTags = async (tags: string[]) => {
+    if (!selectedClient) return;
+    try {
+      await clientProvider.tag(selectedClient.id, tags);
+      setSelectedClient({ ...selectedClient, tags });
+      toast({ title: "Tags updated" });
+      loadClients();
+    } catch (error) {
+      console.error("Failed to update tags:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update tags",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAddNote = async (note: string) => {
+    if (!selectedClient) return;
+    try {
+      await clientProvider.note(selectedClient.id, note);
+      setSelectedClient({ ...selectedClient, notes: note });
+      toast({ title: "Note saved" });
+    } catch (error) {
+      console.error("Failed to save note:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save note",
+        variant: "destructive",
+      });
+    }
+  };
+
+  useKeyboardShortcuts([
+    {
+      key: "/",
+      description: "Focus search",
+      callback: () => document.querySelector<HTMLInputElement>("input")?.focus(),
+    },
+    {
+      key: "Escape",
+      description: "Close inspector",
+      callback: () => {
+        if (selectedId) handleCloseInspector();
+        if (nudgeClient) setNudgeClient(null);
+      },
+    },
+    {
+      key: "n",
+      description: "Nudge selected client",
+      callback: () => {
+        if (selectedClient) {
+          setNudgeClient(selectedClient);
+        }
+      },
+    },
+  ]);
 
   return (
-    <div className="space-y-6 animate-fade-in">{/* ... keep existing code */}
+    <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-3xl font-bold mb-2">My Clients</h1>
-        <p className="text-muted-foreground">Manage your client roster and track their progress</p>
+        <h1 className="text-3xl font-bold mb-2">Clients</h1>
+        <p className="text-muted-foreground">
+          Manage your client roster and track their progress
+        </p>
       </div>
 
-      {/* Search & Filters */}
-      <Card className="p-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div className="relative md:col-span-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search clients..."
-              className="pl-9"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Clients</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="at_risk">Needs Attention</SelectItem>
-              <SelectItem value="prospect">Prospects</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="name">Name (A-Z)</SelectItem>
-              <SelectItem value="progress">Progress (High-Low)</SelectItem>
-              <SelectItem value="revenue">Revenue (High-Low)</SelectItem>
-            </SelectContent>
-          </Select>
+      <div className="flex flex-col md:flex-row gap-3">
+        <div className="flex-1">
+          <ClientSearch value={query} onChange={handleSearchChange} />
         </div>
-      </Card>
-
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="p-4">
-          <p className="text-sm text-muted-foreground mb-1">Total Clients</p>
-          <p className="text-2xl font-bold">{clients.filter((c) => c.status !== "prospect").length}</p>
-        </Card>
-        <Card className="p-4">
-          <p className="text-sm text-muted-foreground mb-1">Active Programs</p>
-          <p className="text-2xl font-bold">{clients.filter((c) => c.status === "active").length}</p>
-        </Card>
-        <Card className="p-4 bg-amber-50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800/50">
-          <p className="text-sm text-muted-foreground mb-1">⚠️ Needs Attention</p>
-          <p className="text-2xl font-bold text-amber-600 dark:text-amber-500">
-            {clients.filter((c) => c.status === "at_risk").length}
-          </p>
-        </Card>
-        <Card className="p-4 bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800/50">
-          <p className="text-sm text-muted-foreground mb-1">New Prospects</p>
-          <p className="text-2xl font-bold text-blue-600 dark:text-blue-500">
-            {clients.filter((c) => c.status === "prospect").length}
-          </p>
-        </Card>
+        <ClientFilters filters={filters} onChange={handleFiltersChange} />
       </div>
 
-      {/* Client List */}
-      {isLoading ? (
-        <ClientCardSkeletonList count={4} />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="rounded-lg border p-4">
+          <p className="text-sm text-muted-foreground">Total Clients</p>
+          <p className="text-2xl font-bold">{total}</p>
+        </div>
+        <div className="rounded-lg border p-4">
+          <p className="text-sm text-muted-foreground">Active</p>
+          <p className="text-2xl font-bold">
+            {clients.filter((c) => c.status === "active").length}
+          </p>
+        </div>
+        <div className="rounded-lg border p-4 bg-amber-50 dark:bg-amber-950/20">
+          <p className="text-sm text-muted-foreground">At Risk</p>
+          <p className="text-2xl font-bold text-amber-600">
+            {clients.filter((c) => c.status === "churnRisk").length}
+          </p>
+        </div>
+        <div className="rounded-lg border p-4">
+          <p className="text-sm text-muted-foreground">Paused</p>
+          <p className="text-2xl font-bold">
+            {clients.filter((c) => c.status === "paused").length}
+          </p>
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      ) : clients.length > 0 ? (
+        <ClientTable
+          clients={clients}
+          selectedId={selectedId}
+          onSelect={handleSelectClient}
+          onNudge={(client) => setNudgeClient(client)}
+          sortBy={sortBy}
+          sortDir={sortDir}
+          onSort={handleSort}
+        />
       ) : (
-        <div className="grid gap-4">
-          {filteredClients.map((client) => (
-            <Card 
-              key={client.id} 
-              className={`p-6 transition-smooth hover:shadow-lg hover:-translate-y-0.5 cursor-pointer ${
-                client.status === "prospect" 
-                  ? "bg-blue-200 dark:bg-blue-800/50 border-blue-400 dark:border-blue-600" 
-                  : client.status === "at_risk"
-                  ? "bg-amber-100 dark:bg-amber-900/40 border-amber-400 dark:border-amber-600"
-                  : ""
-              }`}
-            >
-            <div className="flex items-start gap-4">
-              <Avatar className={`h-12 w-12 ${
-                client.status === "at_risk" 
-                  ? "ring-2 ring-amber-400 dark:ring-amber-600" 
-                  : client.status === "prospect"
-                  ? "ring-2 ring-blue-300 dark:ring-blue-700"
-                  : ""
-              }`}>
-                <AvatarImage src={client.avatar} alt={client.name} />
-                <AvatarFallback>{client.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-              </Avatar>
-
-              <div className="flex-1">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <h3 className={`font-semibold ${
-                      client.status === "at_risk"
-                        ? "text-amber-600 dark:text-amber-500"
-                        : client.status === "prospect"
-                        ? "text-blue-600 dark:text-blue-400"
-                        : ""
-                    }`}>{client.name}</h3>
-                    <Badge 
-                      variant={
-                        client.status === "active" 
-                          ? "default" 
-                          : "outline"
-                      }
-                      className={
-                        client.status === "prospect"
-                          ? "bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-700"
-                          : client.status === "at_risk"
-                          ? "bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-700"
-                          : ""
-                      }
-                    >
-                      {client.status === "at_risk" 
-                        ? "⚠️ Needs Attention" 
-                        : client.status === "prospect"
-                        ? "New Prospect"
-                        : "Active"}
-                    </Badge>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => navigate("/messages")}
-                    >
-                      <MessageSquare className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => setSelectedClient(client)}
-                    >
-                      <Eye className="h-4 w-4 mr-2" />
-                      View Details
-                    </Button>
-                  </div>
-                </div>
-
-                <p className="text-sm text-muted-foreground mb-3">{client.program}</p>
-
-                <div className="grid grid-cols-3 gap-4 text-sm">
-                  {client.status === "prospect" ? (
-                    <>
-                      <div>
-                        <p className="text-muted-foreground">Rating</p>
-                        <p className="font-medium text-blue-600 dark:text-blue-400">
-                          {"rating" in client ? `⭐ ${client.rating}` : "N/A"}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground">Goal</p>
-                        <p className="font-medium text-blue-600 dark:text-blue-400">
-                          {"goal" in client ? client.goal : "N/A"}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground">Inquiry Date</p>
-                        <p className="font-medium text-blue-600 dark:text-blue-400">2025-10-03</p>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div>
-                        <p className="text-muted-foreground">Last Session</p>
-                        <p className={`font-medium ${
-                          client.status === "at_risk" ? "text-amber-600 dark:text-amber-500" : ""
-                        }`}>{client.lastSession || "N/A"}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground">Next Session</p>
-                        <p className={`font-medium ${
-                          client.status === "at_risk" ? "text-amber-600 dark:text-amber-500" : ""
-                        }`}>{client.nextSession || "Not scheduled"}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground">Progress</p>
-                        <p className={`font-medium ${
-                          client.status === "at_risk" ? "text-amber-600 dark:text-amber-500" : ""
-                        }`}>{client.progress}%</p>
-                      </div>
-                    </>
-                  )}
-                </div>
-
-                {client.status !== "prospect" && (
-                  <div className="mt-3">
-                    <div className="w-full bg-secondary rounded-full h-2">
-                      <div
-                        className={`h-2 rounded-full transition-all ${
-                          client.status === "at_risk"
-                            ? "bg-amber-500 dark:bg-amber-600"
-                            : "bg-primary"
-                        }`}
-                        style={{ width: `${client.progress}%` }}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {client.revenue > 0 && (
-                  <div className="mt-3 text-sm">
-                    <span className="text-muted-foreground">Lifetime Revenue: </span>
-                    <span className="font-semibold">${client.revenue.toLocaleString()}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
-      )}
-
-      {!isLoading && filteredClients.length === 0 && (
         <EmptyState
           icon={Users}
           title="No clients found"
-          description={searchQuery ? "Try adjusting your search terms" : "Start by adding your first client"}
+          description={
+            query || filters.tags.length > 0
+              ? "Try adjusting your search or filters"
+              : "Start by adding your first client"
+          }
           action={
-            searchQuery
+            query || filters.tags.length > 0
               ? {
-                  label: "Clear search",
-                  onClick: () => setSearchQuery(""),
+                  label: "Clear filters",
+                  onClick: () => {
+                    handleSearchChange("");
+                    handleFiltersChange({
+                      tags: [],
+                      status: undefined,
+                      riskMin: undefined,
+                      riskMax: undefined,
+                      hasNext: undefined,
+                    });
+                  },
                 }
               : undefined
           }
         />
       )}
 
-      <ClientDetailModal
+      <ClientInspector
+        open={!!selectedId}
+        onOpenChange={(open) => !open && handleCloseInspector()}
         client={selectedClient}
-        open={!!selectedClient}
-        onOpenChange={(open) => !open && setSelectedClient(null)}
+        loading={inspectorLoading}
+        onNudge={() => selectedClient && setNudgeClient(selectedClient)}
+        onUpdateTags={handleUpdateTags}
+        onAddNote={handleAddNote}
+      />
+
+      <NudgeDialog
+        open={!!nudgeClient}
+        onOpenChange={(open) => !open && setNudgeClient(null)}
+        client={nudgeClient}
+        onSend={handleNudge}
       />
     </div>
   );
