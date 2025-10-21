@@ -1,0 +1,122 @@
+{
+  "cl1": {
+    "metrics": {
+      "streakDays": 0,
+      "workouts7d": 0,
+      "responseRate30d": 45
+    },
+    "goals": ["Lose 20 lbs", "Run 5K", "Build consistency"],
+    "messages": [
+      {
+        "id": "m1",
+        "time": "2025-01-05T14:32:00Z",
+        "direction": "in",
+        "preview": "Hey, sorry I've been MIA. Work has been crazy..."
+      },
+      {
+        "id": "m2",
+        "time": "2025-01-05T10:15:00Z",
+        "direction": "out",
+        "preview": "Hey Sarah! Haven't heard from you in a few days..."
+      }
+    ],
+    "sessions": [
+      {
+        "id": "s1",
+        "time": "2025-01-20T10:00:00Z",
+        "type": "Personal Training",
+        "status": "upcoming"
+      },
+      {
+        "id": "s2",
+        "time": "2025-01-15T10:00:00Z",
+        "type": "Personal Training",
+        "status": "missed"
+      },
+      {
+        "id": "s3",
+        "time": "2025-01-13T10:00:00Z",
+        "type": "Personal Training",
+        "status": "missed"
+      }
+    ]
+  },
+  "cl2": {
+    "metrics": {
+      "streakDays": 84,
+      "workouts7d": 5,
+      "responseRate30d": 95
+    },
+    "goals": ["Bench 315 lbs", "Squat 405 lbs", "Deadlift 500 lbs"],
+    "messages": [
+      {
+        "id": "m3",
+        "time": "2025-01-16T10:30:00Z",
+        "direction": "in",
+        "preview": "Thanks! Feels amazing to stay consistent. See you Friday!"
+      },
+      {
+        "id": "m4",
+        "time": "2025-01-16T10:25:00Z",
+        "direction": "out",
+        "preview": "Mike! 11 weeks straight is amazing..."
+      }
+    ],
+    "sessions": [
+      {
+        "id": "s4",
+        "time": "2025-01-19T06:00:00Z",
+        "type": "Strength Training",
+        "status": "upcoming"
+      },
+      {
+        "id": "s5",
+        "time": "2025-01-17T06:00:00Z",
+        "type": "Strength Training",
+        "status": "done"
+      },
+      {
+        "id": "s6",
+        "time": "2025-01-15T06:00:00Z",
+        "type": "Strength Training",
+        "status": "done"
+      }
+    ]
+  },
+  "cl3": {
+    "metrics": {
+      "streakDays": 7,
+      "workouts7d": 3,
+      "responseRate30d": 80
+    },
+    "goals": ["Get comfortable with gym", "Build routine", "Lose 10 lbs"],
+    "messages": [
+      {
+        "id": "m5",
+        "time": "2025-01-14T17:30:00Z",
+        "direction": "in",
+        "preview": "Feeling good! A bit sore but that's normal right?"
+      },
+      {
+        "id": "m6",
+        "time": "2025-01-14T17:25:00Z",
+        "direction": "out",
+        "preview": "Lisa, how are you feeling after day 3?"
+      }
+    ],
+    "sessions": [
+      {
+        "id": "s7",
+        "time": "2025-01-18T17:00:00Z",
+        "type": "Beginner Training",
+        "status": "upcoming"
+      },
+      {
+        "id": "s8",
+        "time": "2025-01-16T17:00:00Z",
+        "type": "Beginner Training",
+        "status": "done"
+      }
+    ]
+  }
+}
