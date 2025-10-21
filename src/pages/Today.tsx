@@ -198,9 +198,9 @@ export default function Today() {
     <>
       <TrainerXPNotification />
       
-      <div className="container py-6">
+      <div className="container mx-auto px-4 md:px-6 py-6 max-w-[1600px]">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold">Today</h1>
           {safeItemsCount > 0 && (
             <Button 
@@ -215,9 +215,9 @@ export default function Today() {
         </div>
 
         {/* 3-Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Queue Column (40%) */}
-          <div className="lg:col-span-5 space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-8">
+          {/* Queue Column */}
+          <div className="md:col-span-7 lg:col-span-4 space-y-4">
             <h2 className="text-lg font-semibold">
               Queue {queue.length > 0 && `(${queue.length})`}
             </h2>
@@ -248,13 +248,15 @@ export default function Today() {
             )}
           </div>
 
-          {/* Activity Feed Column (35%) */}
-          <div className="lg:col-span-4 hidden lg:block">
-            <ActivityFeed items={feed} onUndo={handleUndo} />
+          {/* Activity Feed Column */}
+          <div className="md:col-span-5 lg:col-span-5 hidden md:block">
+            <div className="border border-border rounded-lg p-6 bg-card/50 h-full">
+              <ActivityFeed items={feed} onUndo={handleUndo} />
+            </div>
           </div>
 
-          {/* Widgets Column (25%) */}
-          <div className="lg:col-span-3 space-y-4">
+          {/* Widgets Column */}
+          <div className="md:col-span-12 lg:col-span-3 space-y-6">
             <ValueMetricsWidget />
             <MessagesWidget onOpenMessages={() => setMessagesOpen(true)} />
             <CalendarWidget onOpenCalendar={() => setCalendarOpen(true)} />

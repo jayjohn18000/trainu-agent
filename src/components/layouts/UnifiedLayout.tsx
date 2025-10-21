@@ -12,7 +12,7 @@ export function UnifiedLayout() {
         onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
       />
       
-      <main className={`flex-1 transition-all duration-200 ${
+      <main className={`flex-1 pl-0 transition-all duration-200 ${
         sidebarCollapsed ? 'ml-14' : 'ml-60'
       }`}>
         <Outlet />
