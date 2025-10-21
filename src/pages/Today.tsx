@@ -214,10 +214,18 @@ export default function Today() {
           )}
         </div>
 
-        {/* 3-Column Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-8">
-          {/* Queue Column (40%) */}
-          <div className="md:col-span-12 lg:col-span-5 space-y-4">
+        {/* Horizontal Widgets Bar */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <ValueMetricsWidget />
+          <MessagesWidget onOpenMessages={() => setMessagesOpen(true)} />
+          <CalendarWidget onOpenCalendar={() => setCalendarOpen(true)} />
+          <AtRiskWidget />
+        </div>
+
+        {/* 2-Column Layout: Queue + Activity Feed */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+          {/* Queue Column */}
+          <div className="space-y-4">
             <h2 className="text-lg font-semibold">
               Queue {queue.length > 0 && `(${queue.length})`}
             </h2>
@@ -246,16 +254,8 @@ export default function Today() {
             )}
           </div>
 
-          {/* Widgets Column (25%) */}
-          <div className="md:col-span-12 lg:col-span-3 space-y-6">
-            <ValueMetricsWidget />
-            <MessagesWidget onOpenMessages={() => setMessagesOpen(true)} />
-            <CalendarWidget onOpenCalendar={() => setCalendarOpen(true)} />
-            <AtRiskWidget />
-          </div>
-
-          {/* Activity Feed Column (35%) */}
-          <div className="md:col-span-12 lg:col-span-4 hidden lg:block">
+          {/* Activity Feed Column */}
+          <div className="hidden lg:block">
             <div className="border border-border rounded-lg p-6 bg-card/50 h-full">
               <ActivityFeed items={feed} onUndo={handleUndo} />
             </div>
