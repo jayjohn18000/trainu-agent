@@ -16,7 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useTrainerGamification } from "@/hooks/useTrainerGamification";
 import { TrainerXPNotification } from "@/components/gamification/TrainerXPNotification";
-import { Zap } from "lucide-react";
+import { Zap, CheckCircle } from "lucide-react";
 import type { QueueItem } from "@/types/agent";
 
 export default function Today() {
@@ -216,51 +216,49 @@ export default function Today() {
 
         {/* 3-Column Layout */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-8">
-          {/* Queue Column */}
-          <div className="md:col-span-7 lg:col-span-4 space-y-4">
+          {/* Queue Column (40%) */}
+          <div className="md:col-span-12 lg:col-span-5 space-y-4">
             <h2 className="text-lg font-semibold">
               Queue {queue.length > 0 && `(${queue.length})`}
             </h2>
-
+            
             {queue.length === 0 ? (
-              <Card>
-                <CardContent className="py-12 text-center">
-                  <p className="text-lg font-medium mb-2">All caught up!</p>
-                  <p className="text-sm text-muted-foreground">
-                    No pending drafts at the moment.
-                  </p>
-                </CardContent>
+              <Card className="p-12 text-center">
+                <div className="flex flex-col items-center gap-4">
+                  <CheckCircle className="h-16 w-16 text-green-500" />
+                  <div>
+                    <h3 className="text-xl font-semibold mb-2">All Caught Up! 🎉</h3>
+                    <p className="text-muted-foreground">
+                      Great work! No pending items in your queue.
+                    </p>
+                  </div>
+                </div>
               </Card>
             ) : (
-              queue.map((item, idx) => (
-                <div
+              queue.map((item) => (
+                <QueueCard
                   key={item.id}
-                  onClick={() => setSelectedIndex(idx)}
-                  className={selectedIndex === idx ? "ring-2 ring-primary rounded-lg" : ""}
-                >
-                  <QueueCard
-                    item={item}
-                    onApprove={handleApprove}
-                    onEdit={handleEdit}
-                  />
-                </div>
+                  item={item}
+                  onApprove={() => handleApprove(item.id)}
+                  onEdit={() => handleEdit(item.id)}
+                />
               ))
             )}
           </div>
 
-          {/* Activity Feed Column */}
-          <div className="md:col-span-5 lg:col-span-5 hidden md:block">
-            <div className="border border-border rounded-lg p-6 bg-card/50 h-full">
-              <ActivityFeed items={feed} onUndo={handleUndo} />
-            </div>
-          </div>
-
-          {/* Widgets Column */}
+          {/* Widgets Column (25%) */}
           <div className="md:col-span-12 lg:col-span-3 space-y-6">
             <ValueMetricsWidget />
             <MessagesWidget onOpenMessages={() => setMessagesOpen(true)} />
             <CalendarWidget onOpenCalendar={() => setCalendarOpen(true)} />
             <AtRiskWidget />
+          </div>
+
+          {/* Activity Feed Column (35%) */}
+          <div className="md:col-span-12 lg:col-span-4 hidden lg:block">
+            <div className="border border-border rounded-lg p-6 bg-card/50 h-full">
+              <ActivityFeed items={feed} onUndo={handleUndo} />
+            </div>
           </div>
         </div>
       </div>
