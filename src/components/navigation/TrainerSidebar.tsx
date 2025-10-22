@@ -170,7 +170,7 @@ export function TrainerSidebar({ collapsed, onToggle }: TrainerSidebarProps) {
           </nav>
 
           {/* Footer - Trainer Level */}
-          <div className="p-3 border-t border-border">
+          <div className="p-3 border-t border-border" data-tour="level">
             {collapsed ? (
               <Tooltip delayDuration={0}>
                 <TooltipTrigger asChild>

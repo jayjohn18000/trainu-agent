@@ -26,6 +26,14 @@ export function QueueCard({
   showUndo = false,
 }: QueueCardProps) {
   const [isWhyOpen, setIsWhyOpen] = useState(false);
+  const [isSliding, setIsSliding] = useState(false);
+
+  const handleApprove = () => {
+    setIsSliding(true);
+    setTimeout(() => {
+      onApprove?.(item.id);
+    }, 300);
+  };
 
   const getConfidenceBadge = (confidence: number) => {
     if (confidence >= 0.8) {
@@ -49,7 +57,11 @@ export function QueueCard({
   const badge = getConfidenceBadge(item.confidence);
 
   return (
-    <Card className="transition-all hover:shadow-md">
+    <Card 
+      className={`transition-all hover:shadow-md ${
+        isSliding ? "animate-slide-out-left" : ""
+      }`}
+    >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
@@ -101,8 +113,9 @@ export function QueueCard({
               {onApprove && (
                 <Button
                   size="sm"
-                  onClick={() => onApprove(item.id)}
+                  onClick={handleApprove}
                   className="flex-1"
+                  data-tour="approve-btn"
                 >
                   <Check className="h-4 w-4 mr-2" />
                   Approve

@@ -71,7 +71,8 @@ export function ActivityFeed({ items, onUndo, className }: ActivityFeedProps) {
               {items.map((item, idx) => (
                 <div
                   key={idx}
-                  className="flex gap-3 pb-4 border-b last:border-0 last:pb-0"
+                  className="flex gap-3 pb-4 border-b last:border-0 last:pb-0 animate-slide-in-from-left"
+                  style={{ animationDelay: `${idx * 30}ms` }}
                 >
                   <div
                     className={`mt-0.5 ${getStatusColor(item.status)}`}

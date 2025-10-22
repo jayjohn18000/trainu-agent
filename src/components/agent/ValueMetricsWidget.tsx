@@ -3,6 +3,8 @@ import { Ring } from "@/components/ui/Ring";
 import { Clock, Send, TrendingUp, AlertTriangle, Sparkles } from "lucide-react";
 import { useTrainerGamification } from "@/hooks/useTrainerGamification";
 import { useAchievementTracker } from "@/hooks/useAchievementTracker";
+import { useCountUp } from "@/hooks/useCountUp";
+import { useEffect, useState } from "react";
 
 interface ValueMetricsWidgetProps {
   queueCount?: number;
@@ -12,6 +14,12 @@ interface ValueMetricsWidgetProps {
 export function ValueMetricsWidget({ queueCount = 0, feedCount = 0 }: ValueMetricsWidgetProps) {
   const { progress } = useTrainerGamification();
   const { userStats } = useAchievementTracker();
+  const [hasAnimated, setHasAnimated] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setHasAnimated(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Calculate time saved (3 minutes per message)
   const timeSavedMinutes = userStats.messagesSentTotal * 3;
@@ -26,43 +34,51 @@ export function ValueMetricsWidget({ queueCount = 0, feedCount = 0 }: ValueMetri
     ? Math.round((userStats.messagesSentTotal / totalMessages) * 100)
     : 95;
 
+  // Count-up animations
+  const animatedTimeSavedHours = useCountUp(timeSavedHours, 800, 0, hasAnimated);
+  const animatedMessagesSent = useCountUp(userStats.messagesSentTotal, 800, 0, hasAnimated);
+  const animatedResponseRate = useCountUp(responseRate, 800, 0, hasAnimated);
+  const animatedAtRiskEngaged = useCountUp(userStats.atRiskEngaged, 800, 0, hasAnimated);
+
   const metricCards = [
     {
       icon: Clock,
       iconColor: "text-blue-500",
       label: "Time Saved",
-      value: timeSavedDisplay,
-      subtitle: `${userStats.messagesSentTotal} msgs approved`,
-      percentage: Math.min(100, (timeSavedHours / 10) * 100), // Cap at 10 hours
+      value: animatedTimeSavedHours > 0 
+        ? `${animatedTimeSavedHours}h ${timeSavedMinutes % 60}m`
+        : `${timeSavedMinutes}m`,
+      subtitle: `${animatedMessagesSent} msgs approved`,
+      percentage: Math.min(100, (animatedTimeSavedHours / 10) * 100),
     },
     {
       icon: Send,
       iconColor: "text-green-500",
       label: "Messages Sent",
-      value: String(userStats.messagesSentTotal),
+      value: String(animatedMessagesSent),
       subtitle: `${userStats.messagesEdited} edited`,
-      percentage: (userStats.messagesSentTotal / Math.max(1, userStats.messagesSentTotal + 10)) * 100,
+      percentage: (animatedMessagesSent / Math.max(1, animatedMessagesSent + 10)) * 100,
     },
     {
       icon: TrendingUp,
       iconColor: "text-purple-500",
       label: "Response Rate",
-      value: `${responseRate}%`,
+      value: `${animatedResponseRate}%`,
       subtitle: "Last 30 days",
-      percentage: responseRate,
+      percentage: animatedResponseRate,
     },
     {
       icon: AlertTriangle,
       iconColor: "text-orange-500",
       label: "At-Risk Engaged",
-      value: String(userStats.atRiskEngaged),
+      value: String(animatedAtRiskEngaged),
       subtitle: `${queueCount} in queue`,
-      percentage: (userStats.atRiskEngaged / Math.max(1, userStats.atRiskEngaged + 5)) * 100,
+      percentage: (animatedAtRiskEngaged / Math.max(1, animatedAtRiskEngaged + 5)) * 100,
     },
   ];
 
   return (
-    <Card className="border-border">
+    <Card className="border-border" data-tour="metrics">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-sm">
           <Sparkles className="h-4 w-4 text-primary" />
@@ -86,7 +102,7 @@ export function ValueMetricsWidget({ queueCount = 0, feedCount = 0 }: ValueMetri
                         {metric.label}
                       </p>
                     </div>
-                    <p className="text-lg font-bold mb-0.5">{metric.value}</p>
+                    <p className="text-lg font-bold mb-0.5 animate-count-up">{metric.value}</p>
                     <p className="text-xs text-muted-foreground">
                       {metric.subtitle}
                     </p>

@@ -10,6 +10,10 @@ import { AtRiskWidget } from "@/components/agent/AtRiskWidget";
 import { ProgramBuilderCard } from "@/components/agent/ProgramBuilderCard";
 import { WelcomeModal } from "@/components/onboarding/WelcomeModal";
 import { TourOverlay } from "@/components/onboarding/TourOverlay";
+import { Confetti } from "@/components/effects/Confetti";
+import { QueueCardSkeletonList } from "@/components/skeletons/QueueCardSkeleton";
+import { ActivityFeedSkeleton } from "@/components/skeletons/ActivityFeedSkeleton";
+import { ValueMetricsSkeleton } from "@/components/skeletons/ValueMetricsSkeleton";
 import { SettingsModal } from "@/components/modals/SettingsModal";
 import { CalendarModal } from "@/components/modals/CalendarModal";
 import { MessagesModal } from "@/components/modals/MessagesModal";
@@ -37,8 +41,11 @@ export default function Today() {
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [welcomeOpen, setWelcomeOpen] = useState(false);
   const [tourActive, setTourActive] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [previousLevel, setPreviousLevel] = useState<number | null>(null);
   const { toast } = useToast();
-  const { awardXP } = useTrainerGamification();
+  const { awardXP, progress } = useTrainerGamification();
   const { updateStats, newlyUnlockedAchievements } = useAchievementTracker();
 
   // Check if first visit
@@ -47,7 +54,22 @@ export default function Today() {
     if (!welcomeShown) {
       setWelcomeOpen(true);
     }
+
+    // Simulate loading
+    const timer = setTimeout(() => setIsLoading(false), 800);
+    return () => clearTimeout(timer);
   }, []);
+
+  // Track level changes for confetti
+  useEffect(() => {
+    if (previousLevel === null) {
+      setPreviousLevel(progress.level);
+    } else if (progress.level > previousLevel) {
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 3000);
+      setPreviousLevel(progress.level);
+    }
+  }, [progress.level, previousLevel]);
 
   const handleStartTour = () => {
     setTourActive(true);
@@ -303,7 +325,9 @@ export default function Today() {
               </div>
             </button>
             
-            {queue.length === 0 ? (
+            {isLoading ? (
+              <QueueCardSkeletonList count={3} />
+            ) : queue.length === 0 ? (
               <Card className="p-12 text-center">
                 <div className="flex flex-col items-center gap-4">
                   <CheckCircle className="h-16 w-16 text-green-500" />
@@ -317,13 +341,18 @@ export default function Today() {
               </Card>
             ) : (
               <>
-                {queue.slice(0, 3).map((item) => (
-                  <QueueCard
+                {queue.slice(0, 3).map((item, idx) => (
+                  <div 
                     key={item.id}
-                    item={item}
-                    onApprove={() => handleApprove(item.id)}
-                    onEdit={() => handleEdit(item.id)}
-                  />
+                    className="animate-slide-in-from-left"
+                    style={{ animationDelay: `${idx * 50}ms` }}
+                  >
+                    <QueueCard
+                      item={item}
+                      onApprove={() => handleApprove(item.id)}
+                      onEdit={() => handleEdit(item.id)}
+                    />
+                  </div>
                 ))}
                 {queue.length > 3 && (
                   <button
@@ -361,11 +390,15 @@ export default function Today() {
         {/* Bottom Widgets Bar */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Left Column: Activity Feed */}
-          <div className="border border-border rounded-lg p-6 bg-card/50">
-            <ActivityFeed 
-              items={feed.slice(0, Math.max(8, queue.length))} 
-              onUndo={handleUndo} 
-            />
+          <div className="border border-border rounded-lg p-6 bg-card/50" data-tour="feed">
+            {isLoading ? (
+              <ActivityFeedSkeleton />
+            ) : (
+              <ActivityFeed 
+                items={feed.slice(0, Math.max(8, queue.length))} 
+                onUndo={handleUndo} 
+              />
+            )}
           </div>
           
           {/* Right Column: Calendar + AtRisk */}
@@ -401,6 +434,9 @@ export default function Today() {
       <CalendarModal open={calendarOpen} onOpenChange={setCalendarOpen} />
       <MessagesModal open={messagesOpen} onOpenChange={setMessagesOpen} />
       <KeyboardShortcutsOverlay open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
+
+      {/* Confetti on level up */}
+      <Confetti active={showConfetti} />
     </>
   );
 }

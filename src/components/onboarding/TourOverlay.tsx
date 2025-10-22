@@ -44,8 +44,8 @@ const tourSteps: TourStep[] = [
   {
     target: "[data-tour='level']",
     title: "Level Up",
-    description: "Earn XP for every action. Unlock achievements and climb the leaderboard!",
-    position: "right",
+    description: "Earn XP for every action. Unlock achievements and track your progress!",
+    position: "bottom",
   },
 ];
 
