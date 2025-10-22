@@ -36,6 +36,7 @@ import DevFlags from "@/pages/DevFlags";
 import Challenges from "@/pages/Challenges";
 import NotFound from "@/pages/NotFound";
 import Today from "@/pages/Today";
+import Queue from "@/pages/Queue";
 import Gone410 from "@/pages/Gone410";
 
 export default function App() {
@@ -52,6 +53,7 @@ export default function App() {
           {/* Agent Console routes - unified layout */}
           <Route element={<UnifiedLayout />}>
             <Route path="/today" element={<Today />} />
+            <Route path="/queue" element={<Queue />} />
             <Route path="/clients" element={<Clients />} />
           </Route>
 

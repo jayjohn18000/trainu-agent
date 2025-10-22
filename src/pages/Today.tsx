@@ -264,9 +264,19 @@ export default function Today() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 mb-8">
           {/* Queue Column */}
           <div className="space-y-4">
-            <h2 className="text-lg font-semibold">
-              Queue {queue.length > 0 && `(${queue.length})`}
-            </h2>
+            <button
+              onClick={() => window.location.href = '/queue'}
+              className="w-full text-left group"
+            >
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold group-hover:text-primary transition-colors">
+                  Queue {queue.length > 0 && `(${queue.length})`}
+                </h2>
+                <Badge variant="outline" className="text-xs group-hover:border-primary transition-colors">
+                  View All →
+                </Badge>
+              </div>
+            </button>
             
             {queue.length === 0 ? (
               <Card className="p-12 text-center">
@@ -282,7 +292,7 @@ export default function Today() {
               </Card>
             ) : (
               <>
-                {queue.map((item) => (
+                {queue.slice(0, 3).map((item) => (
                   <QueueCard
                     key={item.id}
                     item={item}
@@ -290,6 +300,18 @@ export default function Today() {
                     onEdit={() => handleEdit(item.id)}
                   />
                 ))}
+                {queue.length > 3 && (
+                  <button
+                    onClick={() => window.location.href = '/queue'}
+                    className="w-full"
+                  >
+                    <Card className="p-4 border-dashed border-2 hover:border-primary/50 transition-colors cursor-pointer text-center">
+                      <p className="text-sm text-muted-foreground">
+                        +{queue.length - 3} more in queue
+                      </p>
+                    </Card>
+                  </button>
+                )}
                 <ProgramBuilderCard />
               </>
             )}
