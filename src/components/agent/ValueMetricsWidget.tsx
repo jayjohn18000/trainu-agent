@@ -1,89 +1,102 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Ring } from "@/components/ui/Ring";
-import { Clock, Send, TrendingUp, Users } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Clock, Send, TrendingUp, AlertTriangle, Sparkles } from "lucide-react";
+import { useTrainerGamification } from "@/hooks/useTrainerGamification";
+import { useAchievementTracker } from "@/hooks/useAchievementTracker";
 
-interface ValueMetrics {
-  timeSavedToday: number; // minutes
-  timeSavedWeek: number;
-  messagesSentToday: number;
-  messagesSentWeek: number;
-  responseRate30d: number; // percentage
-  atRiskEngaged: number;
+interface ValueMetricsWidgetProps {
+  queueCount?: number;
+  feedCount?: number;
 }
 
-// Mock data - will be replaced with real data from API
-const mockMetrics: ValueMetrics = {
-  timeSavedToday: 45,
-  timeSavedWeek: 215,
-  messagesSentToday: 9,
-  messagesSentWeek: 43,
-  responseRate30d: 87,
-  atRiskEngaged: 3,
-};
+export function ValueMetricsWidget({ queueCount = 0, feedCount = 0 }: ValueMetricsWidgetProps) {
+  const { progress } = useTrainerGamification();
+  const { userStats } = useAchievementTracker();
 
-export function ValueMetricsWidget() {
-  const metrics = mockMetrics;
+  // Calculate time saved (3 minutes per message)
+  const timeSavedMinutes = userStats.messagesSentTotal * 3;
+  const timeSavedHours = Math.floor(timeSavedMinutes / 60);
+  const timeSavedDisplay = timeSavedHours > 0 
+    ? `${timeSavedHours}h ${timeSavedMinutes % 60}m`
+    : `${timeSavedMinutes}m`;
+
+  // Calculate response rate (approved / total)
+  const totalMessages = userStats.messagesSentTotal + userStats.messagesEdited;
+  const responseRate = totalMessages > 0 
+    ? Math.round((userStats.messagesSentTotal / totalMessages) * 100)
+    : 95;
 
   const metricCards = [
     {
       icon: Clock,
+      iconColor: "text-blue-500",
       label: "Time Saved",
-      value: `${metrics.timeSavedToday}m`,
-      subtitle: `${metrics.timeSavedWeek}m this week`,
-      percentage: (metrics.timeSavedToday / 60) * 100, // out of 1 hour
-      color: "hsl(var(--primary))",
+      value: timeSavedDisplay,
+      subtitle: `${userStats.messagesSentTotal} msgs approved`,
+      percentage: Math.min(100, (timeSavedHours / 10) * 100), // Cap at 10 hours
     },
     {
       icon: Send,
+      iconColor: "text-green-500",
       label: "Messages Sent",
-      value: metrics.messagesSentToday,
-      subtitle: `${metrics.messagesSentWeek} this week`,
-      percentage: (metrics.messagesSentToday / 20) * 100, // out of 20 daily
-      color: "hsl(var(--success))",
+      value: String(userStats.messagesSentTotal),
+      subtitle: `${userStats.messagesEdited} edited`,
+      percentage: (userStats.messagesSentTotal / Math.max(1, userStats.messagesSentTotal + 10)) * 100,
     },
     {
       icon: TrendingUp,
+      iconColor: "text-purple-500",
       label: "Response Rate",
-      value: `${metrics.responseRate30d}%`,
+      value: `${responseRate}%`,
       subtitle: "Last 30 days",
-      percentage: metrics.responseRate30d,
-      color: "hsl(var(--warning))",
+      percentage: responseRate,
     },
     {
-      icon: Users,
+      icon: AlertTriangle,
+      iconColor: "text-orange-500",
       label: "At-Risk Engaged",
-      value: metrics.atRiskEngaged,
-      subtitle: "This week",
-      percentage: (metrics.atRiskEngaged / 5) * 100, // out of 5 target
-      color: "hsl(var(--info))",
+      value: String(userStats.atRiskEngaged),
+      subtitle: `${queueCount} in queue`,
+      percentage: (userStats.atRiskEngaged / Math.max(1, userStats.atRiskEngaged + 5)) * 100,
     },
   ];
 
   return (
-    <Card>
-      <CardContent className="pt-6">
-        <div className="grid grid-cols-2 gap-6">
-          {metricCards.map((metric) => {
+    <Card className="border-border">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-sm">
+          <Sparkles className="h-4 w-4 text-primary" />
+          Your Impact
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-2 gap-3">
+          {metricCards.map((metric, idx) => {
             const Icon = metric.icon;
             return (
-              <div key={metric.label} className="flex flex-col items-center text-center space-y-2">
-                <div className="relative">
-                  <Ring
-                    percentage={Math.min(metric.percentage, 100)}
-                    size={64}
-                    strokeWidth={6}
-                    label=""
-                    className=""
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Icon className="h-5 w-5 text-muted-foreground" />
+              <div
+                key={idx}
+                className="flex flex-col gap-2 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Icon className={`h-4 w-4 ${metric.iconColor}`} />
+                      <p className="text-xs text-muted-foreground truncate">
+                        {metric.label}
+                      </p>
+                    </div>
+                    <p className="text-lg font-bold mb-0.5">{metric.value}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {metric.subtitle}
+                    </p>
                   </div>
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{metric.value}</p>
-                  <p className="text-xs text-muted-foreground">{metric.label}</p>
-                  <p className="text-xs text-muted-foreground">{metric.subtitle}</p>
+                  <Ring
+                    percentage={metric.percentage}
+                    size={32}
+                    strokeWidth={3}
+                    className="flex-shrink-0"
+                  />
                 </div>
               </div>
             );

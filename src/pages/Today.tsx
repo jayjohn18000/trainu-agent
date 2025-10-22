@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { fixtures } from "@/lib/fixtures";
 import { QueueCard } from "@/components/agent/QueueCard";
 import { ActivityFeed } from "@/components/agent/ActivityFeed";
@@ -8,6 +8,8 @@ import { MessagesWidget } from "@/components/agent/MessagesWidget";
 import { CalendarWidget } from "@/components/agent/CalendarWidget";
 import { AtRiskWidget } from "@/components/agent/AtRiskWidget";
 import { ProgramBuilderCard } from "@/components/agent/ProgramBuilderCard";
+import { WelcomeModal } from "@/components/onboarding/WelcomeModal";
+import { TourOverlay } from "@/components/onboarding/TourOverlay";
 import { SettingsModal } from "@/components/modals/SettingsModal";
 import { CalendarModal } from "@/components/modals/CalendarModal";
 import { MessagesModal } from "@/components/modals/MessagesModal";
@@ -33,9 +35,31 @@ export default function Today() {
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [messagesOpen, setMessagesOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
+  const [tourActive, setTourActive] = useState(false);
   const { toast } = useToast();
   const { awardXP } = useTrainerGamification();
   const { updateStats, newlyUnlockedAchievements } = useAchievementTracker();
+
+  // Check if first visit
+  useEffect(() => {
+    const welcomeShown = localStorage.getItem("welcomeShown");
+    if (!welcomeShown) {
+      setWelcomeOpen(true);
+    }
+  }, []);
+
+  const handleStartTour = () => {
+    setTourActive(true);
+  };
+
+  const handleCompleteTour = () => {
+    setTourActive(false);
+  };
+
+  const handleSkipTour = () => {
+    setTourActive(false);
+  };
 
   const handleApprove = (id: string) => {
     const item = queue.find((q) => q.id === id);
@@ -267,6 +291,7 @@ export default function Today() {
             <button
               onClick={() => window.location.href = '/queue'}
               className="w-full text-left group"
+              data-tour="queue"
             >
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold group-hover:text-primary transition-colors">
@@ -326,7 +351,9 @@ export default function Today() {
                 ↑ 15%
               </Badge>
             </div>
-            <ValueMetricsWidget />
+            <div data-tour="metrics">
+              <ValueMetricsWidget queueCount={queue.length} feedCount={feed.length} />
+            </div>
             <MessagesWidget onOpenMessages={() => setMessagesOpen(true)} />
           </div>
         </div>
@@ -360,6 +387,16 @@ export default function Today() {
       )}
 
       {/* Modals */}
+      <WelcomeModal 
+        open={welcomeOpen} 
+        onOpenChange={setWelcomeOpen}
+        onStartTour={handleStartTour}
+      />
+      <TourOverlay 
+        active={tourActive}
+        onComplete={handleCompleteTour}
+        onSkip={handleSkipTour}
+      />
       <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
       <CalendarModal open={calendarOpen} onOpenChange={setCalendarOpen} />
       <MessagesModal open={messagesOpen} onOpenChange={setMessagesOpen} />

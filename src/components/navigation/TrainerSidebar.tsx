@@ -3,6 +3,7 @@ import { Home, Users, MessageSquare, Calendar, Settings, ChevronLeft, ChevronRig
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { TrainerLevelDisplay } from "@/components/gamification/TrainerLevelDisplay";
+import { AgentStatusBar } from "@/components/agent/AgentStatusBar";
 import { SettingsModal } from "@/components/modals/SettingsModal";
 import { CalendarModal } from "@/components/modals/CalendarModal";
 import { MessagesModal } from "@/components/modals/MessagesModal";
@@ -28,6 +29,7 @@ export function TrainerSidebar({ collapsed, onToggle }: TrainerSidebarProps) {
   const [messagesOpen, setMessagesOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [agentState, setAgentState] = useState<"active" | "paused" | "processing">("active");
 
   const handleNavClick = (item: typeof navItems[0]) => {
     if (item.isModal) {
@@ -35,6 +37,10 @@ export function TrainerSidebar({ collapsed, onToggle }: TrainerSidebarProps) {
       if (item.label === 'Calendar') setCalendarOpen(true);
       if (item.label === 'Settings') setSettingsOpen(true);
     }
+  };
+
+  const handleToggleAgent = () => {
+    setAgentState(prev => prev === "paused" ? "active" : "paused");
   };
 
   return (
@@ -57,6 +63,32 @@ export function TrainerSidebar({ collapsed, onToggle }: TrainerSidebarProps) {
             >
               {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
             </Button>
+          </div>
+
+          {/* Agent Status */}
+          <div className={cn("px-3 py-2 border-b border-border", collapsed && "px-2")}>
+            {collapsed ? (
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger asChild>
+                  <div className="flex justify-center">
+                    <AgentStatusBar 
+                      state={agentState}
+                      onToggle={handleToggleAgent}
+                    />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  <p>Agent Status: {agentState}</p>
+                </TooltipContent>
+              </Tooltip>
+            ) : (
+              <AgentStatusBar 
+                state={agentState}
+                currentAction="Reviewing messages"
+                lastUpdate={new Date()}
+                onToggle={handleToggleAgent}
+              />
+            )}
           </div>
 
           {/* Navigation */}
