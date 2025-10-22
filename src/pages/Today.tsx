@@ -11,14 +11,17 @@ import { ProgramBuilderCard } from "@/components/agent/ProgramBuilderCard";
 import { SettingsModal } from "@/components/modals/SettingsModal";
 import { CalendarModal } from "@/components/modals/CalendarModal";
 import { MessagesModal } from "@/components/modals/MessagesModal";
+import { KeyboardShortcutsOverlay } from "@/components/navigation/KeyboardShortcutsOverlay";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useTrainerGamification } from "@/hooks/useTrainerGamification";
+import { useAchievementTracker } from "@/hooks/useAchievementTracker";
 import { TrainerXPNotification } from "@/components/gamification/TrainerXPNotification";
-import { Zap, CheckCircle, TrendingUp } from "lucide-react";
+import { AchievementUnlockNotification } from "@/components/ui/AchievementUnlockNotification";
+import { Zap, CheckCircle, TrendingUp, Keyboard } from "lucide-react";
 import type { QueueItem } from "@/types/agent";
 
 export default function Today() {
@@ -29,8 +32,10 @@ export default function Today() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [messagesOpen, setMessagesOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const { toast } = useToast();
   const { awardXP } = useTrainerGamification();
+  const { updateStats, newlyUnlockedAchievements } = useAchievementTracker();
 
   const handleApprove = (id: string) => {
     const item = queue.find((q) => q.id === id);
@@ -54,8 +59,13 @@ export default function Today() {
     };
     setFeed((prev) => [feedItem, ...prev]);
 
-    // Award XP
+    // Award XP and update stats
     awardXP(25, "Approved message");
+    updateStats({
+      messagesSentToday: feed.length + 1,
+      messagesSentTotal: feed.length + 1,
+      timeSavedHours: ((feed.length + 1) * 5) / 60, // 5 min per message
+    });
 
     toast({
       title: "Message approved",
@@ -81,8 +91,11 @@ export default function Today() {
       )
     );
 
-    // Award XP
+    // Award XP and update stats
     awardXP(50, "Edited message");
+    updateStats({
+      messagesEdited: (feed.filter(f => f.action === 'sent').length || 0) + 1,
+    });
 
     toast({
       title: "Message updated",
@@ -192,6 +205,12 @@ export default function Today() {
       callback: () => setSettingsOpen(true),
       description: "Open settings",
     },
+    {
+      key: "?",
+      shift: true,
+      callback: () => setShortcutsOpen(true),
+      description: "Show keyboard shortcuts",
+    },
   ]);
 
   const safeItemsCount = queue.filter(item => item.confidence >= 0.8).length;
@@ -200,20 +219,45 @@ export default function Today() {
     <>
       <TrainerXPNotification />
       
+      {/* Achievement Notifications */}
+      {newlyUnlockedAchievements.map((achievement) => (
+        <AchievementUnlockNotification
+          key={achievement.id}
+          achievement={{
+            id: achievement.id,
+            name: achievement.name,
+            description: achievement.description,
+            tier: achievement.tier,
+            icon: achievement.icon,
+          }}
+          show={true}
+        />
+      ))}
+      
       <div className="container mx-auto px-4 md:px-6 py-6 max-w-[1600px]">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold">Today</h1>
-          {safeItemsCount > 0 && (
+          <div className="flex items-center gap-2">
             <Button 
-              variant="outline" 
-              size="sm"
-              onClick={handleApproveAllSafe}
+              variant="ghost" 
+              size="icon"
+              onClick={() => setShortcutsOpen(true)}
+              title="Keyboard shortcuts (?)"
             >
-              <Zap className="h-4 w-4 mr-2" />
-              Approve {safeItemsCount} Safe
+              <Keyboard className="h-4 w-4" />
             </Button>
-          )}
+            {safeItemsCount > 0 && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleApproveAllSafe}
+              >
+                <Zap className="h-4 w-4 mr-2" />
+                Approve {safeItemsCount} Safe
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* 2-Column Layout: Queue + Your Impact/Messages */}
@@ -297,6 +341,7 @@ export default function Today() {
       <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
       <CalendarModal open={calendarOpen} onOpenChange={setCalendarOpen} />
       <MessagesModal open={messagesOpen} onOpenChange={setMessagesOpen} />
+      <KeyboardShortcutsOverlay open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
     </>
   );
 }

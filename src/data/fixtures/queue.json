@@ -2,21 +2,81 @@
   {
     "id": "q1",
     "clientId": "c1",
-    "clientName": "Emily K",
-    "preview": "Hey Emily…",
+    "clientName": "Sarah Martinez",
+    "preview": "Hey Sarah! I noticed you've missed the last two sessions and wanted to check in. I know you've been working toward your 5K goal – how's that going? Sometimes life gets busy, but I'm here to help you stay on track. Would love to reconnect and adjust your plan if needed. What does your schedule look like this week?",
     "confidence": 0.86,
     "status": "review",
-    "why": ["Missed 2 sessions", "5K goal"],
+    "why": ["Missed 2 sessions in a row", "Previously mentioned 5K goal", "85% churn risk score", "Last seen 6 days ago"],
     "createdAt": "2025-10-21T14:00:00Z"
   },
   {
     "id": "q2",
     "clientId": "c2",
-    "clientName": "Jordan M",
-    "preview": "Congrats on 10-workout streak…",
-    "confidence": 0.92,
+    "clientName": "Mike Chen",
+    "preview": "Mike! 🔥 12 weeks straight – that's incredible consistency! Your dedication is seriously inspiring. I've been tracking your progress and you're crushing every benchmark we set. Keep this momentum going, you're on track for something special. What's your next big goal?",
+    "confidence": 0.95,
     "status": "autosend",
-    "why": ["Streak 10"],
+    "why": ["12-week workout streak achieved", "All benchmarks met", "Low churn risk (12%)", "Highly engaged client"],
     "createdAt": "2025-10-21T13:55:00Z"
+  },
+  {
+    "id": "q3",
+    "clientId": "c3",
+    "clientName": "Lisa Williams",
+    "preview": "Hey Lisa! How are you feeling after your first week? Starting a new fitness journey takes courage and you're already showing up. Any questions about your program? I'm here to make sure everything feels manageable and effective. Looking forward to seeing your progress!",
+    "confidence": 0.78,
+    "status": "review",
+    "why": ["First week as new client", "Needs encouragement", "Building relationship", "45% risk - critical onboarding phase"],
+    "createdAt": "2025-10-21T13:30:00Z"
+  },
+  {
+    "id": "q4",
+    "clientId": "c4",
+    "clientName": "David Johnson",
+    "preview": "David, I've been reviewing your progress and noticed we've plateaued around the same weight for about 4 weeks. This is totally normal! Time to shake things up. I'm thinking we adjust your program – maybe increase intensity or try a different approach. What do you think about switching to a new split? Let's break through this together.",
+    "confidence": 0.82,
+    "status": "review",
+    "why": ["4-week plateau detected", "Weight unchanged", "68% risk score", "Program adjustment needed"],
+    "createdAt": "2025-10-21T12:45:00Z"
+  },
+  {
+    "id": "q5",
+    "clientId": "c5",
+    "clientName": "Emma Thompson",
+    "preview": "Emma, I haven't heard from you in 2 weeks and I'm genuinely concerned. I know life happens and fitness isn't always the top priority – totally get it. But I also know how important your wellness goals are to you. Can we hop on a quick call? No pressure, just want to make sure you're okay and see if there's anything I can do to support you right now.",
+    "confidence": 0.91,
+    "status": "review",
+    "why": ["14 days no contact - critical", "92% churn risk", "Urgent intervention needed", "Previously consistent client"],
+    "createdAt": "2025-10-21T12:00:00Z"
+  },
+  {
+    "id": "q6",
+    "clientId": "c6",
+    "clientName": "Jake Rodriguez",
+    "preview": "Jake! You crushed that program – seriously impressive work. You're ready for the next level. I've been designing an advanced strength program that I think would be perfect for you. More complex movements, periodization, the works. Interested in taking your training to the next tier? Let's chat about what's next.",
+    "confidence": 0.88,
+    "status": "autosend",
+    "why": ["Program completed successfully", "All goals achieved", "Low risk (15%)", "Upsell opportunity - advanced program"],
+    "createdAt": "2025-10-21T11:30:00Z"
+  },
+  {
+    "id": "q7",
+    "clientId": "c7",
+    "clientName": "Amy Lee",
+    "preview": "Hey Amy! I've noticed we've been averaging about 3 sessions a month and I want to help you build more consistency. What if we tried a 30-day challenge together? Nothing crazy, just committing to 3 sessions per week. I'll check in with you regularly and we can celebrate the small wins. Sometimes structure is what we need. What do you think?",
+    "confidence": 0.73,
+    "status": "review",
+    "why": ["Low frequency - 3 sessions/month", "74% churn risk", "Needs structure and accountability", "Last seen 8 days ago"],
+    "createdAt": "2025-10-21T11:00:00Z"
+  },
+  {
+    "id": "q8",
+    "clientId": "c8",
+    "clientName": "Chris Davis",
+    "preview": "Chris! Welcome back! It takes guts to come back after time off and I'm really glad you're here. Let's ease back in – no pressure, just consistent progress. I've modified your program to account for the break. How are you feeling? Any concerns or things you want to focus on this time around?",
+    "confidence": 0.89,
+    "status": "autosend",
+    "why": ["Returning after 2-month break", "Comeback journey", "Positive momentum", "55% risk - needs encouragement"],
+    "createdAt": "2025-10-21T10:30:00Z"
   }
 ]

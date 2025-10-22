@@ -1,20 +1,137 @@
 [
   {
     "id": "c1",
-    "name": "Emily K",
-    "risk": 72,
-    "nextAction": "Review draft",
-    "aiInsight": "Missed 2 sessions. Mentions 5K goal.",
-    "lastSeen": "5d",
-    "tags": ["run"]
+    "name": "Sarah Martinez",
+    "risk": 85,
+    "nextAction": "Urgent re-engagement",
+    "aiInsight": "Missed 2 sessions. High risk of churn.",
+    "lastSeen": "6d",
+    "tags": ["run", "weight-loss"]
   },
   {
     "id": "c2",
-    "name": "Jordan M",
-    "risk": 18,
-    "nextAction": "Send congrats",
-    "aiInsight": "Hit 10-workout streak.",
+    "name": "Mike Chen",
+    "risk": 12,
+    "nextAction": "Celebrate streak",
+    "aiInsight": "12-week streak. Crushing goals.",
     "lastSeen": "1d",
-    "tags": ["strength"]
+    "tags": ["strength", "powerlifting"]
+  },
+  {
+    "id": "c3",
+    "name": "Lisa Williams",
+    "risk": 45,
+    "nextAction": "First week check-in",
+    "aiInsight": "New client. Needs encouragement.",
+    "lastSeen": "2d",
+    "tags": ["beginner", "cardio"]
+  },
+  {
+    "id": "c4",
+    "name": "David Johnson",
+    "risk": 68,
+    "nextAction": "Program adjustment",
+    "aiInsight": "Stuck at same weight for 4 weeks.",
+    "lastSeen": "3d",
+    "tags": ["weight-loss", "plateau"]
+  },
+  {
+    "id": "c5",
+    "name": "Emma Thompson",
+    "risk": 92,
+    "nextAction": "Immediate intervention",
+    "aiInsight": "No check-ins for 14 days. Critical risk.",
+    "lastSeen": "14d",
+    "tags": ["yoga", "wellness"]
+  },
+  {
+    "id": "c6",
+    "name": "Jake Rodriguez",
+    "risk": 15,
+    "nextAction": "Upsell opportunity",
+    "aiInsight": "Completed program. Ready for advanced.",
+    "lastSeen": "1d",
+    "tags": ["strength", "advanced"]
+  },
+  {
+    "id": "c7",
+    "name": "Amy Lee",
+    "risk": 74,
+    "nextAction": "Consistency challenge",
+    "aiInsight": "Only 3 sessions/month. Needs structure.",
+    "lastSeen": "8d",
+    "tags": ["inconsistent"]
+  },
+  {
+    "id": "c8",
+    "name": "Chris Davis",
+    "risk": 55,
+    "nextAction": "Welcome back",
+    "aiInsight": "Returning after 2-month hiatus.",
+    "lastSeen": "2d",
+    "tags": ["comeback"]
+  },
+  {
+    "id": "c9",
+    "name": "Rachel Smith",
+    "risk": 8,
+    "nextAction": "Celebrate PRs",
+    "aiInsight": "Hit 3 PRs this month. Star client.",
+    "lastSeen": "1d",
+    "tags": ["strength", "powerlifting"]
+  },
+  {
+    "id": "c10",
+    "name": "Tom Brown",
+    "risk": 88,
+    "nextAction": "Re-engagement attempt",
+    "aiInsight": "Never responds to messages.",
+    "lastSeen": "12d",
+    "tags": ["silent"]
+  },
+  {
+    "id": "c11",
+    "name": "Jessica Wilson",
+    "risk": 5,
+    "nextAction": "Continue momentum",
+    "aiInsight": "Responds in <2 hours. Highly engaged.",
+    "lastSeen": "1d",
+    "tags": ["engaged", "cardio"]
+  },
+  {
+    "id": "c12",
+    "name": "Alex Martinez",
+    "risk": 42,
+    "nextAction": "Midweek check-in",
+    "aiInsight": "Only trains Sat/Sun. Weekend warrior.",
+    "lastSeen": "4d",
+    "tags": ["weekend-warrior"]
+  },
+  {
+    "id": "c13",
+    "name": "Nicole Park",
+    "risk": 22,
+    "nextAction": "Morning motivation",
+    "aiInsight": "5am sessions only. Consistent.",
+    "lastSeen": "1d",
+    "tags": ["early-bird", "cardio"]
+  },
+  {
+    "id": "c14",
+    "name": "Brandon Taylor",
+    "risk": 58,
+    "nextAction": "Modified program support",
+    "aiInsight": "Recovering from injury. Needs encouragement.",
+    "lastSeen": "2d",
+    "tags": ["injured", "rehab"]
+  },
+  {
+    "id": "c15",
+    "name": "Megan Foster",
+    "risk": 18,
+    "nextAction": "Feature in community",
+    "aiInsight": "Shares progress publicly. Social influencer.",
+    "lastSeen": "1d",
+    "tags": ["social", "transformation"]
   }
 ]
