@@ -13,15 +13,15 @@ type Props = {
   queueItem: {
     id: string;
     clientName: string;
-    fullMessage: string;
+    preview: string;
     confidence: number;
     why: string[];
-  };
+  } | null;
   onSave: (id: string, message: string, tone: string) => void;
 };
 
 export function MessageEditor({ open, onOpenChange, queueItem, onSave }: Props) {
-  const [message, setMessage] = useState(queueItem.fullMessage);
+  const [message, setMessage] = useState(queueItem?.preview || "");
   const [tone, setTone] = useState<string>("friendly");
   const [isRegenerating, setIsRegenerating] = useState(false);
   const { toast } = useToast();
@@ -34,13 +34,13 @@ export function MessageEditor({ open, onOpenChange, queueItem, onSave }: Props) 
     
     // Mock regenerated message with different tone
     const toneVariations: Record<string, string> = {
-      professional: `Dear ${queueItem.clientName},\n\nI hope this message finds you well. I wanted to reach out regarding your recent training sessions...\n\nBest regards,\n{trainerName}`,
-      friendly: `Hey ${queueItem.clientName}! 👋\n\nJust wanted to check in with you about your training. How's everything going?\n\nCheers,\n{trainerName}`,
-      motivational: `${queueItem.clientName}! 🔥\n\nYou've got this! I believe in your potential and I'm here to help you crush your goals!\n\nLet's do this!\n{trainerName}`,
-      direct: `${queueItem.clientName},\n\nWe need to talk about your training progress. Let's get straight to it.\n\n{trainerName}`,
+      professional: `Dear ${queueItem?.clientName},\n\nI hope this message finds you well. I wanted to reach out regarding your recent training sessions...\n\nBest regards,\n{trainerName}`,
+      friendly: `Hey ${queueItem?.clientName}! 👋\n\nJust wanted to check in with you about your training. How's everything going?\n\nCheers,\n{trainerName}`,
+      motivational: `${queueItem?.clientName}! 🔥\n\nYou've got this! I believe in your potential and I'm here to help you crush your goals!\n\nLet's do this!\n{trainerName}`,
+      direct: `${queueItem?.clientName},\n\nWe need to talk about your training progress. Let's get straight to it.\n\n{trainerName}`,
     };
     
-    setMessage(toneVariations[tone] || queueItem.fullMessage);
+    setMessage(toneVariations[tone] || queueItem?.preview || "");
     setIsRegenerating(false);
     
     toast({
@@ -50,6 +50,7 @@ export function MessageEditor({ open, onOpenChange, queueItem, onSave }: Props) 
   };
 
   const handleSave = () => {
+    if (!queueItem) return;
     onSave(queueItem.id, message, tone);
     onOpenChange(false);
     
@@ -61,6 +62,8 @@ export function MessageEditor({ open, onOpenChange, queueItem, onSave }: Props) 
 
   const charCount = message.length;
   const isValidLength = charCount >= 50 && charCount <= 500;
+
+  if (!queueItem) return null;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
