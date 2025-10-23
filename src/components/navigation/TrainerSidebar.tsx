@@ -10,6 +10,7 @@ import { MessagesModal } from "@/components/modals/MessagesModal";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { analytics } from "@/lib/analytics";
 
 interface TrainerSidebarProps {
   collapsed: boolean;
@@ -40,7 +41,11 @@ export function TrainerSidebar({ collapsed, onToggle }: TrainerSidebarProps) {
   };
 
   const handleToggleAgent = () => {
-    setAgentState(prev => prev === "paused" ? "active" : "paused");
+    setAgentState(prev => {
+      const newState = prev === "paused" ? "active" : "paused";
+      analytics.track('agent_toggled', { state: newState });
+      return newState;
+    });
   };
 
   return (

@@ -12,6 +12,8 @@ import { clientProvider } from "@/lib/data/clients/provider";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { Users, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { analytics } from "@/lib/analytics";
+import { memo } from "react";
 
 export default function Clients() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -100,6 +102,7 @@ export default function Clients() {
 
   const handleSelectClient = (client: Client) => {
     updateURL({ id: client.id });
+    analytics.track('client_viewed', { clientId: client.id });
   };
 
   const handleCloseInspector = () => {
@@ -130,6 +133,7 @@ export default function Clients() {
     if (!nudgeClient) return;
     try {
       await clientProvider.nudge(nudgeClient.id, { templateId, preview });
+      analytics.track('client_nudged', { clientId: nudgeClient.id, templateId });
       toast({
         title: "Nudge sent",
         description: `Message sent to ${nudgeClient.name}`,
@@ -203,13 +207,13 @@ export default function Clients() {
   ]);
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-3xl font-bold mb-2">Clients</h1>
-        <p className="text-muted-foreground">
+    <div className="space-y-4 md:space-y-6 p-4 md:p-6 animate-fade-in" role="main" aria-label="Clients page">
+      <header>
+        <h1 className="text-2xl md:text-3xl font-bold mb-2">Clients</h1>
+        <p className="text-sm md:text-base text-muted-foreground">
           Manage your client roster and track their progress
         </p>
-      </div>
+      </header>
 
       <div className="flex flex-col md:flex-row gap-3">
         <div className="flex-1">

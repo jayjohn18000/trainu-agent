@@ -7,8 +7,9 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { ChevronDown, Check, Edit, Undo } from "lucide-react";
-import { useState } from "react";
+import { useState, memo } from "react";
 import type { QueueItem } from "@/types/agent";
+import { useTouchGestures } from "@/hooks/useTouchGestures";
 
 interface QueueCardProps {
   item: QueueItem;
@@ -19,16 +20,30 @@ interface QueueCardProps {
   isSelected?: boolean;
 }
 
-export function QueueCard({
+const QueueCardComponent = ({
   item,
   onApprove,
   onEdit,
   onUndo,
   showUndo = false,
   isSelected = false,
-}: QueueCardProps) {
+}: QueueCardProps) => {
   const [isWhyOpen, setIsWhyOpen] = useState(false);
   const [isSliding, setIsSliding] = useState(false);
+  const [swiped, setSwiped] = useState(false);
+
+  // Touch gesture support for mobile
+  const { handlers, swipeProgress } = useTouchGestures({
+    onSwipeRight: () => {
+      if (onApprove) {
+        setSwiped(true);
+        setTimeout(() => {
+          onApprove(item.id);
+        }, 300);
+      }
+    },
+    threshold: 100,
+  });
 
   const handleApprove = () => {
     setIsSliding(true);
@@ -60,9 +75,16 @@ export function QueueCard({
 
   return (
     <Card 
-      className={`transition-all hover:shadow-lg hover-lift ${
-        isSliding ? "animate-slide-out-left" : ""
+      {...handlers}
+      className={`transition-all hover:shadow-lg hover-lift touch-pan-y select-none ${
+        isSliding || swiped ? "animate-slide-out-left" : ""
       } ${isSelected ? "ring-2 ring-primary shadow-glow" : ""}`}
+      style={{
+        transform: `translateX(${swipeProgress * 20}px)`,
+        opacity: 1 - swipeProgress * 0.3,
+      }}
+      role="article"
+      aria-label={`Queue item for ${item.clientName}`}
     >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
@@ -72,7 +94,7 @@ export function QueueCard({
               {item.preview}
             </p>
           </div>
-          <Badge variant={badge.variant} className={badge.className}>
+          <Badge variant={badge.variant} className={badge.className} aria-label={`Confidence: ${Math.round(item.confidence * 100)}%`}>
             {Math.round(item.confidence * 100)}%
           </Badge>
         </div>
@@ -81,11 +103,15 @@ export function QueueCard({
       <CardContent className="space-y-3 pt-0">
         {/* Why Suggested */}
         <Collapsible open={isWhyOpen} onOpenChange={setIsWhyOpen}>
-          <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+          <CollapsibleTrigger 
+            className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            aria-label="View reason for suggestion"
+          >
             <ChevronDown
               className={`h-4 w-4 transition-transform ${
                 isWhyOpen ? "rotate-180" : ""
               }`}
+              aria-hidden="true"
             />
             Why suggested
           </CollapsibleTrigger>
@@ -106,8 +132,9 @@ export function QueueCard({
               variant="outline"
               onClick={() => onUndo(item.id)}
               className="flex-1"
+              aria-label="Undo message"
             >
-              <Undo className="h-4 w-4 mr-2" />
+              <Undo className="h-4 w-4 mr-2" aria-hidden="true" />
               Undo
             </Button>
           ) : (
@@ -118,8 +145,9 @@ export function QueueCard({
                   onClick={handleApprove}
                   className="flex-1 btn-press hover:shadow-glow transition-smooth"
                   data-tour="approve-btn"
+                  aria-label="Approve and send message"
                 >
-                  <Check className="h-4 w-4 mr-2" />
+                  <Check className="h-4 w-4 mr-2" aria-hidden="true" />
                   Approve
                 </Button>
               )}
@@ -128,8 +156,9 @@ export function QueueCard({
                   size="sm"
                   variant="outline"
                   onClick={() => onEdit(item.id)}
+                  aria-label="Edit message"
                 >
-                  <Edit className="h-4 w-4 mr-2" />
+                  <Edit className="h-4 w-4 mr-2" aria-hidden="true" />
                   Edit
                 </Button>
               )}
@@ -139,4 +168,7 @@ export function QueueCard({
       </CardContent>
     </Card>
   );
-}
+};
+
+// Memoize for performance
+export const QueueCard = memo(QueueCardComponent);
