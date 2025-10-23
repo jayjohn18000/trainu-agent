@@ -13,18 +13,23 @@ interface EmptyStateProps {
 
 export function EmptyState({ icon: Icon, title, description, action }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center py-12 px-4 text-center animate-fade-in">
+    <div className="flex flex-col items-center justify-center py-16 px-4 text-center animate-fade-in">
       {Icon && (
-        <div className="h-20 w-20 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
-          <Icon className="h-10 w-10 text-muted-foreground" />
+        <div className="relative h-24 w-24 rounded-3xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center mb-6 animate-scale-in shadow-lg">
+          <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-primary/20 to-transparent opacity-0 animate-pulse" />
+          <Icon className="h-12 w-12 text-primary relative z-10" strokeWidth={1.5} />
         </div>
       )}
-      <h3 className="text-lg font-semibold mb-2">{title}</h3>
+      <h3 className="text-xl font-bold mb-2 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">{title}</h3>
       {description && (
-        <p className="text-sm text-muted-foreground max-w-sm mb-6">{description}</p>
+        <p className="text-sm text-muted-foreground max-w-md mb-8 leading-relaxed">{description}</p>
       )}
       {action && (
-        <Button onClick={action.onClick} className="transition-smooth hover:shadow-glow">
+        <Button 
+          onClick={action.onClick} 
+          size="lg"
+          className="btn-glow hover-scale transition-smooth shadow-md hover:shadow-glow"
+        >
           {action.label}
         </Button>
       )}

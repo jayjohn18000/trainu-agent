@@ -16,6 +16,7 @@ interface QueueCardProps {
   onEdit?: (id: string) => void;
   onUndo?: (id: string) => void;
   showUndo?: boolean;
+  isSelected?: boolean;
 }
 
 export function QueueCard({
@@ -24,6 +25,7 @@ export function QueueCard({
   onEdit,
   onUndo,
   showUndo = false,
+  isSelected = false,
 }: QueueCardProps) {
   const [isWhyOpen, setIsWhyOpen] = useState(false);
   const [isSliding, setIsSliding] = useState(false);
@@ -58,9 +60,9 @@ export function QueueCard({
 
   return (
     <Card 
-      className={`transition-all hover:shadow-md ${
+      className={`transition-all hover:shadow-lg hover-lift ${
         isSliding ? "animate-slide-out-left" : ""
-      }`}
+      } ${isSelected ? "ring-2 ring-primary shadow-glow" : ""}`}
     >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
@@ -114,7 +116,7 @@ export function QueueCard({
                 <Button
                   size="sm"
                   onClick={handleApprove}
-                  className="flex-1"
+                  className="flex-1 btn-press hover:shadow-glow transition-smooth"
                   data-tour="approve-btn"
                 >
                   <Check className="h-4 w-4 mr-2" />

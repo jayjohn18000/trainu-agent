@@ -13,12 +13,17 @@ export async function getAgentStatus() {
     };
   }
 
-  const { data, error } = await supabase.functions.invoke("agent-status");
-  if (error) throw error;
-  return {
-    ...data,
-    lastUpdate: new Date(data.lastUpdate),
-  };
+  try {
+    const { data, error } = await supabase.functions.invoke("agent-status");
+    if (error) throw error;
+    return {
+      ...data,
+      lastUpdate: new Date(data.lastUpdate),
+    };
+  } catch (error) {
+    console.error("Failed to fetch agent status:", error);
+    throw new Error("Unable to fetch agent status. Please try again.");
+  }
 }
 
 export async function getQueue(): Promise<QueueItem[]> {
@@ -28,9 +33,14 @@ export async function getQueue(): Promise<QueueItem[]> {
     return fixtures.queue;
   }
 
-  const { data, error } = await supabase.functions.invoke("agent-queue");
-  if (error) throw error;
-  return data || [];
+  try {
+    const { data, error } = await supabase.functions.invoke("agent-queue");
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error("Failed to fetch queue:", error);
+    throw new Error("Unable to load queue items. Please refresh the page.");
+  }
 }
 
 export async function getFeed(): Promise<FeedItem[]> {
@@ -40,17 +50,27 @@ export async function getFeed(): Promise<FeedItem[]> {
     return fixtures.feed;
   }
 
-  const { data, error } = await supabase.functions.invoke("agent-feed");
-  if (error) throw error;
-  return data || [];
+  try {
+    const { data, error } = await supabase.functions.invoke("agent-feed");
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error("Failed to fetch feed:", error);
+    throw new Error("Unable to load activity feed. Please refresh the page.");
+  }
 }
 
 export async function approveQueueItem(id: string) {
-  const { data, error } = await supabase.functions.invoke("agent-queue", {
-    body: { action: "approve", id },
-  });
-  if (error) throw error;
-  return data;
+  try {
+    const { data, error } = await supabase.functions.invoke("agent-queue", {
+      body: { action: "approve", id },
+    });
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error("Failed to approve item:", error);
+    throw new Error("Unable to approve item. Please try again.");
+  }
 }
 
 export async function undoQueueItem(id: string) {
@@ -62,11 +82,16 @@ export async function undoQueueItem(id: string) {
 }
 
 export async function editQueueItem(id: string, payload: any) {
-  const { data, error } = await supabase.functions.invoke("agent-queue", {
-    body: { action: "edit", id, payload },
-  });
-  if (error) throw error;
-  return data;
+  try {
+    const { data, error } = await supabase.functions.invoke("agent-queue", {
+      body: { action: "edit", id, payload },
+    });
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error("Failed to edit item:", error);
+    throw new Error("Unable to save changes. Please try again.");
+  }
 }
 
 export async function nudgeClient(clientId: string) {

@@ -2,8 +2,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { EmptyState } from "@/components/ui/empty-state";
 import { formatDistanceToNow, differenceInMinutes } from "date-fns";
-import { Send, Edit, CheckCircle, XCircle, Undo } from "lucide-react";
+import { Send, Edit, CheckCircle, XCircle, Undo, Clock } from "lucide-react";
 import type { FeedItem } from "@/types/agent";
 
 interface ActivityFeedProps {
@@ -62,9 +63,11 @@ export function ActivityFeed({ items, onUndo, className }: ActivityFeedProps) {
       </CardHeader>
       <CardContent>
         {items.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-4">
-            No recent activity
-          </p>
+          <EmptyState
+            icon={Clock}
+            title="No Activity Yet"
+            description="Your recent actions and messages will appear here once you start approving items."
+          />
         ) : (
           <ScrollArea className="h-[600px] pr-4">
             <div className="space-y-4">

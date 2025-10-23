@@ -21,13 +21,14 @@ import { KeyboardShortcutsOverlay } from "@/components/navigation/KeyboardShortc
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useToast } from "@/hooks/use-toast";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useTrainerGamification } from "@/hooks/useTrainerGamification";
 import { useAchievementTracker } from "@/hooks/useAchievementTracker";
 import { TrainerXPNotification } from "@/components/gamification/TrainerXPNotification";
 import { AchievementUnlockNotification } from "@/components/ui/AchievementUnlockNotification";
-import { Zap, CheckCircle, TrendingUp, Keyboard } from "lucide-react";
+import { Zap, CheckCircle, TrendingUp, Keyboard, Inbox } from "lucide-react";
 import type { QueueItem } from "@/types/agent";
 
 export default function Today() {
@@ -114,8 +115,16 @@ export default function Today() {
     });
 
     toast({
-      title: "Message approved",
-      description: `Draft to ${item.clientName} will be sent. +25 XP`,
+      title: "Message Approved",
+      description: (
+        <div className="flex items-center gap-2">
+          <span>Draft to {item.clientName} sent successfully!</span>
+          <span className="text-primary font-semibold flex items-center gap-1">
+            <Zap className="h-3 w-3" />
+            +25 XP
+          </span>
+        </div>
+      ),
     });
   };
 
@@ -213,13 +222,31 @@ export default function Today() {
   // Keyboard shortcuts
   useKeyboardShortcuts([
     {
+      key: "j",
+      callback: () => {
+        if (queue.length > 0) {
+          setSelectedIndex(prev => Math.min(prev + 1, queue.length - 1));
+        }
+      },
+      description: "Next item in queue",
+    },
+    {
+      key: "k",
+      callback: () => {
+        if (queue.length > 0) {
+          setSelectedIndex(prev => Math.max(prev - 1, 0));
+        }
+      },
+      description: "Previous item in queue",
+    },
+    {
       key: "a",
       callback: () => {
         if (queue.length > 0 && queue[selectedIndex]) {
           handleApprove(queue[selectedIndex].id);
         }
       },
-      description: "Approve current item",
+      description: "Approve selected item",
     },
     {
       key: "e",
@@ -228,7 +255,7 @@ export default function Today() {
           handleEdit(queue[selectedIndex].id);
         }
       },
-      description: "Edit current item",
+      description: "Edit selected item",
     },
     {
       key: "A",
@@ -328,17 +355,11 @@ export default function Today() {
             {isLoading ? (
               <QueueCardSkeletonList count={3} />
             ) : queue.length === 0 ? (
-              <Card className="p-12 text-center">
-                <div className="flex flex-col items-center gap-4">
-                  <CheckCircle className="h-16 w-16 text-green-500" />
-                  <div>
-                    <h3 className="text-xl font-semibold mb-2">All Caught Up! 🎉</h3>
-                    <p className="text-muted-foreground">
-                      Great work! No pending items in your queue.
-                    </p>
-                  </div>
-                </div>
-              </Card>
+              <EmptyState
+                icon={CheckCircle}
+                title="All Caught Up!"
+                description="Great work! No pending items in your queue. Your agent will notify you when there's something new."
+              />
             ) : (
               <>
                 {queue.slice(0, 3).map((item, idx) => (
@@ -351,6 +372,7 @@ export default function Today() {
                       item={item}
                       onApprove={() => handleApprove(item.id)}
                       onEdit={() => handleEdit(item.id)}
+                      isSelected={idx === selectedIndex}
                     />
                   </div>
                 ))}
