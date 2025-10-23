@@ -1,9 +1,20 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import { Dumbbell, Calendar, Users, TrendingUp, ArrowRight } from "lucide-react";
 
 export default function Landing() {
   const navigate = useNavigate();
+
+  // Auto-redirect to trainer dashboard for demo purposes
+  // In production, this would check auth state and user role
+  useEffect(() => {
+    // If this is a demo/testing environment, auto-redirect to trainer view
+    const isDemoMode = true; // In production, check auth state
+    if (isDemoMode) {
+      navigate("/today");
+    }
+  }, [navigate]);
 
   const features = [
     {
@@ -40,12 +51,12 @@ export default function Landing() {
             Connect with certified trainers. Track your progress. Achieve your goals.
           </p>
           <div className="flex gap-4 justify-center">
-            <Button size="lg" onClick={() => navigate("/discover")} className="gap-2">
-              Find a Trainer
+            <Button size="lg" onClick={() => navigate("/today")} className="gap-2">
+              Trainer Demo
               <ArrowRight className="h-4 w-4" />
             </Button>
-            <Button size="lg" variant="outline" onClick={() => navigate("/dashboard/client")}>
-              View Demo Dashboard
+            <Button size="lg" variant="outline" onClick={() => navigate("/me")}>
+              Client Demo
             </Button>
           </div>
         </div>

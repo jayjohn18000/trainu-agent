@@ -50,30 +50,21 @@ export default function App() {
           <Route path="/directory" element={<Directory />} />
           <Route path="/trainers/:slug" element={<TrainerProfile />} />
 
-          {/* Agent Console routes - unified layout */}
+          {/* Trainer routes - unified sidebar layout */}
           <Route element={<UnifiedLayout />}>
             <Route path="/today" element={<Today />} />
             <Route path="/queue" element={<Queue />} />
             <Route path="/clients" element={<Clients />} />
+            <Route path="/growth" element={<Growth />} />
           </Route>
 
-          {/* Legacy routes - old layout (will be phased out) */}
+          {/* Client routes - tab-based layout */}
           <Route element={<AppLayout><Outlet /></AppLayout>}>
-            <Route path="/discover" element={<Discover />} />
-            <Route path="/dashboard/client" element={<ClientDashboardNew />} />
             <Route path="/me" element={<ClientDashboardNew />} />
-            <Route path="/dashboard/trainer" element={<TrainerDashboard />} />
-            <Route path="/dashboard/owner" element={<OwnerDashboard />} />
-            <Route path="/dashboard/gym-admin" element={<GymAdminDashboard />} />
-            <Route path="/calendar" element={<Calendar />} />
             <Route path="/workout" element={<WorkoutLogger />} />
             <Route path="/progress" element={<Progress />} />
             <Route path="/challenges" element={<Challenges />} />
             <Route path="/programs" element={<Programs />} />
-            <Route path="/clients" element={<Clients />} />
-            <Route path="/dashboard/clients" element={<TrainerClients />} />
-            <Route path="/messages" element={<Messages />} />
-            <Route path="/settings" element={<Settings />} />
             <Route path="/community" element={<Community />} />
             <Route path="/events" element={<Events />} />
             <Route path="/community/events" element={<CommunityEvents />} />
@@ -81,18 +72,26 @@ export default function App() {
             <Route path="/community/people" element={<CommunityPeople />} />
             <Route path="/community/groups" element={<CommunityGroups />} />
             <Route path="/store" element={<Store />} />
+          </Route>
+
+          {/* Admin & Discovery routes - tab-based layout */}
+          <Route element={<AppLayout><Outlet /></AppLayout>}>
+            <Route path="/discover" element={<Discover />} />
             <Route path="/creators" element={<Creators />} />
-            <Route path="/inbox" element={<Inbox />} />
-            <Route path="/growth" element={<Growth />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/admin/trainers" element={<Admin />} />
             <Route path="/admin/classes" element={<Admin />} />
             <Route path="/dev/flags" element={<DevFlags />} />
           </Route>
 
-          {/* Redirects for old agent routes */}
+          {/* Legacy redirects */}
           <Route path="/dashboard/trainer" element={<Navigate to="/today" replace />} />
+          <Route path="/dashboard/client" element={<Navigate to="/me" replace />} />
+          <Route path="/dashboard/clients" element={<Navigate to="/clients" replace />} />
           <Route path="/inbox" element={<Navigate to="/today" replace />} />
+          <Route path="/calendar" element={<Navigate to="/today" replace />} />
+          <Route path="/messages" element={<Navigate to="/today" replace />} />
+          <Route path="/settings" element={<Navigate to="/today" replace />} />
 
           {/* Error routes */}
           <Route path="/410" element={<Gone410 />} />
