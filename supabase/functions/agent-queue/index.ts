@@ -1,108 +1,69 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.76.1'
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
 
-const mockQueue = [
-  {
-    id: "q1",
-    clientId: "c1",
-    clientName: "Emily K",
-    preview: "Hey Emily…",
-    confidence: 0.86,
-    status: "review",
-    why: ["Missed 2 sessions", "5K goal"],
-    createdAt: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: "q2",
-    clientId: "c2",
-    clientName: "Jordan M",
-    preview: "Congrats on 10-workout streak…",
-    confidence: 0.92,
-    status: "autosend",
-    why: ["Streak 10"],
-    createdAt: new Date(Date.now() - 65 * 60 * 1000).toISOString(),
-  },
-];
-
-serve(async (req) => {
-  if (req.method === "OPTIONS") {
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const isAgentMock = Deno.env.get("AGENT_MOCK") === "1";
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
+    );
 
-    if (req.method === "GET") {
-      if (isAgentMock) {
-        return new Response(JSON.stringify(mockQueue), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      // TODO: Get real queue from database
-      return new Response(JSON.stringify([]), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      console.log('Unauthorized request to agent-queue');
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    if (req.method === "POST") {
-      const { action, id, payload } = await req.json();
+    const { data: queue, error } = await supabase
+      .from('queue_items')
+      .select('*')
+      .eq('trainer_id', user.id)
+      .eq('status', 'review')
+      .order('created_at', { ascending: true })
+      .limit(10);
 
-      if (isAgentMock) {
-        // Handle mock actions
-        if (action === "approve") {
-          return new Response(
-            JSON.stringify({ success: true, id, action: "approved" }),
-            {
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-            }
-          );
-        }
-        
-        if (action === "undo") {
-          return new Response(
-            JSON.stringify({ success: true, id, action: "undone" }),
-            {
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-            }
-          );
-        }
-
-        if (action === "edit") {
-          return new Response(
-            JSON.stringify({ success: true, id, action: "edited", payload }),
-            {
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-            }
-          );
-        }
-      }
-
-      // TODO: Implement real queue actions
-      return new Response(
-        JSON.stringify({ success: true, id, action }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+    if (error) {
+      console.error('Error fetching queue:', error);
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
-    return new Response(JSON.stringify({ error: "Method not allowed" }), {
-      status: 405,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    const formattedQueue = (queue || []).map(item => ({
+      id: item.id,
+      clientId: item.client_id,
+      clientName: item.client_name,
+      preview: item.preview,
+      confidence: item.confidence,
+      scheduledFor: item.scheduled_for || 'Today',
+      why: item.why || [],
+      status: item.status,
+      createdAt: item.created_at,
+    }));
+
+    return new Response(JSON.stringify(formattedQueue), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
+
   } catch (error) {
     console.error("Error in agent-queue:", error);
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return new Response(JSON.stringify({ error: errorMessage }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 });

@@ -14,13 +14,258 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      activity_feed: {
+        Row: {
+          action: string
+          client_id: string | null
+          client_name: string
+          confidence: number | null
+          created_at: string | null
+          id: string
+          message_preview: string | null
+          status: string | null
+          trainer_id: string | null
+          why: string | null
+        }
+        Insert: {
+          action: string
+          client_id?: string | null
+          client_name: string
+          confidence?: number | null
+          created_at?: string | null
+          id?: string
+          message_preview?: string | null
+          status?: string | null
+          trainer_id?: string | null
+          why?: string | null
+        }
+        Update: {
+          action?: string
+          client_id?: string | null
+          client_name?: string
+          confidence?: number | null
+          created_at?: string | null
+          id?: string
+          message_preview?: string | null
+          status?: string | null
+          trainer_id?: string | null
+          why?: string | null
+        }
+        Relationships: []
+      }
+      agent_status: {
+        Row: {
+          avg_response_time: string | null
+          clients_at_risk: number | null
+          id: string
+          messages_sent_today: number | null
+          response_rate: number | null
+          state: string | null
+          trainer_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          avg_response_time?: string | null
+          clients_at_risk?: number | null
+          id?: string
+          messages_sent_today?: number | null
+          response_rate?: number | null
+          state?: string | null
+          trainer_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          avg_response_time?: string | null
+          clients_at_risk?: number | null
+          id?: string
+          messages_sent_today?: number | null
+          response_rate?: number | null
+          state?: string | null
+          trainer_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      message_templates: {
+        Row: {
+          category: string | null
+          content: string
+          created_at: string | null
+          id: string
+          name: string
+          tone: string | null
+          trainer_id: string | null
+          updated_at: string | null
+          usage_count: number | null
+        }
+        Insert: {
+          category?: string | null
+          content: string
+          created_at?: string | null
+          id?: string
+          name: string
+          tone?: string | null
+          trainer_id?: string | null
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Update: {
+          category?: string | null
+          content?: string
+          created_at?: string | null
+          id?: string
+          name?: string
+          tone?: string | null
+          trainer_id?: string | null
+          updated_at?: string | null
+          usage_count?: number | null
+        }
+        Relationships: []
+      }
+      queue_items: {
+        Row: {
+          client_id: string
+          client_name: string
+          confidence: number | null
+          created_at: string | null
+          id: string
+          preview: string
+          scheduled_for: string | null
+          status: string | null
+          trainer_id: string | null
+          updated_at: string | null
+          why: string[] | null
+        }
+        Insert: {
+          client_id: string
+          client_name: string
+          confidence?: number | null
+          created_at?: string | null
+          id?: string
+          preview: string
+          scheduled_for?: string | null
+          status?: string | null
+          trainer_id?: string | null
+          updated_at?: string | null
+          why?: string[] | null
+        }
+        Update: {
+          client_id?: string
+          client_name?: string
+          confidence?: number | null
+          created_at?: string | null
+          id?: string
+          preview?: string
+          scheduled_for?: string | null
+          status?: string | null
+          trainer_id?: string | null
+          updated_at?: string | null
+          why?: string[] | null
+        }
+        Relationships: []
+      }
+      trainer_achievements: {
+        Row: {
+          achievement_description: string | null
+          achievement_id: string
+          achievement_name: string
+          id: string
+          trainer_id: string | null
+          unlocked_at: string | null
+        }
+        Insert: {
+          achievement_description?: string | null
+          achievement_id: string
+          achievement_name: string
+          id?: string
+          trainer_id?: string | null
+          unlocked_at?: string | null
+        }
+        Update: {
+          achievement_description?: string | null
+          achievement_id?: string
+          achievement_name?: string
+          id?: string
+          trainer_id?: string | null
+          unlocked_at?: string | null
+        }
+        Relationships: []
+      }
+      trainer_profiles: {
+        Row: {
+          created_at: string | null
+          current_streak: number | null
+          id: string
+          last_active_date: string | null
+          level: number | null
+          longest_streak: number | null
+          total_clients_nudged: number | null
+          total_messages_approved: number | null
+          total_messages_edited: number | null
+          updated_at: string | null
+          xp: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_streak?: number | null
+          id: string
+          last_active_date?: string | null
+          level?: number | null
+          longest_streak?: number | null
+          total_clients_nudged?: number | null
+          total_messages_approved?: number | null
+          total_messages_edited?: number | null
+          updated_at?: string | null
+          xp?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          current_streak?: number | null
+          id?: string
+          last_active_date?: string | null
+          level?: number | null
+          longest_streak?: number | null
+          total_clients_nudged?: number | null
+          total_messages_approved?: number | null
+          total_messages_edited?: number | null
+          updated_at?: string | null
+          xp?: number | null
+        }
+        Relationships: []
+      }
+      xp_history: {
+        Row: {
+          amount: number
+          created_at: string | null
+          id: string
+          reason: string
+          trainer_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          id?: string
+          reason: string
+          trainer_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          id?: string
+          reason?: string
+          trainer_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_trainer_stat: {
+        Args: { stat_name: string; trainer_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

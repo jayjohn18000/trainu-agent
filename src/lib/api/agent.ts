@@ -62,8 +62,9 @@ export async function getFeed(): Promise<FeedItem[]> {
 
 export async function approveQueueItem(id: string) {
   try {
-    const { data, error } = await supabase.functions.invoke("agent-queue", {
-      body: { action: "approve", id },
+    const { data, error } = await supabase.functions.invoke("queue-management", {
+      body: { id },
+      method: 'POST',
     });
     if (error) throw error;
     return data;
@@ -73,24 +74,45 @@ export async function approveQueueItem(id: string) {
   }
 }
 
-export async function undoQueueItem(id: string) {
-  const { data, error } = await supabase.functions.invoke("agent-queue", {
-    body: { action: "undo", id },
-  });
-  if (error) throw error;
-  return data;
-}
-
-export async function editQueueItem(id: string, payload: any) {
+export async function editQueueItem(id: string, payload: { message: string; tone?: string }) {
   try {
-    const { data, error } = await supabase.functions.invoke("agent-queue", {
-      body: { action: "edit", id, payload },
+    const { data, error } = await supabase.functions.invoke("queue-management", {
+      body: { id, message: payload.message, tone: payload.tone },
+      method: 'POST',
     });
     if (error) throw error;
     return data;
   } catch (error) {
     console.error("Failed to edit item:", error);
     throw new Error("Unable to save changes. Please try again.");
+  }
+}
+
+export async function batchApproveQueueItems(minConfidence: number = 0.8) {
+  try {
+    const { data, error } = await supabase.functions.invoke("queue-management", {
+      body: { minConfidence },
+      method: 'POST',
+    });
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error("Failed to batch approve:", error);
+    throw new Error("Unable to batch approve items. Please try again.");
+  }
+}
+
+export async function updateAgentStatus(state: 'active' | 'paused') {
+  try {
+    const { data, error } = await supabase.functions.invoke("agent-status", {
+      body: { state },
+      method: 'POST',
+    });
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error("Failed to update status:", error);
+    throw new Error("Unable to update agent status. Please try again.");
   }
 }
 
