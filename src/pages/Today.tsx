@@ -1,5 +1,6 @@
 import { useState, useEffect, memo } from "react";
-import { fixtures } from "@/lib/fixtures";
+import { supabase } from "@/integrations/supabase/client";
+import { getQueue, getFeed, approveQueueItem, editQueueItem, batchApproveQueueItems } from "@/lib/api/agent";
 import { QueueCard } from "@/components/agent/QueueCard";
 import { ActivityFeed } from "@/components/agent/ActivityFeed";
 import { MessageEditor } from "@/components/agent/MessageEditor";
@@ -55,8 +56,8 @@ const QueueList = memo(({ queue, selectedIndex, onApprove, onEdit }: any) => (
 QueueList.displayName = 'QueueList';
 
 export default function Today() {
-  const [queue, setQueue] = useState(fixtures.queue);
-  const [feed, setFeed] = useState(fixtures.feed);
+  const [queue, setQueue] = useState<QueueItem[]>([]);
+  const [feed, setFeed] = useState<any[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [editingItem, setEditingItem] = useState<any | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -73,6 +74,11 @@ export default function Today() {
   const { updateStats, newlyUnlockedAchievements } = useAchievementTracker();
   const isMobile = useIsMobile();
 
+  // Load initial data
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Check if first visit
   useEffect(() => {
     const welcomeShown = localStorage.getItem("welcomeShown");
@@ -82,11 +88,74 @@ export default function Today() {
 
     // Track page view
     analytics.track('page_viewed', { page: 'today' });
-
-    // Simulate loading
-    const timer = setTimeout(() => setIsLoading(false), 800);
-    return () => clearTimeout(timer);
   }, []);
+
+  // Setup realtime subscriptions
+  useEffect(() => {
+    const queueChannel = supabase
+      .channel('queue-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'queue_items',
+        },
+        () => {
+          loadQueue();
+        }
+      )
+      .subscribe();
+
+    const feedChannel = supabase
+      .channel('feed-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'activity_feed',
+        },
+        () => {
+          loadFeed();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(queueChannel);
+      supabase.removeChannel(feedChannel);
+    };
+  }, []);
+
+  const loadData = async () => {
+    setIsLoading(true);
+    await Promise.all([loadQueue(), loadFeed()]);
+    setIsLoading(false);
+  };
+
+  const loadQueue = async () => {
+    try {
+      const data = await getQueue();
+      setQueue(data);
+    } catch (error) {
+      console.error('Failed to load queue:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load queue. Please refresh.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const loadFeed = async () => {
+    try {
+      const data = await getFeed();
+      setFeed(data);
+    } catch (error) {
+      console.error('Failed to load feed:', error);
+    }
+  };
 
   // Track level changes for confetti
   useEffect(() => {
@@ -112,52 +181,46 @@ export default function Today() {
     setTourActive(false);
   };
 
-  const handleApprove = (id: string) => {
+  const handleApprove = async (id: string) => {
     const item = queue.find((q) => q.id === id);
     if (!item) return;
 
-    // Remove from queue
-    setQueue((prev) => prev.filter((q) => q.id !== id));
+    try {
+      // Call API to approve
+      await approveQueueItem(id);
 
-    // Add to feed with approval timestamp
-    const feedItem = {
-      id: `feed-${Date.now()}-${id}`,
-      ts: new Date().toISOString(),
-      approvedAt: new Date().toISOString(),
-      action: "sent" as const,
-      client: item.clientName,
-      clientId: id,
-      status: "success" as const,
-      why: item.why.join(", "),
-      messagePreview: item.preview,
-      confidence: item.confidence,
-    };
-    setFeed((prev) => [feedItem, ...prev]);
+      // Award XP and update stats
+      await awardXP(25, "Approved message");
+      updateStats({
+        messagesSentToday: feed.length + 1,
+        messagesSentTotal: feed.length + 1,
+        timeSavedHours: ((feed.length + 1) * 5) / 60,
+      });
 
-    // Award XP and update stats
-    awardXP(25, "Approved message");
-    updateStats({
-      messagesSentToday: feed.length + 1,
-      messagesSentTotal: feed.length + 1,
-      timeSavedHours: ((feed.length + 1) * 5) / 60, // 5 min per message
-    });
+      // Track analytics
+      analytics.track('queue_item_approved', { id });
+      analytics.track('xp_earned', { amount: 25, reason: 'Approved message' });
 
-    // Track analytics
-    analytics.track('queue_item_approved', { id });
-    analytics.track('xp_earned', { amount: 25, reason: 'Approved message' });
-
-    toast({
-      title: "Message Approved",
-      description: (
-        <div className="flex items-center gap-2">
-          <span>Draft to {item.clientName} sent successfully!</span>
-          <span className="text-primary font-semibold flex items-center gap-1">
-            <Zap className="h-3 w-3" aria-hidden="true" />
-            +25 XP
-          </span>
-        </div>
-      ),
-    });
+      toast({
+        title: "Message Approved",
+        description: (
+          <div className="flex items-center gap-2">
+            <span>Draft to {item.clientName} sent successfully!</span>
+            <span className="text-primary font-semibold flex items-center gap-1">
+              <Zap className="h-3 w-3" aria-hidden="true" />
+              +25 XP
+            </span>
+          </div>
+        ),
+      });
+    } catch (error) {
+      console.error('Failed to approve:', error);
+      toast({
+        title: "Error",
+        description: "Failed to approve message. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleEdit = (id: string) => {
@@ -166,68 +229,41 @@ export default function Today() {
     setEditingItem(item);
   };
 
-  const handleSaveEdit = (updatedMessage: string, tone: string) => {
+  const handleSaveEdit = async (updatedMessage: string, tone: string) => {
     if (!editingItem) return;
     
-    // Update queue item
-    setQueue((prev) =>
-      prev.map((q) =>
-        q.id === editingItem.id
-          ? { ...q, preview: updatedMessage }
-          : q
-      )
-    );
+    try {
+      // Call API to edit
+      await editQueueItem(editingItem.id, { message: updatedMessage, tone });
 
-    // Award XP and update stats
-    awardXP(50, "Edited message");
-    updateStats({
-      messagesEdited: (feed.filter(f => f.action === 'sent').length || 0) + 1,
-    });
+      // Award XP and update stats
+      await awardXP(50, "Edited message");
+      updateStats({
+        messagesEdited: (feed.filter(f => f.action === 'sent').length || 0) + 1,
+      });
 
-    // Track analytics
-    analytics.track('queue_item_edited', { id: editingItem.id });
-    analytics.track('xp_earned', { amount: 50, reason: 'Edited message' });
+      // Track analytics
+      analytics.track('queue_item_edited', { id: editingItem.id });
+      analytics.track('xp_earned', { amount: 50, reason: 'Edited message' });
 
-    toast({
-      title: "Message updated",
-      description: `Draft updated with ${tone} tone. +50 XP`,
-    });
+      toast({
+        title: "Message updated",
+        description: `Draft updated with ${tone} tone. +50 XP`,
+      });
 
-    setEditingItem(null);
+      setEditingItem(null);
+    } catch (error) {
+      console.error('Failed to edit:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save changes. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleUndo = (feedItemId: string) => {
-    const feedItem = feed.find((f) => f.id === feedItemId);
-    if (!feedItem || !feedItem.clientId) return;
 
-    // Move back to queue
-    const queueItem: QueueItem = {
-      id: feedItem.clientId,
-      clientId: feedItem.clientId,
-      clientName: feedItem.client,
-      preview: feedItem.messagePreview || '',
-      confidence: feedItem.confidence || 0.8,
-      status: "review",
-      why: feedItem.why.split(", "),
-      createdAt: new Date().toISOString(),
-    };
-
-    setQueue((prev) => [queueItem, ...prev]);
-    setFeed((prev) => prev.filter((f) => f.id !== feedItemId));
-
-    // Small penalty
-    awardXP(-10, "Undid message");
-
-    // Track analytics
-    analytics.track('queue_item_undone', { id: feedItemId });
-
-    toast({
-      title: "Message recalled",
-      description: "Draft returned to queue. -10 XP",
-    });
-  };
-
-  const handleApproveAllSafe = () => {
+  const handleApproveAllSafe = async () => {
     const safeItems = queue.filter(item => item.confidence >= 0.8);
     
     if (safeItems.length === 0) {
@@ -238,25 +274,28 @@ export default function Today() {
       return;
     }
 
-    // Batch approve with staggered animation
-    safeItems.forEach((item, index) => {
-      setTimeout(() => {
-        handleApprove(item.id);
-      }, index * 200);
-    });
+    try {
+      // Call batch approve API
+      const result = await batchApproveQueueItems(0.8);
 
-    // Bonus XP for batch efficiency
-    if (safeItems.length >= 3) {
-      setTimeout(() => {
-        awardXP(75, "Efficiency bonus");
+      // Award XP for batch efficiency
+      if (safeItems.length >= 3) {
+        await awardXP(75, "Efficiency bonus");
         analytics.track('xp_earned', { amount: 75, reason: 'Efficiency bonus' });
-      }, safeItems.length * 200 + 100);
-    }
+      }
 
-    toast({
-      title: `Approving ${safeItems.length} safe messages`,
-      description: `+${safeItems.length * 25 + (safeItems.length >= 3 ? 75 : 0)} XP total`,
-    });
+      toast({
+        title: `Approved ${result.approved || safeItems.length} messages`,
+        description: `+${(result.approved || safeItems.length) * 25 + (safeItems.length >= 3 ? 75 : 0)} XP total`,
+      });
+    } catch (error) {
+      console.error('Failed to batch approve:', error);
+      toast({
+        title: "Error",
+        description: "Failed to approve messages. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Keyboard shortcuts
@@ -465,8 +504,7 @@ export default function Today() {
               <ActivityFeedSkeleton />
             ) : (
               <ActivityFeed 
-                items={feed.slice(0, Math.max(8, queue.length))} 
-                onUndo={handleUndo} 
+                items={feed.slice(0, Math.max(8, queue.length))}
               />
             )}
           </section>

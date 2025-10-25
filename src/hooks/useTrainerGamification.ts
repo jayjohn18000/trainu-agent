@@ -1,4 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import * as gamificationAPI from '@/lib/api/gamification';
 
 export const XP_REWARDS = {
   APPROVE_MESSAGE: 25,
@@ -50,27 +52,65 @@ interface XPNotification {
 }
 
 export function useTrainerGamification() {
-  const [progress, setProgress] = useState<TrainerProgress>(() => {
-    const saved = localStorage.getItem('trainer-progress');
-    if (saved) {
-      return JSON.parse(saved);
-    }
-    return {
-      xp: 0,
-      level: 1,
-      title: 'Rookie Agent',
-      xpToNext: 100,
-      totalXpForNextLevel: 100,
-    };
+  const [progress, setProgress] = useState<TrainerProgress>({
+    xp: 0,
+    level: 1,
+    title: 'Rookie Agent',
+    xpToNext: 100,
+    totalXpForNextLevel: 100,
   });
 
   const [xpNotification, setXpNotification] = useState<XPNotification | null>(null);
   const [levelUpNotification, setLevelUpNotification] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Save progress to localStorage whenever it changes
+  // Load progress from API on mount
   useEffect(() => {
-    localStorage.setItem('trainer-progress', JSON.stringify(progress));
-  }, [progress]);
+    loadProgress();
+  }, []);
+
+  // Subscribe to realtime updates on trainer profile
+  useEffect(() => {
+    const channel = supabase
+      .channel('trainer-progress')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'trainer_profiles',
+        },
+        () => {
+          loadProgress();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const loadProgress = async () => {
+    try {
+      const data = await gamificationAPI.getProgress();
+      const currentLevel = data.level;
+      const levelInfo = getLevelInfo(currentLevel);
+      const nextLevelInfo = getLevelInfo(currentLevel + 1);
+
+      setProgress({
+        xp: data.xp,
+        level: data.level,
+        title: levelInfo.title,
+        xpToNext: nextLevelInfo ? nextLevelInfo.xpRequired - data.xp : 0,
+        totalXpForNextLevel: nextLevelInfo ? nextLevelInfo.xpRequired - levelInfo.xpRequired : 0,
+      });
+    } catch (error) {
+      console.error('Failed to load progress:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const calculateLevel = useCallback((xp: number) => {
     let currentLevel = 1;
@@ -87,43 +127,39 @@ export function useTrainerGamification() {
     return TRAINER_LEVELS.find(l => l.level === level) || TRAINER_LEVELS[0];
   }, []);
 
-  const awardXP = useCallback((amount: number, reason: string) => {
-    setProgress(prev => {
-      const newXP = prev.xp + amount;
-      const newLevel = calculateLevel(newXP);
-      const levelInfo = getLevelInfo(newLevel);
-      const nextLevelInfo = getLevelInfo(newLevel + 1);
+  const awardXP = useCallback(async (amount: number, reason: string) => {
+    try {
+      const result = await gamificationAPI.awardXP(amount, reason);
       
-      const didLevelUp = newLevel > prev.level;
-      
-      if (didLevelUp) {
+      // Show XP notification
+      setXpNotification({
+        amount,
+        reason,
+        timestamp: Date.now(),
+      });
+
+      // Show level up notification if leveled up
+      if (result.leveledUp) {
         setTimeout(() => {
-          setLevelUpNotification(newLevel);
+          setLevelUpNotification(result.newLevel);
           setTimeout(() => setLevelUpNotification(null), 5000);
         }, 500);
       }
 
-      return {
-        xp: newXP,
-        level: newLevel,
-        title: levelInfo.title,
-        xpToNext: nextLevelInfo ? nextLevelInfo.xpRequired - newXP : 0,
-        totalXpForNextLevel: nextLevelInfo ? nextLevelInfo.xpRequired - levelInfo.xpRequired : 0,
-      };
-    });
+      // Reload progress
+      await loadProgress();
 
-    // Show XP notification
-    setXpNotification({
-      amount,
-      reason,
-      timestamp: Date.now(),
-    });
+      // Auto-clear XP notification after 3 seconds
+      setTimeout(() => {
+        setXpNotification(null);
+      }, 3000);
 
-    // Auto-clear notification after 3 seconds
-    setTimeout(() => {
-      setXpNotification(null);
-    }, 3000);
-  }, [calculateLevel, getLevelInfo]);
+      return result;
+    } catch (error) {
+      console.error('Failed to award XP:', error);
+      throw error;
+    }
+  }, []);
 
   const clearXPNotification = useCallback(() => {
     setXpNotification(null);
@@ -140,5 +176,6 @@ export function useTrainerGamification() {
     awardXP,
     clearXPNotification,
     clearLevelUpNotification,
+    loading,
   };
 }
