@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { AppLayout } from "@/components/AppLayout";
 import { UnifiedLayout } from "@/components/layouts/UnifiedLayout";
@@ -6,9 +6,11 @@ import { ErrorBoundary } from "@/components/system/ErrorBoundary";
 import { RedirectHandler } from "@/components/RedirectHandler";
 import { Toaster } from "@/components/ui/toaster";
 import { Loader2 } from "lucide-react";
+import { useAuthStore } from "@/lib/store/useAuthStore";
 
 // Critical routes - loaded immediately for best UX
 import Landing from "@/pages/Landing";
+import Login from "@/pages/Login";
 import Today from "@/pages/Today";
 
 // Lazy load secondary routes for better performance
@@ -46,28 +48,45 @@ function LoadingFallback() {
   );
 }
 
+// Protected route wrapper
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuthStore();
+
+  if (loading) return <LoadingFallback />;
+  if (!user) return <Navigate to="/login" replace />;
+
+  return <>{children}</>;
+}
+
 export default function App() {
+  const { initialize } = useAuthStore();
+
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
+
   return (
     <ErrorBoundary>
       <BrowserRouter>
         <RedirectHandler />
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
-            {/* Marketing routes - no app chrome */}
+            {/* Public routes */}
             <Route path="/" element={<Landing />} />
+            <Route path="/login" element={<Login />} />
             <Route path="/directory" element={<Directory />} />
             <Route path="/trainers/:slug" element={<TrainerProfile />} />
 
-            {/* Trainer routes - unified sidebar layout */}
-            <Route element={<UnifiedLayout />}>
+            {/* Protected trainer routes - unified sidebar layout */}
+            <Route element={<ProtectedRoute><UnifiedLayout /></ProtectedRoute>}>
               <Route path="/today" element={<Today />} />
               <Route path="/queue" element={<Queue />} />
               <Route path="/clients" element={<Clients />} />
               <Route path="/growth" element={<Growth />} />
             </Route>
 
-            {/* Client routes - tab-based layout */}
-            <Route element={<AppLayout><Outlet /></AppLayout>}>
+            {/* Protected client routes - tab-based layout */}
+            <Route element={<ProtectedRoute><AppLayout><Outlet /></AppLayout></ProtectedRoute>}>
               <Route path="/me" element={<ClientDashboardNew />} />
               <Route path="/workout" element={<WorkoutLogger />} />
               <Route path="/progress" element={<Progress />} />
