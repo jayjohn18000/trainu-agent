@@ -54,11 +54,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    const url = new URL(req.url);
-    const action = url.searchParams.get('action');
-
-    // Get Progress
-    if (action === 'getProgress' && req.method === 'GET') {
+    // Default GET request returns progress
+    if (req.method === 'GET') {
       const { data: profile, error } = await supabase
         .from('trainer_profiles')
         .select('*')
@@ -90,9 +87,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Award XP
-    if (action === 'awardXP' && req.method === 'POST') {
-      const { amount, reason }: AwardXPRequest = await req.json();
+    // Award XP via POST
+    if (req.method === 'POST') {
+      const body = await req.json();
+      const { amount, reason }: AwardXPRequest = body;
 
       // Get current profile
       const { data: profile } = await supabase
@@ -151,35 +149,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Get Achievements
-    if (action === 'getAchievements' && req.method === 'GET') {
-      const { data: unlocked } = await supabase
-        .from('trainer_achievements')
-        .select('*')
-        .eq('trainer_id', user.id)
-        .order('unlocked_at', { ascending: false });
-
-      const { data: profile } = await supabase
-        .from('trainer_profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      const unlockedIds = new Set(unlocked?.map(a => a.achievement_id) || []);
-      
-      const all = ACHIEVEMENTS.map(achievement => ({
-        ...achievement,
-        unlocked: unlockedIds.has(achievement.id),
-        unlockedAt: unlocked?.find(a => a.achievement_id === achievement.id)?.unlocked_at,
-        progress: achievement.condition(profile || {}) ? 1 : 0,
-      }));
-
-      return new Response(JSON.stringify({ achievements: all }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    return new Response(JSON.stringify({ error: 'Invalid action' }), {
+    return new Response(JSON.stringify({ error: 'Invalid request' }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

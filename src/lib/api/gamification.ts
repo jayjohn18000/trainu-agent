@@ -22,10 +22,7 @@ export interface Achievement {
  * Get current gamification progress
  */
 export async function getProgress(): Promise<GameProgress> {
-  const { data, error } = await supabase.functions.invoke('gamification', {
-    body: {},
-    method: 'GET',
-  });
+  const { data, error } = await supabase.functions.invoke('gamification');
 
   if (error) throw error;
   return data;
@@ -54,10 +51,7 @@ export async function awardXP(amount: number, reason: string): Promise<{
  * Get all achievements
  */
 export async function getAchievements(): Promise<{ achievements: Achievement[] }> {
-  const { data, error } = await supabase.functions.invoke('gamification', {
-    body: {},
-    method: 'GET',
-  });
+  const { data, error } = await supabase.functions.invoke('gamification');
 
   if (error) throw error;
   return data;
