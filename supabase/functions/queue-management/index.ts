@@ -25,8 +25,17 @@ Deno.serve(async (req) => {
       });
     }
 
-    const url = new URL(req.url);
-    const action = url.searchParams.get('action');
+    // Get action from query params for GET requests, body for POST requests
+    let action: string | null = null;
+    let body: any = null;
+    
+    if (req.method === 'GET') {
+      const url = new URL(req.url);
+      action = url.searchParams.get('action');
+    } else if (req.method === 'POST') {
+      body = await req.json();
+      action = body.action;
+    }
 
     // Get Queue Items
     if (action === 'getQueue' && req.method === 'GET') {
@@ -53,7 +62,7 @@ Deno.serve(async (req) => {
 
     // Approve Queue Item
     if (action === 'approve' && req.method === 'POST') {
-      const { id } = await req.json();
+      const { id } = body;
 
       // Get queue item
       const { data: item } = await supabase
@@ -103,7 +112,7 @@ Deno.serve(async (req) => {
 
     // Edit Queue Item
     if (action === 'edit' && req.method === 'POST') {
-      const { id, message, tone } = await req.json();
+      const { id, message, tone } = body;
 
       await supabase
         .from('queue_items')
@@ -127,7 +136,7 @@ Deno.serve(async (req) => {
 
     // Batch Approve
     if (action === 'batchApprove' && req.method === 'POST') {
-      const { minConfidence } = await req.json();
+      const { minConfidence } = body;
 
       // Get items to approve
       const { data: items } = await supabase
