@@ -63,7 +63,7 @@ export async function getFeed(): Promise<FeedItem[]> {
 export async function approveQueueItem(id: string) {
   try {
     const { data, error } = await supabase.functions.invoke("queue-management", {
-      body: { id },
+      body: { action: 'approve', id },
       method: 'POST',
     });
     if (error) throw error;
@@ -77,7 +77,7 @@ export async function approveQueueItem(id: string) {
 export async function editQueueItem(id: string, payload: { message: string; tone?: string }) {
   try {
     const { data, error } = await supabase.functions.invoke("queue-management", {
-      body: { id, message: payload.message, tone: payload.tone },
+      body: { action: 'edit', id, message: payload.message, tone: payload.tone },
       method: 'POST',
     });
     if (error) throw error;
@@ -91,7 +91,7 @@ export async function editQueueItem(id: string, payload: { message: string; tone
 export async function batchApproveQueueItems(minConfidence: number = 0.8) {
   try {
     const { data, error } = await supabase.functions.invoke("queue-management", {
-      body: { minConfidence },
+      body: { action: 'batchApprove', minConfidence },
       method: 'POST',
     });
     if (error) throw error;
