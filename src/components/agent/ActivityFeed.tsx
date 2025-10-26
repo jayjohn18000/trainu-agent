@@ -16,15 +16,27 @@ interface ActivityFeedProps {
 export function ActivityFeed({ items, onUndo, className }: ActivityFeedProps) {
   const canUndo = (item: any) => {
     if (!item.approvedAt || item.action !== "sent") return false;
-    const minutesSince = differenceInMinutes(new Date(), new Date(item.approvedAt));
-    return minutesSince < 60;
+    try {
+      const approvedDate = new Date(item.approvedAt);
+      if (isNaN(approvedDate.getTime())) return false;
+      const minutesSince = differenceInMinutes(new Date(), approvedDate);
+      return minutesSince < 60;
+    } catch {
+      return false;
+    }
   };
 
   const getUndoTimeLeft = (item: any) => {
     if (!item.approvedAt) return null;
-    const minutesSince = differenceInMinutes(new Date(), new Date(item.approvedAt));
-    const minutesLeft = 60 - minutesSince;
-    return minutesLeft > 0 ? minutesLeft : null;
+    try {
+      const approvedDate = new Date(item.approvedAt);
+      if (isNaN(approvedDate.getTime())) return null;
+      const minutesSince = differenceInMinutes(new Date(), approvedDate);
+      const minutesLeft = 60 - minutesSince;
+      return minutesLeft > 0 ? minutesLeft : null;
+    } catch {
+      return null;
+    }
   };
   const getActionIcon = (action: string) => {
     switch (action) {
@@ -98,9 +110,9 @@ export function ActivityFeed({ items, onUndo, className }: ActivityFeedProps) {
                     </p>
                     <div className="flex items-center justify-between gap-2">
                       <time className="text-xs text-muted-foreground">
-                        {formatDistanceToNow(new Date(item.ts), {
-                          addSuffix: true,
-                        })}
+                        {item.ts && new Date(item.ts).getTime() > 0 
+                          ? formatDistanceToNow(new Date(item.ts), { addSuffix: true })
+                          : 'Just now'}
                       </time>
                       {canUndo(item) && onUndo && (
                         <Button
