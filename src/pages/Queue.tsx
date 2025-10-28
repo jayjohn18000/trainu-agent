@@ -1,43 +1,65 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { fixtures } from "@/lib/fixtures";
 import { QueueCard } from "@/components/agent/QueueCard";
 import { ProgramBuilderCard } from "@/components/agent/ProgramBuilderCard";
 import { MessageEditor } from "@/components/agent/MessageEditor";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useTrainerGamification } from "@/hooks/useTrainerGamification";
-import { useAchievementTracker } from "@/hooks/useAchievementTracker";
-import { ArrowLeft, Zap, CheckCircle } from "lucide-react";
+import { ArrowLeft, Zap, CheckCircle, Loader2 } from "lucide-react";
 import type { QueueItem } from "@/types/agent";
+import * as agentAPI from "@/lib/api/agent";
 
 export default function Queue() {
   const navigate = useNavigate();
-  const [queue, setQueue] = useState(fixtures.queue);
-  const [editingItem, setEditingItem] = useState<any | null>(null);
+  const [queue, setQueue] = useState<QueueItem[]>([]);
+  const [editingItem, setEditingItem] = useState<QueueItem | null>(null);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const { awardXP } = useTrainerGamification();
-  const { updateStats } = useAchievementTracker();
 
-  const handleApprove = (id: string) => {
+  useEffect(() => {
+    loadQueue();
+  }, []);
+
+  const loadQueue = async () => {
+    try {
+      setLoading(true);
+      const data = await agentAPI.getQueue();
+      setQueue(data);
+    } catch (error) {
+      toast({
+        title: "Error loading queue",
+        description: error instanceof Error ? error.message : "Failed to load queue",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleApprove = async (id: string) => {
     const item = queue.find((q) => q.id === id);
     if (!item) return;
 
-    setQueue((prev) => prev.filter((q) => q.id !== id));
-    
-    awardXP(25, "Approved message");
-    updateStats({
-      messagesSentToday: fixtures.feed.length + 1,
-      messagesSentTotal: fixtures.feed.length + 1,
-      timeSavedHours: ((fixtures.feed.length + 1) * 5) / 60,
-    });
+    try {
+      await agentAPI.approveQueueItem(id);
+      setQueue((prev) => prev.filter((q) => q.id !== id));
+      
+      await awardXP(25, "Approved message");
 
-    toast({
-      title: "Message approved",
-      description: `Draft to ${item.clientName} will be sent. +25 XP`,
-    });
+      toast({
+        title: "Message approved",
+        description: `Draft to ${item.clientName} will be sent. +25 XP`,
+      });
+    } catch (error) {
+      toast({
+        title: "Failed to approve",
+        description: error instanceof Error ? error.message : "Please try again",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleEdit = (id: string) => {
@@ -46,31 +68,38 @@ export default function Queue() {
     setEditingItem(item);
   };
 
-  const handleSaveEdit = (updatedMessage: string, tone: string) => {
+  const handleSaveEdit = async (updatedMessage: string, tone: string) => {
     if (!editingItem) return;
     
-    setQueue((prev) =>
-      prev.map((q) =>
-        q.id === editingItem.id
-          ? { ...q, preview: updatedMessage }
-          : q
-      )
-    );
+    try {
+      await agentAPI.editQueueItem(editingItem.id, { message: updatedMessage, tone });
+      
+      setQueue((prev) =>
+        prev.map((q) =>
+          q.id === editingItem.id
+            ? { ...q, preview: updatedMessage }
+            : q
+        )
+      );
 
-    awardXP(50, "Edited message");
-    updateStats({
-      messagesEdited: (fixtures.feed.filter(f => f.action === 'sent').length || 0) + 1,
-    });
+      await awardXP(50, "Edited message");
 
-    toast({
-      title: "Message updated",
-      description: `Draft updated with ${tone} tone. +50 XP`,
-    });
+      toast({
+        title: "Message updated",
+        description: `Draft updated with ${tone} tone. +50 XP`,
+      });
 
-    setEditingItem(null);
+      setEditingItem(null);
+    } catch (error) {
+      toast({
+        title: "Failed to save edit",
+        description: error instanceof Error ? error.message : "Please try again",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleApproveAllSafe = () => {
+  const handleApproveAllSafe = async () => {
     const safeItems = queue.filter(item => item.confidence >= 0.8);
     
     if (safeItems.length === 0) {
@@ -81,22 +110,25 @@ export default function Queue() {
       return;
     }
 
-    safeItems.forEach((item, index) => {
-      setTimeout(() => {
-        handleApprove(item.id);
-      }, index * 200);
-    });
+    try {
+      const result = await agentAPI.batchApproveQueueItems(0.8);
+      
+      setQueue((prev) => prev.filter(item => item.confidence < 0.8));
 
-    if (safeItems.length >= 3) {
-      setTimeout(() => {
-        awardXP(75, "Efficiency bonus");
-      }, safeItems.length * 200 + 100);
+      const xpAmount = result.approved * 25 + (result.approved >= 3 ? 75 : 0);
+      await awardXP(xpAmount, "Batch approval");
+
+      toast({
+        title: `Approved ${result.approved} messages`,
+        description: `+${xpAmount} XP earned`,
+      });
+    } catch (error) {
+      toast({
+        title: "Batch approval failed",
+        description: error instanceof Error ? error.message : "Please try again",
+        variant: "destructive",
+      });
     }
-
-    toast({
-      title: `Approving ${safeItems.length} safe messages`,
-      description: `+${safeItems.length * 25 + (safeItems.length >= 3 ? 75 : 0)} XP total`,
-    });
   };
 
   const safeItemsCount = queue.filter(item => item.confidence >= 0.8).length;
@@ -150,7 +182,12 @@ export default function Queue() {
       </div>
 
       {/* Queue Items */}
-      {queue.length === 0 ? (
+      {loading ? (
+        <Card className="p-12 text-center">
+          <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-muted-foreground" />
+          <p className="text-muted-foreground">Loading queue...</p>
+        </Card>
+      ) : queue.length === 0 ? (
         <Card className="p-12 text-center">
           <div className="flex flex-col items-center gap-4">
             <CheckCircle className="h-16 w-16 text-success" />

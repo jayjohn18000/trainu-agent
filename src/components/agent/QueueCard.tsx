@@ -6,7 +6,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { ChevronDown, Check, Edit, Undo } from "lucide-react";
+import { ChevronDown, Check, Edit, Undo, Loader2 } from "lucide-react";
 import { useState, memo } from "react";
 import type { QueueItem } from "@/types/agent";
 import { useTouchGestures } from "@/hooks/useTouchGestures";
@@ -31,6 +31,7 @@ const QueueCardComponent = ({
   const [isWhyOpen, setIsWhyOpen] = useState(false);
   const [isSliding, setIsSliding] = useState(false);
   const [swiped, setSwiped] = useState(false);
+  const [isApproving, setIsApproving] = useState(false);
 
   // Touch gesture support for mobile
   const { handlers, swipeProgress } = useTouchGestures({
@@ -45,11 +46,17 @@ const QueueCardComponent = ({
     threshold: 100,
   });
 
-  const handleApprove = () => {
+  const handleApprove = async () => {
+    if (isApproving || !onApprove) return;
+    
+    setIsApproving(true);
     setIsSliding(true);
-    setTimeout(() => {
-      onApprove?.(item.id);
-    }, 300);
+    
+    try {
+      await onApprove(item.id);
+    } finally {
+      // Keep loading state active until parent removes the card
+    }
   };
 
   const getConfidenceBadge = (confidence: number) => {
@@ -143,12 +150,22 @@ const QueueCardComponent = ({
                 <Button
                   size="sm"
                   onClick={handleApprove}
+                  disabled={isApproving}
                   className="flex-1 btn-press hover:shadow-glow transition-smooth"
                   data-tour="approve-btn"
                   aria-label="Approve and send message"
                 >
-                  <Check className="h-4 w-4 mr-2" aria-hidden="true" />
-                  Approve
+                  {isApproving ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" aria-hidden="true" />
+                      Approving...
+                    </>
+                  ) : (
+                    <>
+                      <Check className="h-4 w-4 mr-2" aria-hidden="true" />
+                      Approve
+                    </>
+                  )}
                 </Button>
               )}
               {onEdit && (
