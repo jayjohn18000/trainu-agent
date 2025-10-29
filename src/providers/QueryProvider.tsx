@@ -3,7 +3,7 @@ import { queryClient } from '@/lib/query/client';
 
 export function QueryProvider({ children }: { children: React.ReactNode }) {
   return (
-    <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient} contextSharing={true}>
       {children}
     </QueryClientProvider>
   );
