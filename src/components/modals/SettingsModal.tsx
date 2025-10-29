@@ -8,6 +8,7 @@ import { useState } from "react";
 import { toast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { fixtures } from "@/lib/fixtures";
+import { GHLSettingsModal } from "./GHLSettingsModal";
 
 interface SettingsModalProps {
   open: boolean;
@@ -16,6 +17,7 @@ interface SettingsModalProps {
 
 export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
   const [saving, setSaving] = useState(false);
+  const [ghlModalOpen, setGhlModalOpen] = useState(false);
   const settings = fixtures.settings;
 
   const handleSaveAgent = async () => {
@@ -47,10 +49,11 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
         </DialogHeader>
 
         <Tabs defaultValue="agent" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="agent">Agent</TabsTrigger>
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
+            <TabsTrigger value="integrations">Integrations</TabsTrigger>
             <TabsTrigger value="achievements">Achievements</TabsTrigger>
           </TabsList>
 
@@ -187,6 +190,25 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
             </div>
           </TabsContent>
 
+          {/* Integrations Tab */}
+          <TabsContent value="integrations" className="space-y-6">
+            <div className="space-y-4">
+              <div className="border rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold">GoHighLevel</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Connect your GHL account to send real messages
+                    </p>
+                  </div>
+                  <Button onClick={() => setGhlModalOpen(true)}>
+                    Configure
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+
           {/* Achievements Tab */}
           <TabsContent value="achievements" className="space-y-6">
             <div className="text-center py-8">
@@ -200,6 +222,8 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
           </TabsContent>
         </Tabs>
       </DialogContent>
+      
+      <GHLSettingsModal open={ghlModalOpen} onOpenChange={setGhlModalOpen} />
     </Dialog>
   );
 }

@@ -1,1 +1,22 @@
 project_id = "sakksoxuanyimicevljq"
+
+[functions.gamification]
+verify_jwt = true
+
+[functions.queue-management]
+verify_jwt = true
+
+[functions.agent-status]
+verify_jwt = true
+
+[functions.agent-queue]
+verify_jwt = true
+
+[functions.agent-feed]
+verify_jwt = true
+
+[functions.client-nudge]
+verify_jwt = true
+
+[functions.ghl-integration]
+verify_jwt = true

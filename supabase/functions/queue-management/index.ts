@@ -86,7 +86,7 @@ Deno.serve(async (req) => {
         .eq('id', id);
 
       // Add to activity feed
-      await supabase
+      const { data: feedItem } = await supabase
         .from('activity_feed')
         .insert({
           trainer_id: user.id,
@@ -97,7 +97,33 @@ Deno.serve(async (req) => {
           message_preview: item.preview,
           confidence: item.confidence,
           why: item.why.join(', '),
+        })
+        .select()
+        .single();
+
+      // Send via GHL if configured
+      try {
+        const { data: ghlResult } = await supabase.functions.invoke('ghl-integration', {
+          body: {
+            action: 'send_message',
+            queueItemId: feedItem?.id,
+            contactData: {
+              firstName: item.client_name.split(' ')[0],
+              lastName: item.client_name.split(' ')[1] || '',
+              email: `${item.client_name.toLowerCase().replace(/\s+/g, '.')}@example.com`, // Replace with actual client data
+              phone: '+1234567890', // Replace with actual client data
+            },
+            messageData: {
+              content: item.preview,
+              subject: 'Message from your trainer',
+            },
+          },
         });
+        console.log('GHL message sent:', ghlResult);
+      } catch (ghlError) {
+        console.error('GHL send failed:', ghlError);
+        // Continue even if GHL fails - message still approved
+      }
 
       // Update trainer stats
       await supabase.rpc('increment_trainer_stat', {
@@ -171,9 +197,37 @@ Deno.serve(async (req) => {
         why: item.why.join(', '),
       }));
 
-      await supabase
+      const { data: insertedFeedItems } = await supabase
         .from('activity_feed')
-        .insert(feedItems);
+        .insert(feedItems)
+        .select();
+
+      // Send all messages via GHL if configured
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        const feedItem = insertedFeedItems?.[i];
+        
+        try {
+          await supabase.functions.invoke('ghl-integration', {
+            body: {
+              action: 'send_message',
+              queueItemId: feedItem?.id,
+              contactData: {
+                firstName: item.client_name.split(' ')[0],
+                lastName: item.client_name.split(' ')[1] || '',
+                email: `${item.client_name.toLowerCase().replace(/\s+/g, '.')}@example.com`,
+                phone: '+1234567890',
+              },
+              messageData: {
+                content: item.preview,
+                subject: 'Message from your trainer',
+              },
+            },
+          });
+        } catch (ghlError) {
+          console.error('GHL send failed for item:', item.id, ghlError);
+        }
+      }
 
       return new Response(JSON.stringify({ approved: items.length }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

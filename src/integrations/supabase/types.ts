@@ -21,6 +21,11 @@ export type Database = {
           client_name: string
           confidence: number | null
           created_at: string | null
+          ghl_channel: string | null
+          ghl_delivered_at: string | null
+          ghl_message_id: string | null
+          ghl_read_at: string | null
+          ghl_status: string | null
           id: string
           message_preview: string | null
           status: string | null
@@ -33,6 +38,11 @@ export type Database = {
           client_name: string
           confidence?: number | null
           created_at?: string | null
+          ghl_channel?: string | null
+          ghl_delivered_at?: string | null
+          ghl_message_id?: string | null
+          ghl_read_at?: string | null
+          ghl_status?: string | null
           id?: string
           message_preview?: string | null
           status?: string | null
@@ -45,6 +55,11 @@ export type Database = {
           client_name?: string
           confidence?: number | null
           created_at?: string | null
+          ghl_channel?: string | null
+          ghl_delivered_at?: string | null
+          ghl_message_id?: string | null
+          ghl_read_at?: string | null
+          ghl_status?: string | null
           id?: string
           message_preview?: string | null
           status?: string | null
@@ -83,6 +98,45 @@ export type Database = {
           state?: string | null
           trainer_id?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      ghl_config: {
+        Row: {
+          contact_field_mapping: Json | null
+          created_at: string | null
+          default_channel: string | null
+          email_enabled: boolean | null
+          id: string
+          location_id: string
+          sms_enabled: boolean | null
+          trainer_id: string
+          updated_at: string | null
+          webhook_registered: boolean | null
+        }
+        Insert: {
+          contact_field_mapping?: Json | null
+          created_at?: string | null
+          default_channel?: string | null
+          email_enabled?: boolean | null
+          id?: string
+          location_id: string
+          sms_enabled?: boolean | null
+          trainer_id: string
+          updated_at?: string | null
+          webhook_registered?: boolean | null
+        }
+        Update: {
+          contact_field_mapping?: Json | null
+          created_at?: string | null
+          default_channel?: string | null
+          email_enabled?: boolean | null
+          id?: string
+          location_id?: string
+          sms_enabled?: boolean | null
+          trainer_id?: string
+          updated_at?: string | null
+          webhook_registered?: boolean | null
         }
         Relationships: []
       }
