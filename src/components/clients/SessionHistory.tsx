@@ -85,7 +85,7 @@ export function SessionHistory({ clientId }: Props) {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <h4 className="font-medium">{session.type}</h4>
-                    <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20">
+                    <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
                       Scheduled
                     </Badge>
                   </div>

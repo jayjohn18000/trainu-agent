@@ -43,7 +43,7 @@ export function ValueMetricsWidget({ queueCount = 0, feedCount = 0 }: ValueMetri
   const metricCards = [
     {
       icon: Clock,
-      iconColor: "text-blue-500",
+      iconColor: "text-primary",
       label: "Time Saved",
       value: animatedTimeSavedHours > 0 
         ? `${animatedTimeSavedHours}h ${timeSavedMinutes % 60}m`

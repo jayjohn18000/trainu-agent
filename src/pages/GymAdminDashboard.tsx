@@ -118,7 +118,7 @@ export default function GymAdminDashboard() {
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <Activity className="h-6 w-6 text-blue-500" />
+              <Activity className="h-6 w-6 text-primary" />
               <h3 className="text-lg font-semibold">GHL Integration</h3>
             </div>
             <Badge variant="secondary" className="gap-1">
