@@ -280,8 +280,8 @@ export default function ClientDashboardNew() {
           onClick={() => navigate("/progress?tab=measurements")}
         >
           <div className="flex items-center justify-between mb-3">
-            <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-              <TrendingUp className="h-5 w-5 text-blue-500" />
+            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <TrendingUp className="h-5 w-5 text-primary" />
             </div>
             <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
           </div>
@@ -371,7 +371,7 @@ export default function ClientDashboardNew() {
       <Card className="p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Users className="h-5 w-5 text-blue-500" />
+            <Users className="h-5 w-5 text-primary" />
             <h3 className="text-lg font-semibold">Community Leaderboard</h3>
           </div>
           <Button 
@@ -431,7 +431,7 @@ export default function ClientDashboardNew() {
               Your squat depth has improved significantly! Keep focusing on that mobility work.
             </p>
           </div>
-          <div className="p-4 rounded-lg bg-muted/50 border-l-4 border-blue-500">
+          <div className="p-4 rounded-lg bg-muted/50 border-l-4 border-primary">
             <p className="text-sm font-medium mb-1">📈 Progress Update</p>
             <p className="text-sm text-muted-foreground">
               Great consistency this month! You're on track to hit your strength goals.

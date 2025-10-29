@@ -92,19 +92,7 @@ Deno.serve(async (req) => {
       let body: AwardXPRequest;
       
       try {
-        // Read request body as text first to handle potential issues
-        const text = await req.text();
-        
-        if (!text || text.trim() === '') {
-          console.error('Empty request body');
-          return new Response(JSON.stringify({ error: 'Request body cannot be empty' }), {
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
-        }
-
-        // Parse JSON - this will throw if invalid JSON
-        body = JSON.parse(text);
+        body = await req.json();
         
         if (!body || typeof body !== 'object') {
           console.error('Invalid request body:', body);
@@ -114,26 +102,16 @@ Deno.serve(async (req) => {
           });
         }
         
-        // Validate required fields
-        if (typeof body.amount !== 'number' || isNaN(body.amount)) {
-          console.error('Invalid amount:', body.amount);
-          return new Response(JSON.stringify({ error: 'Amount must be a valid number' }), {
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
-        }
-        
-        if (typeof body.reason !== 'string' || !body.reason.trim()) {
-          console.error('Invalid reason:', body.reason);
-          return new Response(JSON.stringify({ error: 'Reason must be a non-empty string' }), {
+        if (!body.amount || !body.reason) {
+          console.error('Missing required fields:', body);
+          return new Response(JSON.stringify({ error: 'Amount and reason are required' }), {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
         }
       } catch (e) {
         console.error('Failed to parse request body:', e);
-        const errorMessage = e instanceof Error ? e.message : 'Unknown error';
-        return new Response(JSON.stringify({ error: `Invalid JSON in request body: ${errorMessage}` }), {
+        return new Response(JSON.stringify({ error: 'Invalid JSON in request body' }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });

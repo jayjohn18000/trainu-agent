@@ -38,16 +38,8 @@ export async function awardXP(amount: number, reason: string): Promise<{
   leveledUp: boolean;
   newAchievements: Achievement[];
 }> {
-  // Validate inputs before making the request
-  if (typeof amount !== 'number' || isNaN(amount)) {
-    throw new Error('Amount must be a valid number');
-  }
-  if (typeof reason !== 'string' || !reason.trim()) {
-    throw new Error('Reason must be a non-empty string');
-  }
-
   const { data, error } = await supabase.functions.invoke('gamification', {
-    body: { amount, reason: reason.trim() },
+    body: { amount, reason },
     method: 'POST',
   });
 
