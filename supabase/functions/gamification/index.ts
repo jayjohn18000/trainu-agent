@@ -89,16 +89,26 @@ Deno.serve(async (req) => {
 
     // Award XP via POST
     if (req.method === 'POST') {
-      let body;
+      let body: AwardXPRequest;
+      
       try {
-        const text = await req.text();
-        if (!text || text.trim() === '') {
-          return new Response(JSON.stringify({ error: 'Request body is required' }), {
+        body = await req.json();
+        
+        if (!body || typeof body !== 'object') {
+          console.error('Invalid request body:', body);
+          return new Response(JSON.stringify({ error: 'Request body must be a valid JSON object' }), {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
         }
-        body = JSON.parse(text);
+        
+        if (!body.amount || !body.reason) {
+          console.error('Missing required fields:', body);
+          return new Response(JSON.stringify({ error: 'Amount and reason are required' }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
       } catch (e) {
         console.error('Failed to parse request body:', e);
         return new Response(JSON.stringify({ error: 'Invalid JSON in request body' }), {
@@ -107,7 +117,7 @@ Deno.serve(async (req) => {
         });
       }
 
-      const { amount, reason }: AwardXPRequest = body;
+      const { amount, reason } = body;
 
       // Get current profile
       const { data: profile } = await supabase
