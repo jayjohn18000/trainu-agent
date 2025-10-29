@@ -1,0 +1,301 @@
+# TrainU Project - Cursor AI Context
+
+## Project Overview
+TrainU is a comprehensive fitness training platform that connects trainers with clients, featuring client management, messaging, calendar scheduling, program building, and gamification. The platform integrates with GoHighLevel (GHL) for CRM capabilities.
+
+## Technology Stack
+- **Frontend**: React 18, TypeScript, Vite
+- **Routing**: React Router v6
+- **Styling**: Tailwind CSS with custom design system
+- **UI Components**: Radix UI (shadcn/ui)
+- **State Management**: Zustand
+- **Backend**: Lovable Cloud (Supabase) with Edge Functions
+- **Database**: PostgreSQL (via Supabase)
+- **Authentication**: Supabase Auth
+- **Integrations**: GoHighLevel (GHL) CRM
+
+## Project Structure
+
+### Key Directories
+```
+src/
+├── components/          # React components
+│   ├── ui/             # shadcn/ui base components
+│   ├── agent/          # Agent mode components
+│   ├── clients/        # Client management components
+│   ├── calendar/       # Calendar & scheduling
+│   ├── messages/       # Messaging interface
+│   ├── navigation/     # Navigation components
+│   └── layouts/        # Layout components
+├── pages/              # Route pages
+├── lib/                # Utilities & business logic
+│   ├── api/           # API client functions
+│   ├── data/          # Data providers (mock & http)
+│   ├── store/         # Zustand stores
+│   └── mock/          # Mock data for development
+├── hooks/              # Custom React hooks
+├── integrations/       # Third-party integrations
+│   └── supabase/      # Supabase client & types (auto-generated)
+└── types/              # TypeScript type definitions
+
+supabase/
+├── functions/          # Edge Functions
+│   ├── gamification/
+│   ├── ghl-integration/
+│   ├── agent-*/
+│   └── queue-management/
+└── config.toml        # Supabase configuration
+```
+
+## Design System Guidelines
+
+### CRITICAL: Semantic Color Tokens
+**NEVER use direct colors like `text-white`, `bg-black`, `text-gray-500` in components.**
+Always use semantic tokens from `src/index.css` and `tailwind.config.ts`:
+
+```tsx
+// ❌ WRONG
+<Button className="text-white bg-black border-gray-300">
+
+// ✅ CORRECT
+<Button variant="default">  // Uses design system tokens
+<div className="text-foreground bg-background border-border">
+```
+
+### Available Design Tokens
+- **Colors**: `background`, `foreground`, `primary`, `secondary`, `accent`, `muted`, `card`, `border`
+- **Text**: `text-foreground`, `text-muted-foreground`, `text-primary`
+- **Backgrounds**: `bg-background`, `bg-card`, `bg-primary`, `bg-secondary`
+- **Borders**: `border-border`, `border-input`
+
+### Component Variants
+Customize shadcn components with proper variants rather than inline styles:
+- Update `src/components/ui/button.tsx` to add new variants
+- Use CVA (class-variance-authority) for variant patterns
+- All color values MUST be HSL format
+
+## Backend Integration (Lovable Cloud/Supabase)
+
+### Important Files (DO NOT EDIT)
+These files are auto-generated and should NEVER be modified:
+- `src/integrations/supabase/client.ts` - Supabase client
+- `src/integrations/supabase/types.ts` - Database types
+- `.env` - Environment variables
+- `supabase/config.toml` - Supabase configuration
+
+### Using Supabase Client
+```typescript
+import { supabase } from "@/integrations/supabase/client";
+
+// Query data
+const { data, error } = await supabase
+  .from('clients')
+  .select('*')
+  .eq('trainer_id', trainerId);
+
+// Call Edge Function
+const { data, error } = await supabase.functions.invoke('function-name', {
+  body: { key: 'value' }
+});
+```
+
+### Edge Functions
+Location: `supabase/functions/`
+- All functions have `verify_jwt = true` in config.toml
+- Use Deno runtime
+- Access user via: `supabase.auth.getUser()`
+- Environment variables available via `Deno.env.get('VAR_NAME')`
+
+### Database Migrations
+Use the database migration tool for ALL schema changes:
+- Never edit types.ts manually
+- Always include RLS policies for new tables
+- Use `trainer_id` for user-specific data
+- Never reference `auth.users` directly (use profiles table pattern)
+
+## Authentication Pattern
+
+### Current Implementation
+- Uses Supabase Auth
+- Auto-confirm email signups enabled
+- Role-based access: `client`, `trainer`, `gym_admin`
+- Default role: `client` (see `src/config/app.ts`)
+
+### User Context
+```typescript
+import { useAuthStore } from "@/lib/store/useAuthStore";
+
+const { user, role } = useAuthStore();
+```
+
+## Data Provider Pattern
+
+### Structure
+Location: `src/lib/data/clients/`
+- `types.ts` - Type definitions
+- `mock.ts` - Mock data provider (development)
+- `http.ts` - HTTP provider (production with Supabase)
+- `provider.ts` - Provider selection based on env
+
+### Usage
+```typescript
+import { clientProvider } from "@/lib/data/clients/provider";
+
+const clients = await clientProvider.list({ q: 'search', limit: 20 });
+```
+
+### Environment Control
+```typescript
+// .env
+VITE_DATA_PROVIDER=http  // or "mock" for development
+```
+
+## GoHighLevel (GHL) Integration
+
+### Configuration
+- Secrets: `GHL_ACCESS_TOKEN`, `GHL_API_BASE`
+- Per-trainer config stored in `ghl_config` table
+- Edge function: `supabase/functions/ghl-integration/index.ts`
+
+### GHL Sync Strategy (Planned)
+- Store `ghl_contact_id` in clients table
+- Bi-directional sync: TrainU ↔ GHL
+- Webhook handler for real-time updates
+- Initial sync flow for onboarding
+
+### GHL Operations
+```typescript
+// Send message via GHL
+const { data } = await supabase.functions.invoke('ghl-integration', {
+  body: {
+    action: 'send_message',
+    contactData: { name, email, phone },
+    messageData: { sms: 'text', email: 'subject|body' }
+  }
+});
+```
+
+## Key Conventions
+
+### File Naming
+- Components: PascalCase (e.g., `ClientTable.tsx`)
+- Hooks: camelCase with `use` prefix (e.g., `useGamification.ts`)
+- Utilities: camelCase (e.g., `analytics.ts`)
+- Types: PascalCase (e.g., `types.ts`)
+
+### Component Structure
+```typescript
+// 1. Imports
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+
+// 2. Types
+interface Props {
+  value: string;
+}
+
+// 3. Component
+export function MyComponent({ value }: Props) {
+  const [state, setState] = useState();
+  
+  return <div>...</div>;
+}
+```
+
+### Import Aliases
+- `@/` - Maps to `src/`
+- Use absolute imports: `import { Button } from "@/components/ui/button"`
+
+## Gamification System
+
+### Features
+- XP and levels for trainers
+- Achievements and milestones
+- Streaks and progress tracking
+- Edge function: `supabase/functions/gamification/index.ts`
+
+### Usage
+```typescript
+import { awardXP, getProgress } from "@/lib/api/gamification";
+
+// Award XP
+await awardXP(50, "Client checked in");
+
+// Get progress
+const progress = await getProgress();
+```
+
+## Agent Mode
+Special "AI-powered assistant" view for trainers:
+- Pages: `ClientsAgent.tsx`, `SettingsAgent.tsx`
+- Components in `src/components/agent/`
+- Features: Queue management, activity feed, automated actions
+
+## Mobile Support
+- Responsive design with Tailwind breakpoints
+- Mobile bottom navigation: `src/components/navigation/MobileBottomNav.tsx`
+- Touch gestures: `src/hooks/useTouchGestures.ts`
+- Use `useIsMobile()` hook for conditional rendering
+
+## Testing & Development
+
+### Mock Data
+- Fixtures in `src/data/fixtures/` and `src/fixtures/`
+- Mock API: `src/lib/mock/api.ts`
+- Mock DB: `src/lib/mock/db.ts`
+
+### Feature Flags
+Location: `src/lib/flags.ts`
+Use for gradual rollouts and A/B testing
+
+## Code Quality Standards
+
+### TypeScript
+- Strict mode enabled
+- Prefer interfaces for object shapes
+- Use type inference where possible
+- Avoid `any` type
+
+### React Best Practices
+- Functional components only
+- Use hooks for state and effects
+- Memoize expensive computations
+- Proper dependency arrays in useEffect
+
+### Performance
+- Lazy load routes with React.lazy()
+- Use Suspense boundaries
+- Implement skeleton loaders
+- Debounce search inputs
+
+## Common Pitfalls to Avoid
+
+1. **Never edit auto-generated Supabase files**
+2. **Always use semantic color tokens, not direct colors**
+3. **Don't reference auth.users directly in foreign keys**
+4. **Include RLS policies for all user-specific tables**
+5. **Use the data provider pattern, don't bypass it**
+6. **Check verify_jwt settings for edge functions**
+7. **Handle loading and error states in UI**
+8. **Implement proper TypeScript types, avoid any**
+
+## Environment Variables
+
+Available in code via `import.meta.env`:
+```typescript
+VITE_SUPABASE_URL
+VITE_SUPABASE_PUBLISHABLE_KEY
+VITE_SUPABASE_PROJECT_ID
+VITE_DATA_PROVIDER
+```
+
+## Deployment
+- Automatic via Lovable platform
+- Preview URLs for testing
+- Custom domain support (paid plans)
+
+## Additional Resources
+- Design tokens: `src/index.css`, `tailwind.config.ts`
+- App config: `src/config/app.ts`
+- Analytics: `src/lib/analytics.ts`
+- Fixtures: `src/lib/fixtures.ts`
