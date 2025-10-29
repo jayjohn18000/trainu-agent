@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { statusBadgeVariants } from "@/lib/design-system/colors";
 import {
   Collapsible,
   CollapsibleContent,
@@ -62,19 +63,19 @@ const QueueCardComponent = ({
   const getConfidenceBadge = (confidence: number) => {
     if (confidence >= 0.8) {
       return {
-        variant: "default" as const,
-        className: "bg-green-500/10 text-green-700 border-green-500/20",
+        variant: "success" as const,
+        className: statusBadgeVariants.success,
       };
     }
     if (confidence >= 0.5) {
       return {
-        variant: "secondary" as const,
-        className: "bg-amber-500/10 text-amber-700 border-amber-500/20",
+        variant: "warning" as const,
+        className: statusBadgeVariants.warning,
       };
     }
     return {
-      variant: "destructive" as const,
-      className: "bg-red-500/10 text-red-700 border-red-500/20",
+      variant: "danger" as const,
+      className: statusBadgeVariants.danger,
     };
   };
 

@@ -4,7 +4,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { UnifiedLayout } from "@/components/layouts/UnifiedLayout";
 import { ErrorBoundary } from "@/components/system/ErrorBoundary";
 import { RedirectHandler } from "@/components/RedirectHandler";
-import { Toaster } from "@/components/ui/toaster";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Loader2 } from "lucide-react";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 
@@ -13,30 +13,32 @@ import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
 import Today from "@/pages/Today";
 
-// Lazy load secondary routes for better performance
-const Directory = lazy(() => import("@/pages/Directory"));
-const TrainerProfile = lazy(() => import("@/pages/TrainerProfile"));
-const Queue = lazy(() => import("@/pages/Queue"));
-const Clients = lazy(() => import("@/pages/Clients"));
-const Growth = lazy(() => import("@/pages/Growth"));
-const ClientDashboard = lazy(() => import("@/pages/ClientDashboard"));
-const ClientDashboardNew = lazy(() => import("@/pages/ClientDashboardNew"));
-const WorkoutLogger = lazy(() => import("@/pages/WorkoutLogger"));
-const Progress = lazy(() => import("@/pages/Progress"));
-const Challenges = lazy(() => import("@/pages/Challenges"));
-const Programs = lazy(() => import("@/pages/Programs"));
-const Community = lazy(() => import("@/pages/Community"));
-const Events = lazy(() => import("@/pages/Events"));
-const CommunityEvents = lazy(() => import("@/pages/community/Events"));
-const EventDetail = lazy(() => import("@/pages/EventDetail"));
-const CommunityPeople = lazy(() => import("@/pages/community/People"));
-const CommunityGroups = lazy(() => import("@/pages/community/Groups"));
-const Store = lazy(() => import("@/pages/Store"));
-const Creators = lazy(() => import("@/pages/Creators"));
-const Admin = lazy(() => import("@/pages/Admin"));
-const DevFlags = lazy(() => import("@/pages/DevFlags"));
-const Gone410 = lazy(() => import("@/pages/Gone410"));
-const NotFound = lazy(() => import("@/pages/NotFound"));
+// Lazy load secondary routes for better performance with retry logic
+import { lazyWithRetry } from "@/lib/lazy";
+
+const Directory = lazyWithRetry(() => import("@/pages/Directory"));
+const TrainerProfile = lazyWithRetry(() => import("@/pages/TrainerProfile"));
+const Queue = lazyWithRetry(() => import("@/pages/Queue"));
+const Clients = lazyWithRetry(() => import("@/pages/Clients"));
+const Growth = lazyWithRetry(() => import("@/pages/Growth"));
+const ClientDashboard = lazyWithRetry(() => import("@/pages/ClientDashboard"));
+const ClientDashboardNew = lazyWithRetry(() => import("@/pages/ClientDashboardNew"));
+const WorkoutLogger = lazyWithRetry(() => import("@/pages/WorkoutLogger"));
+const Progress = lazyWithRetry(() => import("@/pages/Progress"));
+const Challenges = lazyWithRetry(() => import("@/pages/Challenges"));
+const Programs = lazyWithRetry(() => import("@/pages/Programs"));
+const Community = lazyWithRetry(() => import("@/pages/Community"));
+const Events = lazyWithRetry(() => import("@/pages/Events"));
+const CommunityEvents = lazyWithRetry(() => import("@/pages/community/Events"));
+const EventDetail = lazyWithRetry(() => import("@/pages/EventDetail"));
+const CommunityPeople = lazyWithRetry(() => import("@/pages/community/People"));
+const CommunityGroups = lazyWithRetry(() => import("@/pages/community/Groups"));
+const Store = lazyWithRetry(() => import("@/pages/Store"));
+const Creators = lazyWithRetry(() => import("@/pages/Creators"));
+const Admin = lazyWithRetry(() => import("@/pages/Admin"));
+const DevFlags = lazyWithRetry(() => import("@/pages/DevFlags"));
+const Gone410 = lazyWithRetry(() => import("@/pages/Gone410"));
+const NotFound = lazyWithRetry(() => import("@/pages/NotFound"));
 
 // Loading fallback component
 function LoadingFallback() {
@@ -125,7 +127,7 @@ export default function App() {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
-        <Toaster />
+        {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
       </BrowserRouter>
     </ErrorBoundary>
   );

@@ -25,6 +25,11 @@ import { Client } from "@/lib/data/clients/types";
 import { formatDistanceToNow } from "date-fns";
 import { ArrowUpDown, Eye, MessageSquare, MoreVertical, Copy } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { getRiskVariant, statusBadgeVariants } from "@/lib/design-system/colors";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query/keys";
+import { clientProvider } from "@/lib/data/clients/provider";
+import { useCallback, memo } from "react";
 
 interface ClientTableProps {
   clients: Client[];
@@ -37,32 +42,20 @@ interface ClientTableProps {
 }
 
 function getRiskBadge(risk: number) {
-  if (risk <= 33) {
-    return (
-      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-        Low
-      </Badge>
-    );
-  }
-  if (risk <= 66) {
-    return (
-      <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
-        Medium
-      </Badge>
-    );
-  }
+  const variant = getRiskVariant(risk);
+  const label = variant.charAt(0).toUpperCase() + variant.slice(1);
   return (
-    <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-      High
+    <Badge variant="outline" className={statusBadgeVariants[variant === 'low' ? 'success' : variant === 'medium' ? 'warning' : 'danger']}>
+      {label}
     </Badge>
   );
 }
 
 function getStatusBadge(status: Client["status"]) {
-  const variants = {
-    active: { label: "Active", className: "bg-blue-50 text-blue-700 border-blue-200" },
-    paused: { label: "Paused", className: "bg-gray-50 text-gray-700 border-gray-200" },
-    churnRisk: { label: "At Risk", className: "bg-red-50 text-red-700 border-red-200" },
+  const variants: Record<Client["status"], { label: string; className: string }> = {
+    active: { label: "Active", className: statusBadgeVariants.active },
+    paused: { label: "Paused", className: statusBadgeVariants.paused },
+    churnRisk: { label: "At Risk", className: statusBadgeVariants.churnRisk },
   };
   const variant = variants[status];
   return (
@@ -81,6 +74,16 @@ export function ClientTable({
   sortDir,
   onSort,
 }: ClientTableProps) {
+  const queryClient = useQueryClient();
+
+  const handleRowHover = useCallback((clientId: string) => {
+    queryClient.prefetchQuery({
+      queryKey: queryKeys.clients.detail(clientId),
+      queryFn: () => clientProvider.get(clientId),
+      staleTime: 60000, // Prefetch is valid for 1 minute
+    });
+  }, [queryClient]);
+
   const SortButton = ({ field, children }: { field: string; children: React.ReactNode }) => (
     <Button
       variant="ghost"
@@ -129,6 +132,7 @@ export function ClientTable({
                 selectedId === client.id ? "bg-muted" : ""
               }`}
               onClick={() => onSelect(client)}
+              onMouseEnter={() => handleRowHover(client.id)}
             >
               <TableCell>
                 <div className="flex items-center gap-3">
@@ -222,6 +226,7 @@ export function ClientTable({
             selectedId === client.id ? "bg-muted" : ""
           }`}
           onClick={() => onSelect(client)}
+          onMouseEnter={() => handleRowHover(client.id)}
         >
           <div className="flex items-start justify-between mb-3">
             <div className="flex items-center gap-3">
