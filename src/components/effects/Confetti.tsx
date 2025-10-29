@@ -18,7 +18,7 @@ interface Particle {
 }
 
 const COLORS = [
-  "hsl(142, 84%, 55%)", // primary
+  "hsl(189, 94%, 55%)", // primary
   "hsl(142, 76%, 45%)", // success
   "hsl(38, 92%, 50%)",  // warning
   "hsl(270, 70%, 65%)", // purple
