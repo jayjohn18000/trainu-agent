@@ -62,6 +62,9 @@ serve(async (req) => {
         phone: contactData.phone || '',
       };
 
+      console.log('Creating contact with payload:', contactPayload);
+      console.log('Using API Base:', GHL_API_BASE);
+
       const contactResponse = await fetch(`${GHL_API_BASE}/contacts/`, {
         method: 'POST',
         headers: {
