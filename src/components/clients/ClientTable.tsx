@@ -60,7 +60,7 @@ function getRiskBadge(risk: number) {
 
 function getStatusBadge(status: Client["status"]) {
   const variants = {
-    active: { label: "Active", className: "bg-primary/10 text-primary border-primary/20" },
+    active: { label: "Active", className: "bg-blue-50 text-blue-700 border-blue-200" },
     paused: { label: "Paused", className: "bg-gray-50 text-gray-700 border-gray-200" },
     churnRisk: { label: "At Risk", className: "bg-red-50 text-red-700 border-red-200" },
   };

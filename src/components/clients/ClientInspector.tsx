@@ -274,7 +274,7 @@ export function ClientInspector({
                       <div
                         className={`h-8 w-8 rounded-full flex items-center justify-center ${
                           message.direction === "in"
-                            ? "bg-primary/20 text-primary"
+                            ? "bg-blue-100 text-blue-600"
                             : "bg-gray-100 text-gray-600"
                         }`}
                       >
