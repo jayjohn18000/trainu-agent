@@ -20,3 +20,9 @@ verify_jwt = true
 
 [functions.ghl-integration]
 verify_jwt = true
+
+[functions.draft-engine]
+verify_jwt = true
+
+[functions.send-message]
+verify_jwt = true

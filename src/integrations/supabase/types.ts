@@ -592,6 +592,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      increment_message_counters: {
+        Args: { contact_id: string }
+        Returns: undefined
+      }
       increment_trainer_stat: {
         Args: { stat_name: string; trainer_id: string }
         Returns: undefined
