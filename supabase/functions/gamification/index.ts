@@ -60,6 +60,7 @@ Deno.serve(async (req) => {
       
       try {
         body = await req.json();
+        console.log('Received body:', JSON.stringify(body));
       } catch (e) {
         console.error('Failed to parse request body:', e);
         return new Response(JSON.stringify({ error: 'Invalid JSON in request body' }), {
@@ -69,6 +70,7 @@ Deno.serve(async (req) => {
       }
 
       const action = body.action;
+      console.log('Action:', action);
 
       // Handle progress request
       if (action === 'progress') {
@@ -131,10 +133,12 @@ Deno.serve(async (req) => {
       // Handle award XP request
       if (action === 'award_xp') {
         const { amount, reason } = body;
+        console.log('Award XP - amount:', amount, 'type:', typeof amount);
+        console.log('Award XP - reason:', reason, 'type:', typeof reason);
 
         // Validate required fields
         if (typeof amount !== 'number' || isNaN(amount)) {
-          console.error('Invalid amount:', amount);
+          console.error('Invalid amount:', amount, 'Full body:', JSON.stringify(body));
           return new Response(JSON.stringify({ error: 'Amount must be a valid number' }), {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
