@@ -7,7 +7,7 @@ export function useAwardXP() {
   return useMutation({
     mutationFn: ({ amount, reason }: { amount: number; reason: string }) => awardXP(amount, reason),
     onSuccess: () => {
-      queryClient.invalidateQueries(queryKeys.gamification.progress());
+      queryClient.invalidateQueries({ queryKey: queryKeys.gamification.progress() });
     },
   });
 }

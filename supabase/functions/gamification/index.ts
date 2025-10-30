@@ -54,146 +54,160 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Default GET request returns progress
-    if (req.method === 'GET') {
-      const { data: profile, error } = await supabase
-        .from('trainer_profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (error) {
-        console.error('Error fetching profile:', error);
-        return new Response(JSON.stringify({ error: error.message }), {
-          status: 500,
+    // Handle POST requests with action-based routing
+    if (req.method === 'POST') {
+      let body: any;
+      
+      try {
+        body = await req.json();
+      } catch (e) {
+        console.error('Failed to parse request body:', e);
+        return new Response(JSON.stringify({ error: 'Invalid JSON in request body' }), {
+          status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
 
-      const level = profile?.level || 1;
-      const xp = profile?.xp || 0;
-      const nextLevelXp = Math.pow(level, 2) * 100;
-      const progress = (xp % nextLevelXp) / nextLevelXp;
+      const action = body.action;
 
-      return new Response(JSON.stringify({
-        level,
-        xp,
-        nextLevelXp,
-        progress,
-        currentStreak: profile?.current_streak || 0,
-        longestStreak: profile?.longest_streak || 0,
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+      // Handle progress request
+      if (action === 'progress') {
+        const { data: profile, error } = await supabase
+          .from('trainer_profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
 
-    // Award XP via POST
-    if (req.method === 'POST') {
-      let body: AwardXPRequest;
-      
-      try {
-        // Read request body as text first to handle potential issues
-        const text = await req.text();
-        
-        if (!text || text.trim() === '') {
-          console.error('Empty request body');
-          return new Response(JSON.stringify({ error: 'Request body cannot be empty' }), {
-            status: 400,
+        if (error) {
+          console.error('Error fetching profile:', error);
+          return new Response(JSON.stringify({ error: error.message }), {
+            status: 500,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
         }
 
-        // Parse JSON - this will throw if invalid JSON
-        body = JSON.parse(text);
-        
-        if (!body || typeof body !== 'object') {
-          console.error('Invalid request body:', body);
-          return new Response(JSON.stringify({ error: 'Request body must be a valid JSON object' }), {
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
-        }
-        
+        const level = profile?.level || 1;
+        const xp = profile?.xp || 0;
+        const nextLevelXp = Math.pow(level, 2) * 100;
+        const progress = (xp % nextLevelXp) / nextLevelXp;
+
+        return new Response(JSON.stringify({
+          level,
+          xp,
+          nextLevelXp,
+          progress,
+          currentStreak: profile?.current_streak || 0,
+          longestStreak: profile?.longest_streak || 0,
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Handle achievements request
+      if (action === 'achievements') {
+        const { data: profile } = await supabase
+          .from('trainer_profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+        const { data: unlockedAchievements } = await supabase
+          .from('trainer_achievements')
+          .select('achievement_id')
+          .eq('trainer_id', user.id);
+
+        const unlockedIds = new Set(unlockedAchievements?.map(a => a.achievement_id) || []);
+        const achievements = ACHIEVEMENTS.map(achievement => ({
+          ...achievement,
+          unlocked: unlockedIds.has(achievement.id),
+          progress: achievement.condition(profile) ? 100 : 0,
+        }));
+
+        return new Response(JSON.stringify({ achievements }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Handle award XP request
+      if (action === 'award_xp') {
+        const { amount, reason } = body;
+
         // Validate required fields
-        if (typeof body.amount !== 'number' || isNaN(body.amount)) {
-          console.error('Invalid amount:', body.amount);
+        if (typeof amount !== 'number' || isNaN(amount)) {
+          console.error('Invalid amount:', amount);
           return new Response(JSON.stringify({ error: 'Amount must be a valid number' }), {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
         }
         
-        if (typeof body.reason !== 'string' || !body.reason.trim()) {
-          console.error('Invalid reason:', body.reason);
+        if (typeof reason !== 'string' || !reason.trim()) {
+          console.error('Invalid reason:', reason);
           return new Response(JSON.stringify({ error: 'Reason must be a non-empty string' }), {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
         }
-      } catch (e) {
-        console.error('Failed to parse request body:', e);
-        const errorMessage = e instanceof Error ? e.message : 'Unknown error';
-        return new Response(JSON.stringify({ error: `Invalid JSON in request body: ${errorMessage}` }), {
-          status: 400,
+
+        // Get current profile
+        const { data: profile } = await supabase
+          .from('trainer_profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+        const currentXP = profile?.xp || 0;
+        const newXP = currentXP + amount;
+        const oldLevel = profile?.level || 1;
+        const newLevel = calculateLevel(newXP);
+
+        // Update profile
+        await supabase
+          .from('trainer_profiles')
+          .update({ xp: newXP, level: newLevel })
+          .eq('id', user.id);
+
+        // Record XP history
+        await supabase
+          .from('xp_history')
+          .insert({ trainer_id: user.id, amount, reason });
+
+        // Check for new achievements
+        const { data: unlockedAchievements } = await supabase
+          .from('trainer_achievements')
+          .select('achievement_id')
+          .eq('trainer_id', user.id);
+
+        const unlockedIds = new Set(unlockedAchievements?.map(a => a.achievement_id) || []);
+        const newAchievements = [];
+
+        for (const achievement of ACHIEVEMENTS) {
+          if (!unlockedIds.has(achievement.id) && achievement.condition(profile)) {
+            await supabase
+              .from('trainer_achievements')
+              .insert({
+                trainer_id: user.id,
+                achievement_id: achievement.id,
+                achievement_name: achievement.name,
+                achievement_description: achievement.description,
+              });
+            newAchievements.push(achievement);
+          }
+        }
+
+        return new Response(JSON.stringify({
+          success: true,
+          oldLevel,
+          newLevel,
+          leveledUp: newLevel > oldLevel,
+          newAchievements,
+        }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
 
-      const { amount, reason } = body;
-
-      // Get current profile
-      const { data: profile } = await supabase
-        .from('trainer_profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      const currentXP = profile?.xp || 0;
-      const newXP = currentXP + amount;
-      const oldLevel = profile?.level || 1;
-      const newLevel = calculateLevel(newXP);
-
-      // Update profile
-      await supabase
-        .from('trainer_profiles')
-        .update({ xp: newXP, level: newLevel })
-        .eq('id', user.id);
-
-      // Record XP history
-      await supabase
-        .from('xp_history')
-        .insert({ trainer_id: user.id, amount, reason });
-
-      // Check for new achievements
-      const { data: unlockedAchievements } = await supabase
-        .from('trainer_achievements')
-        .select('achievement_id')
-        .eq('trainer_id', user.id);
-
-      const unlockedIds = new Set(unlockedAchievements?.map(a => a.achievement_id) || []);
-      const newAchievements = [];
-
-      for (const achievement of ACHIEVEMENTS) {
-        if (!unlockedIds.has(achievement.id) && achievement.condition(profile)) {
-          await supabase
-            .from('trainer_achievements')
-            .insert({
-              trainer_id: user.id,
-              achievement_id: achievement.id,
-              achievement_name: achievement.name,
-              achievement_description: achievement.description,
-            });
-          newAchievements.push(achievement);
-        }
-      }
-
-      return new Response(JSON.stringify({
-        success: true,
-        oldLevel,
-        newLevel,
-        leveledUp: newLevel > oldLevel,
-        newAchievements,
-      }), {
+      return new Response(JSON.stringify({ error: 'Invalid action' }), {
+        status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }

@@ -8,8 +8,8 @@ export function useMarkSessionComplete() {
   return useMutation({
     mutationFn: (id: string) => calendarApi.markSessionComplete(id),
     onSuccess: (_data, id) => {
-      queryClient.invalidateQueries(queryKeys.calendar.sessions());
-      queryClient.invalidateQueries(queryKeys.calendar.session(id));
+      queryClient.invalidateQueries({ queryKey: queryKeys.calendar.sessions() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.calendar.session(id) });
       toast({ title: 'Session Completed', description: 'Session marked as complete' });
     },
   });
@@ -20,8 +20,8 @@ export function useMarkSessionNoShow() {
   return useMutation({
     mutationFn: (id: string) => calendarApi.markSessionNoShow(id),
     onSuccess: (_data, id) => {
-      queryClient.invalidateQueries(queryKeys.calendar.sessions());
-      queryClient.invalidateQueries(queryKeys.calendar.session(id));
+      queryClient.invalidateQueries({ queryKey: queryKeys.calendar.sessions() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.calendar.session(id) });
       toast({ title: 'Session marked as no-show' });
     },
   });

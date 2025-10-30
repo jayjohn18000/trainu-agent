@@ -57,8 +57,8 @@ export default function Clients() {
 
   useEffect(() => {
     if (clientsData) {
-      setClients(clientsData.items);
-      setTotal(clientsData.total);
+      setClients(clientsData.items || []);
+      setTotal(clientsData.total || 0);
     }
   }, [clientsData]);
 

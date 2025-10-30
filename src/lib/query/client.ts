@@ -7,10 +7,6 @@ export const queryClient = new QueryClient({
       staleTime: 30000,
       retry: 2,
       refetchOnWindowFocus: true,
-      onError: handleQueryError,
-    },
-    mutations: {
-      onError: handleQueryError,
     },
   },
 });

@@ -10,7 +10,7 @@ export function useNudgeClient() {
     mutationFn: ({ id, templateId, preview }: { id: string; templateId: string; preview: string }) =>
       clientProvider.nudge(id, { templateId, preview }),
     onSuccess: (_data, vars) => {
-      queryClient.invalidateQueries(queryKeys.clients.detail(vars.id));
+      queryClient.invalidateQueries({ queryKey: queryKeys.clients.detail(vars.id) });
       toast({ title: 'Nudge sent', description: 'Message sent successfully' });
     },
   });
@@ -21,7 +21,7 @@ export function useUpdateClientTags() {
   return useMutation({
     mutationFn: ({ id, tags }: { id: string; tags: string[] }) => clientProvider.tag(id, tags),
     onMutate: async ({ id, tags }) => {
-      await queryClient.cancelQueries(queryKeys.clients.detail(id));
+      await queryClient.cancelQueries({ queryKey: queryKeys.clients.detail(id) });
       const previous = queryClient.getQueryData(queryKeys.clients.detail(id)) as ClientDetail | undefined;
       queryClient.setQueryData(queryKeys.clients.detail(id), (old: ClientDetail | undefined) =>
         old ? { ...old, tags } : old
@@ -34,7 +34,7 @@ export function useUpdateClientTags() {
       }
     },
     onSettled: (_data, _error, vars) => {
-      queryClient.invalidateQueries(queryKeys.clients.detail(vars.id));
+      queryClient.invalidateQueries({ queryKey: queryKeys.clients.detail(vars.id) });
     },
   });
 }
@@ -44,7 +44,7 @@ export function useAddClientNote() {
   return useMutation({
     mutationFn: ({ id, note }: { id: string; note: string }) => clientProvider.note(id, note),
     onSuccess: (_data, vars) => {
-      queryClient.invalidateQueries(queryKeys.clients.detail(vars.id));
+      queryClient.invalidateQueries({ queryKey: queryKeys.clients.detail(vars.id) });
       toast({ title: 'Note saved' });
     },
   });

@@ -7,7 +7,7 @@ export function useClients(params: ClientListParams) {
   return useQuery({
     queryKey: queryKeys.clients.list(params),
     queryFn: () => clientProvider.list(params),
-    keepPreviousData: true,
+    placeholderData: (previousData) => previousData,
   });
 }
 
