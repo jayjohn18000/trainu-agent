@@ -1,211 +1,89 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.76.1'
-import { checkCompliance, incrementMessageCounters } from '../_shared/timeguard.ts'
+// deno-lint-ignore-file no-explicit-any
+import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+import { checkQuietHours } from "../_shared/timeguard.ts";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
-
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
+serve(async (req) => {
   try {
+    if (req.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
+
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: req.headers.get('Authorization') ?? '' } } }
     );
 
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Get authenticated user
-    const { data: { user }, error: userError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
-    
-    if (userError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return new Response('Unauthorized', { status: 401 });
 
     const { messageId } = await req.json();
+    if (!messageId) return new Response('Invalid payload', { status: 400 });
 
-    // Fetch message
-    const { data: message, error: messageError } = await supabase
+    const { data: message, error: mErr } = await supabase
       .from('messages')
-      .select('*, contacts(*)')
+      .select('id, trainer_id, contact_id, status, content, channel, scheduled_for, ghl_message_id')
       .eq('id', messageId)
       .eq('trainer_id', user.id)
       .single();
+    if (mErr || !message) return new Response('Not found', { status: 404 });
 
-    if (messageError || !message) {
-      console.error('Message not found:', messageError);
-      return new Response(JSON.stringify({ error: 'Message not found' }), {
-        status: 404,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    if (message.status !== 'queued' && message.status !== 'draft') {
+      return new Response('Invalid status', { status: 400 });
     }
 
-    // Check consent
-    if (message.contacts.consent_status === 'opted_out') {
-      await supabase
-        .from('messages')
-        .update({ status: 'failed' })
-        .eq('id', messageId);
+    const [{ data: contact }, { data: config }] = await Promise.all([
+      supabase.from('contacts').select('first_name, last_name, email, phone, consent_status').eq('id', message.contact_id).eq('trainer_id', user.id).single(),
+      supabase.from('ghl_config').select('quiet_hours_start, quiet_hours_end').eq('trainer_id', user.id).single(),
+    ]);
 
-      return new Response(JSON.stringify({ error: 'Contact has opted out' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    if ((contact as any)?.consent_status === 'opted_out') {
+      await supabase.from('messages').update({ status: 'failed', ghl_status: 'opted_out' }).eq('id', message.id);
+      return new Response(JSON.stringify({ error: 'opted_out' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
     }
 
-    // Check compliance (quiet hours, frequency caps)
-    const scheduledTime = message.scheduled_for ? new Date(message.scheduled_for) : new Date();
-    const complianceCheck = await checkCompliance(
-      supabase,
-      message.contact_id,
-      scheduledTime,
-      user.id
-    );
-
-    if (!complianceCheck.allowed) {
-      console.log('Compliance check failed:', complianceCheck.reason);
-      
-      // If it's quiet hours, reschedule
-      if (complianceCheck.nextAvailable) {
-        await supabase
-          .from('messages')
-          .update({ 
-            scheduled_for: complianceCheck.nextAvailable.toISOString(),
-            status: 'queued'
-          })
-          .eq('id', messageId);
-
-        return new Response(JSON.stringify({ 
-          error: 'Outside quiet hours',
-          rescheduled: true,
-          nextAvailable: complianceCheck.nextAvailable 
-        }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-
-      // If it's frequency cap, fail
-      await supabase
-        .from('messages')
-        .update({ status: 'failed' })
-        .eq('id', messageId);
-
-      return new Response(JSON.stringify({ error: complianceCheck.reason }), {
-        status: 429,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    const now = new Date();
+    const scheduled = message.scheduled_for ? new Date(message.scheduled_for as unknown as string) : now;
+    const quiet = checkQuietHours(scheduled, {
+      quiet_hours_start: (config as any)?.quiet_hours_start ?? null,
+      quiet_hours_end: (config as any)?.quiet_hours_end ?? null,
+    });
+    if (!quiet.allowed) {
+      await supabase.from('messages').update({ status: 'queued', scheduled_for: quiet.nextAvailable!.toISOString() }).eq('id', message.id);
+      console.log(JSON.stringify({ function: 'send-message', action: 'quiet_hours_blocked', messageId: message.id, scheduled_for: quiet.nextAvailable!.toISOString(), trainerId: user.id, timestamp: new Date().toISOString() }));
+      return new Response(JSON.stringify({ deferred: true, scheduled_for: quiet.nextAvailable!.toISOString() }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     }
 
-    // Fetch GHL config
-    const { data: ghlConfig } = await supabase
-      .from('ghl_config')
-      .select('*')
-      .eq('trainer_id', user.id)
-      .single();
-
-    if (!ghlConfig) {
-      console.error('GHL config not found');
-      await supabase
-        .from('messages')
-        .update({ status: 'failed' })
-        .eq('id', messageId);
-
-      return new Response(JSON.stringify({ error: 'GHL integration not configured' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Send via GHL (invoke ghl-integration function)
-    const { data: ghlResult, error: ghlError } = await supabase.functions.invoke('ghl-integration', {
+    // Call GHL integration to send
+    const { data: ghlResult, error: fnErr } = await supabase.functions.invoke('ghl-integration', {
       body: {
         action: 'send_message',
-        messageId,
         contactData: {
-          firstName: message.contacts.first_name,
-          lastName: message.contacts.last_name || '',
-          email: message.contacts.email || '',
-          phone: message.contacts.phone || '',
+          firstName: (contact as any)?.first_name ?? '',
+          lastName: (contact as any)?.last_name ?? '',
+          email: (contact as any)?.email ?? '',
+          phone: (contact as any)?.phone ?? '',
         },
         messageData: {
           content: message.content,
-          channel: message.channel,
         },
       },
     });
+    if (fnErr) throw fnErr;
 
-    if (ghlError) {
-      console.error('GHL send failed:', ghlError);
-      await supabase
-        .from('messages')
-        .update({ status: 'failed' })
-        .eq('id', messageId);
+    await supabase.from('messages').update({ status: 'sent', ghl_status: 'sent', ghl_message_id: (ghlResult as any)?.messageId ?? null }).eq('id', message.id);
+    console.log(JSON.stringify({ function: 'send-message', action: 'message_sent', messageId: message.id, trainerId: user.id, channel: message.channel, timestamp: new Date().toISOString() }));
 
-      return new Response(JSON.stringify({ error: 'Failed to send message via GHL' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
-    }
-
-    // Update message status
-    await supabase
-      .from('messages')
-      .update({ 
-        status: 'sent',
-        ghl_message_id: ghlResult?.messageId,
-        ghl_status: 'sent',
-      })
-      .eq('id', messageId);
-
-    // Increment message counters
-    await incrementMessageCounters(supabase, message.contact_id);
-
-    // Log event
-    await supabase.from('events').insert({
-      trainer_id: user.id,
-      event_type: 'message_sent',
-      entity_type: 'message',
-      entity_id: messageId,
-      metadata: { 
-        contactId: message.contact_id,
-        channel: message.channel,
-        ghlMessageId: ghlResult?.messageId,
-      },
-    });
-
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        messageId,
-        ghlMessageId: ghlResult?.messageId,
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
-
-  } catch (error) {
-    console.error('Error in send-message:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return new Response(JSON.stringify({ error: errorMessage }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return new Response(JSON.stringify({ sent: true, result: ghlResult }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  } catch (e) {
+    console.error('send-message error', e);
+    try {
+      const supabase = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+      );
+      const { data: { user } } = await supabase.auth.getUser();
+      console.log(JSON.stringify({ function: 'send-message', action: 'message_failed', error: String(e), trainerId: user?.id, timestamp: new Date().toISOString() }));
+    } catch {}
+    return new Response('Internal Error', { status: 500 });
   }
 });

@@ -1,6 +1,7 @@
 import { useState, useEffect, memo } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { getQueue, getFeed, approveQueueItem, editQueueItem, batchApproveQueueItems } from "@/lib/api/agent";
+import { getFeed, editQueueItem, batchApproveQueueItems } from "@/lib/api/agent";
+import { listDraftsAndQueued, approveMessage } from "@/lib/api/messages";
 import { QueueCard } from "@/components/agent/QueueCard";
 import { ActivityFeed } from "@/components/agent/ActivityFeed";
 import { MessageEditor } from "@/components/agent/MessageEditor";
@@ -136,8 +137,35 @@ export default function Today() {
 
   const loadQueue = async () => {
     try {
-      const data = await getQueue();
-      setQueue(data);
+      // Fetch messages from messages table, then hydrate client names
+      const msgs = await listDraftsAndQueued(20);
+      const contactIds = Array.from(new Set(msgs.map((m) => m.contact_id)));
+      let idToName: Record<string, string> = {};
+      if (contactIds.length > 0) {
+        const { data: contacts, error } = await supabase
+          .from("contacts")
+          .select("id, first_name, last_name")
+          .in("id", contactIds);
+        if (error) throw error;
+        idToName = (contacts || []).reduce((acc: any, c: any) => {
+          acc[c.id] = [c.first_name, c.last_name].filter(Boolean).join(" ") || "Client";
+          return acc;
+        }, {} as Record<string, string>);
+      }
+
+      const mapped = msgs.map((m) => ({
+        id: m.id,
+        clientId: m.contact_id,
+        clientName: idToName[m.contact_id] || "Client",
+        preview: m.content,
+        confidence: typeof m.confidence === "number" ? m.confidence : 0.75,
+        why: m.why_reasons || ["AI suggestion"],
+        status: "review",
+        createdAt: m.created_at,
+        scheduledFor: m.scheduled_for,
+      })) as unknown as QueueItem[];
+
+      setQueue(mapped);
     } catch (error) {
       console.error('Failed to load queue:', error);
       toast({
@@ -186,8 +214,8 @@ export default function Today() {
     if (!item) return;
 
     try {
-      // Call API to approve
-      await approveQueueItem(id);
+      // Approve message via queue-management (messages table)
+      await approveMessage(id);
 
       // Award XP and update stats
       await awardXP(25, "Approved message");

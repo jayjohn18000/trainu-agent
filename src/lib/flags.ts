@@ -41,3 +41,30 @@ export function resetFlags(): void {
   localStorage.setItem(FLAGS_KEY, JSON.stringify(defaultFlags));
   window.dispatchEvent(new CustomEvent('flags-changed'));
 }
+
+// DB-backed flags (demo: per-trainer)
+import { supabase } from "@/integrations/supabase/client";
+
+export async function getDbFlag(flagName: string): Promise<boolean | null> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+    const { data, error } = await supabase
+      .from('feature_flags')
+      .select('enabled')
+      .eq('trainer_id', user.id)
+      .eq('flag_name', flagName)
+      .single();
+    if (error) return null;
+    return !!data?.enabled;
+  } catch {
+    return null;
+  }
+}
+
+export async function setDbFlag(flagName: string, enabled: boolean): Promise<void> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  await supabase.from('feature_flags').upsert({ trainer_id: user.id, flag_name: flagName, enabled });
+  window.dispatchEvent(new CustomEvent('flags-changed'));
+}

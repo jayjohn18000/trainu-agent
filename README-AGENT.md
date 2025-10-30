@@ -133,11 +133,10 @@ Mock data is stored in `src/data/fixtures/`:
 
 ## Next Steps
 
-To continue development:
-1. Implement database tables for queue, feed, clients
-2. Add authentication for trainer accounts
-3. Connect real GHL booking links
-4. Implement "Approve All Safe" logic with quiet hours check
-5. Add message editor for "Edit" action
-6. Implement 60-minute undo window with expiry
-7. Add Storybook stories for all components
+To run the new Agent demo features:
+1. Apply migrations in `supabase/migrations/` (creates `contacts`, `bookings`, `messages`, `insights`, `events`, `feature_flags`).
+2. Seed demo data via `supabase/seeds/demo-data.sql` (set TRAINER_ID accordingly).
+3. Configure env: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `GHL_API_BASE`, `GHL_ACCESS_TOKEN`.
+4. Open `/today` and approve drafts; quiet hours/frequency caps will queue messages.
+5. Feature Flags: toggle in `/settings` → Feature Flags (DB-backed).
+6. KPIs pull live counts from `bookings`, `messages`, and `insights`.

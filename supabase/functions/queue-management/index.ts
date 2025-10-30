@@ -60,78 +60,76 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Approve Queue Item
+    // Approve Message (messages table, compliance-aware)
     if (action === 'approve' && req.method === 'POST') {
-      const { id } = body;
+      const { messageId } = body;
 
-      // Get queue item
-      const { data: item } = await supabase
-        .from('queue_items')
-        .select('*')
-        .eq('id', id)
+      const { data: message, error: msgErr } = await supabase
+        .from('messages')
+        .select('id, trainer_id, contact_id, status, content, scheduled_for')
+        .eq('id', messageId)
         .eq('trainer_id', user.id)
         .single();
-
-      if (!item) {
-        return new Response(JSON.stringify({ error: 'Item not found' }), {
+      if (msgErr || !message) {
+        return new Response(JSON.stringify({ error: 'Message not found' }), {
           status: 404,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
 
-      // Update queue item status
-      await supabase
-        .from('queue_items')
-        .update({ status: 'approved' })
-        .eq('id', id);
+      const [{ data: contact }, { data: config }] = await Promise.all([
+        supabase.from('contacts').select('id, messages_sent_today, messages_sent_this_week').eq('id', message.contact_id).eq('trainer_id', user.id).single(),
+        supabase.from('ghl_config').select('quiet_hours_start, quiet_hours_end, frequency_cap_daily, frequency_cap_weekly').eq('trainer_id', user.id).single(),
+      ]);
 
-      // Add to activity feed
-      const { data: feedItem } = await supabase
-        .from('activity_feed')
-        .insert({
-          trainer_id: user.id,
-          action: 'sent',
-          client_name: item.client_name,
-          client_id: item.client_id,
-          status: 'success',
-          message_preview: item.preview,
-          confidence: item.confidence,
-          why: item.why.join(', '),
-        })
-        .select()
-        .single();
+      const now = new Date();
+      const scheduledFor = message.scheduled_for ? new Date(message.scheduled_for as unknown as string) : now;
 
-      // Send via GHL if configured
-      try {
-        const { data: ghlResult } = await supabase.functions.invoke('ghl-integration', {
-          body: {
-            action: 'send_message',
-            queueItemId: feedItem?.id,
-            contactData: {
-              firstName: item.client_name.split(' ')[0],
-              lastName: item.client_name.split(' ')[1] || '',
-              email: `${item.client_name.toLowerCase().replace(/\s+/g, '.')}@example.com`, // Replace with actual client data
-              phone: '+1234567890', // Replace with actual client data
-            },
-            messageData: {
-              content: item.preview,
-              subject: 'Message from your trainer',
-            },
-          },
-        });
-        console.log('GHL message sent:', ghlResult);
-      } catch (ghlError) {
-        console.error('GHL send failed:', ghlError);
-        // Continue even if GHL fails - message still approved
-      }
-
-      // Update trainer stats
-      await supabase.rpc('increment_trainer_stat', {
-        trainer_id: user.id,
-        stat_name: 'total_messages_approved',
+      const quietCheck = checkQuietHours(scheduledFor, {
+        quiet_hours_start: (config as any)?.quiet_hours_start ?? null,
+        quiet_hours_end: (config as any)?.quiet_hours_end ?? null,
       });
 
-      return new Response(JSON.stringify({ success: true }), {
+      const freqCheck = checkFrequencyCap({
+        today: (contact as any)?.messages_sent_today ?? 0,
+        week: (contact as any)?.messages_sent_this_week ?? 0,
+      }, {
+        frequency_cap_daily: (config as any)?.frequency_cap_daily ?? null,
+        frequency_cap_weekly: (config as any)?.frequency_cap_weekly ?? null,
+      });
+
+      if (!freqCheck.allowed) {
+        return new Response(JSON.stringify({ error: 'frequency_cap_reached', limit: freqCheck.limit }), {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const finalWhen = quietCheck.allowed ? scheduledFor : quietCheck.nextAvailable!;
+
+      const { error: updErr } = await supabase
+        .from('messages')
+        .update({ status: 'queued', scheduled_for: finalWhen.toISOString() })
+        .eq('id', message.id)
+        .eq('trainer_id', user.id);
+      if (updErr) {
+        return new Response(JSON.stringify({ error: 'update_failed' }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      console.log(JSON.stringify({
+        function: 'queue-management',
+        action: 'approve',
+        messageId: message.id,
+        trainerId: user.id,
+        scheduled_for: finalWhen.toISOString(),
+        deferred_by_quiet_hours: !quietCheck.allowed,
+        timestamp: new Date().toISOString(),
+      }));
+
+      return new Response(JSON.stringify({ queued: true, scheduled_for: finalWhen.toISOString(), deferred_by_quiet_hours: !quietCheck.allowed }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }

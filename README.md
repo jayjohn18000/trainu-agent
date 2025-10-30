@@ -71,3 +71,13 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+
+## Agent Demo Setup
+
+1. Apply Supabase migrations in `supabase/migrations/`.
+2. Seed demo data from `supabase/seeds/demo-data.sql` (set TRAINER_ID).
+3. Configure `.env` with:
+   - `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`
+   - `GHL_API_BASE`, `GHL_ACCESS_TOKEN`
+4. Open `/today` and `/settings` → Feature Flags.
+5. Approve drafts to see queued/sent flow; quiet hours auto-schedule.

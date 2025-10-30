@@ -113,6 +113,19 @@ const QueueCardComponent = ({
             {Math.round(item.confidence * 100)}%
           </Badge>
         </div>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {item.confidence < 0.8 && (
+            <Badge variant="outline" className="text-xs">
+              REQUIRES APPROVAL
+            </Badge>
+          )}
+          {/* Quiet hours badge if scheduled in future */}
+          {Boolean((item as any).scheduledFor) && new Date((item as any).scheduledFor) > new Date() && (
+            <Badge variant="outline" className="text-xs">
+              ⏰ Queued for {new Date((item as any).scheduledFor).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </Badge>
+          )}
+        </div>
       </CardHeader>
 
       <CardContent className="space-y-3 pt-0">

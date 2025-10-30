@@ -175,38 +175,65 @@ serve(async (req) => {
     }
 
     if (action === 'webhook') {
-      // Handle GHL webhooks (replies, delivery status, etc.)
-      const { event, data } = await req.json();
-      
-      console.log('GHL Webhook received:', event, data);
-
-      // Update activity feed based on webhook event
-      if (event === 'message.delivered' && data.messageId) {
-        await supabase
-          .from('activity_feed')
-          .update({
-            ghl_status: 'delivered',
-            ghl_delivered_at: new Date().toISOString(),
-          })
-          .eq('ghl_message_id', data.messageId);
+      // Basic webhook handler for GHL events
+      const secret = Deno.env.get('GHL_WEBHOOK_SECRET');
+      const provided = req.headers.get('x-ghl-signature');
+      if (secret && provided !== secret) {
+        return new Response(JSON.stringify({ error: 'invalid_signature' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
-      if (event === 'message.read' && data.messageId) {
-        await supabase
-          .from('activity_feed')
-          .update({
-            ghl_read_at: new Date().toISOString(),
-          })
-          .eq('ghl_message_id', data.messageId);
-      }
+      const payload = await req.json();
+      const event = payload.event as string;
+      const data = payload.data as any;
+      console.log('GHL Webhook received:', event);
 
-      return new Response(
-        JSON.stringify({ success: true }),
-        {
-          status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      // Contacts upsert
+      if (event?.startsWith('contact.')) {
+        const contact = data?.contact || data;
+        if (contact?.id) {
+          await supabase.from('contacts').upsert({
+            trainer_id: user.id,
+            ghl_contact_id: String(contact.id),
+            first_name: contact.firstName ?? null,
+            last_name: contact.lastName ?? null,
+            email: contact.email ?? null,
+            phone: contact.phone ?? null,
+            tags: Array.isArray(contact.tags) ? contact.tags : null,
+          }, { onConflict: 'ghl_contact_id' });
         }
-      );
+      }
+
+      // Appointments -> bookings
+      if (event?.startsWith('appointment.')) {
+        const appt = data?.appointment || data;
+        if (appt?.id && appt?.contactId) {
+          // Find contact by ghl_contact_id
+          const { data: c } = await supabase.from('contacts').select('id').eq('trainer_id', user.id).eq('ghl_contact_id', String(appt.contactId)).single();
+          if (c?.id) {
+            await supabase.from('bookings').upsert({
+              trainer_id: user.id,
+              contact_id: c.id,
+              ghl_appointment_id: String(appt.id),
+              scheduled_at: new Date(appt.startTime || appt.time || Date.now()).toISOString(),
+              status: (appt.status ?? 'scheduled'),
+              session_type: appt.title ?? 'Session',
+            }, { onConflict: 'ghl_appointment_id' });
+          }
+        }
+      }
+
+      // Conversations -> message status mapping
+      if (event === 'conversation.message_outbound' && data?.messageId) {
+        await supabase.from('messages').update({ status: 'sent', ghl_message_id: String(data.messageId), ghl_status: 'sent' }).eq('trainer_id', user.id).eq('ghl_message_id', String(data.messageId));
+      }
+      if (event === 'conversation.message_delivered' && data?.messageId) {
+        await supabase.from('messages').update({ ghl_delivered_at: new Date().toISOString(), status: 'delivered' }).eq('trainer_id', user.id).eq('ghl_message_id', String(data.messageId));
+      }
+      if (event === 'conversation.message_read' && data?.messageId) {
+        await supabase.from('messages').update({ ghl_read_at: new Date().toISOString(), status: 'read' }).eq('trainer_id', user.id).eq('ghl_message_id', String(data.messageId));
+      }
+
+      return new Response(JSON.stringify({ success: true }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     throw new Error('Invalid action');

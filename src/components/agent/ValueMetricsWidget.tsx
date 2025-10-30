@@ -1,10 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Ring } from "@/components/ui/Ring";
-import { Clock, Send, TrendingUp, AlertTriangle, Sparkles } from "lucide-react";
+import { CalendarCheck2, RefreshCw, Send, AlertTriangle, Sparkles } from "lucide-react";
 import { useTrainerGamification } from "@/hooks/useTrainerGamification";
 import { useAchievementTracker } from "@/hooks/useAchievementTracker";
 import { useCountUp } from "@/hooks/useCountUp";
 import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ValueMetricsWidgetProps {
   queueCount?: number;
@@ -15,10 +16,36 @@ export function ValueMetricsWidget({ queueCount = 0, feedCount = 0 }: ValueMetri
   const { progress } = useTrainerGamification();
   const { userStats } = useAchievementTracker();
   const [hasAnimated, setHasAnimated] = useState(false);
+  const [draftsCount, setDraftsCount] = useState<number>(0);
+  const [atRiskCount, setAtRiskCount] = useState<number>(0);
+  const [confirmedToday, setConfirmedToday] = useState<number>(0);
+  const [rescheduledToday, setRescheduledToday] = useState<number>(0);
 
   useEffect(() => {
     const timer = setTimeout(() => setHasAnimated(true), 100);
     return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+        const isoStart = startOfDay.toISOString();
+
+        const [draftQ, riskQ, confirmedQ, reschedQ] = await Promise.all([
+          supabase.from('messages').select('id', { count: 'exact', head: true }).in('status', ['draft']),
+          supabase.from('insights').select('id', { count: 'exact', head: true }).gte('risk_score', 75),
+          supabase.from('bookings').select('id', { count: 'exact', head: true }).eq('status', 'confirmed').gte('updated_at', isoStart),
+          supabase.from('bookings').select('id', { count: 'exact', head: true }).eq('status', 'rescheduled').gte('updated_at', isoStart),
+        ]);
+        setDraftsCount(draftQ.count ?? 0);
+        setAtRiskCount(riskQ.count ?? 0);
+        setConfirmedToday(confirmedQ.count ?? 0);
+        setRescheduledToday(reschedQ.count ?? 0);
+      } catch {}
+    };
+    load();
   }, []);
 
   // Calculate time saved (3 minutes per message)
@@ -42,38 +69,36 @@ export function ValueMetricsWidget({ queueCount = 0, feedCount = 0 }: ValueMetri
 
   const metricCards = [
     {
-      icon: Clock,
+      icon: CalendarCheck2,
+      iconColor: "text-green-500",
+      label: "Confirmed Today",
+      value: String(confirmedToday),
+      subtitle: "Bookings confirmed",
+      percentage: Math.min(100, (confirmedToday / Math.max(1, confirmedToday + 5)) * 100),
+    },
+    {
+      icon: RefreshCw,
       iconColor: "text-blue-500",
-      label: "Time Saved",
-      value: animatedTimeSavedHours > 0 
-        ? `${animatedTimeSavedHours}h ${timeSavedMinutes % 60}m`
-        : `${timeSavedMinutes}m`,
-      subtitle: `${animatedMessagesSent} msgs approved`,
-      percentage: Math.min(100, (animatedTimeSavedHours / 10) * 100),
+      label: "Rescheduled Today",
+      value: String(rescheduledToday),
+      subtitle: "Sessions moved",
+      percentage: Math.min(100, (rescheduledToday / Math.max(1, rescheduledToday + 5)) * 100),
     },
     {
       icon: Send,
-      iconColor: "text-green-500",
-      label: "Messages Sent",
-      value: String(animatedMessagesSent),
-      subtitle: `${userStats.messagesEdited} edited`,
-      percentage: (animatedMessagesSent / Math.max(1, animatedMessagesSent + 10)) * 100,
-    },
-    {
-      icon: TrendingUp,
       iconColor: "text-purple-500",
-      label: "Response Rate",
-      value: `${animatedResponseRate}%`,
-      subtitle: "Last 30 days",
-      percentage: animatedResponseRate,
+      label: "Pending Drafts",
+      value: String(draftsCount),
+      subtitle: `${animatedMessagesSent} sent total`,
+      percentage: Math.min(100, (draftsCount / Math.max(1, draftsCount + 10)) * 100),
     },
     {
       icon: AlertTriangle,
       iconColor: "text-orange-500",
-      label: "At-Risk Engaged",
-      value: String(animatedAtRiskEngaged),
-      subtitle: `${queueCount} in queue`,
-      percentage: (animatedAtRiskEngaged / Math.max(1, animatedAtRiskEngaged + 5)) * 100,
+      label: "At Risk",
+      value: String(atRiskCount),
+      subtitle: ">= 75 risk score",
+      percentage: Math.min(100, (atRiskCount / Math.max(1, atRiskCount + 10)) * 100),
     },
   ];
 
