@@ -101,14 +101,170 @@ export type Database = {
         }
         Relationships: []
       }
+      bookings: {
+        Row: {
+          contact_id: string
+          created_at: string | null
+          ghl_appointment_id: string | null
+          id: string
+          notes: string | null
+          scheduled_at: string
+          session_type: string | null
+          status: Database["public"]["Enums"]["booking_status"] | null
+          trainer_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          contact_id: string
+          created_at?: string | null
+          ghl_appointment_id?: string | null
+          id?: string
+          notes?: string | null
+          scheduled_at: string
+          session_type?: string | null
+          status?: Database["public"]["Enums"]["booking_status"] | null
+          trainer_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          contact_id?: string
+          created_at?: string | null
+          ghl_appointment_id?: string | null
+          id?: string
+          notes?: string | null
+          scheduled_at?: string
+          session_type?: string | null
+          status?: Database["public"]["Enums"]["booking_status"] | null
+          trainer_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contacts: {
+        Row: {
+          consent_status: Database["public"]["Enums"]["consent_status"] | null
+          created_at: string | null
+          email: string | null
+          first_name: string
+          ghl_contact_id: string | null
+          id: string
+          last_message_sent_at: string | null
+          last_name: string | null
+          messages_sent_this_week: number | null
+          messages_sent_today: number | null
+          phone: string | null
+          tags: string[] | null
+          trainer_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          consent_status?: Database["public"]["Enums"]["consent_status"] | null
+          created_at?: string | null
+          email?: string | null
+          first_name: string
+          ghl_contact_id?: string | null
+          id?: string
+          last_message_sent_at?: string | null
+          last_name?: string | null
+          messages_sent_this_week?: number | null
+          messages_sent_today?: number | null
+          phone?: string | null
+          tags?: string[] | null
+          trainer_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          consent_status?: Database["public"]["Enums"]["consent_status"] | null
+          created_at?: string | null
+          email?: string | null
+          first_name?: string
+          ghl_contact_id?: string | null
+          id?: string
+          last_message_sent_at?: string | null
+          last_name?: string | null
+          messages_sent_this_week?: number | null
+          messages_sent_today?: number | null
+          phone?: string | null
+          tags?: string[] | null
+          trainer_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      events: {
+        Row: {
+          created_at: string | null
+          entity_id: string | null
+          entity_type: string | null
+          event_type: string
+          id: string
+          metadata: Json | null
+          trainer_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          trainer_id: string
+        }
+        Update: {
+          created_at?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          trainer_id?: string
+        }
+        Relationships: []
+      }
+      feature_flags: {
+        Row: {
+          enabled: boolean | null
+          flag_name: string
+          id: string
+          trainer_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          enabled?: boolean | null
+          flag_name: string
+          id?: string
+          trainer_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          enabled?: boolean | null
+          flag_name?: string
+          id?: string
+          trainer_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       ghl_config: {
         Row: {
           contact_field_mapping: Json | null
           created_at: string | null
           default_channel: string | null
           email_enabled: boolean | null
+          frequency_cap_daily: number | null
+          frequency_cap_weekly: number | null
           id: string
           location_id: string
+          quiet_hours_end: string | null
+          quiet_hours_start: string | null
           sms_enabled: boolean | null
           trainer_id: string
           updated_at: string | null
@@ -119,8 +275,12 @@ export type Database = {
           created_at?: string | null
           default_channel?: string | null
           email_enabled?: boolean | null
+          frequency_cap_daily?: number | null
+          frequency_cap_weekly?: number | null
           id?: string
           location_id: string
+          quiet_hours_end?: string | null
+          quiet_hours_start?: string | null
           sms_enabled?: boolean | null
           trainer_id: string
           updated_at?: string | null
@@ -131,14 +291,68 @@ export type Database = {
           created_at?: string | null
           default_channel?: string | null
           email_enabled?: boolean | null
+          frequency_cap_daily?: number | null
+          frequency_cap_weekly?: number | null
           id?: string
           location_id?: string
+          quiet_hours_end?: string | null
+          quiet_hours_start?: string | null
           sms_enabled?: boolean | null
           trainer_id?: string
           updated_at?: string | null
           webhook_registered?: boolean | null
         }
         Relationships: []
+      }
+      insights: {
+        Row: {
+          contact_id: string
+          current_streak: number | null
+          engagement_score: number | null
+          id: string
+          last_activity_at: string | null
+          missed_sessions: number | null
+          response_rate: number | null
+          risk_score: number | null
+          total_sessions: number | null
+          trainer_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          contact_id: string
+          current_streak?: number | null
+          engagement_score?: number | null
+          id?: string
+          last_activity_at?: string | null
+          missed_sessions?: number | null
+          response_rate?: number | null
+          risk_score?: number | null
+          total_sessions?: number | null
+          trainer_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          contact_id?: string
+          current_streak?: number | null
+          engagement_score?: number | null
+          id?: string
+          last_activity_at?: string | null
+          missed_sessions?: number | null
+          response_rate?: number | null
+          risk_score?: number | null
+          total_sessions?: number | null
+          trainer_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "insights_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       message_templates: {
         Row: {
@@ -175,6 +389,68 @@ export type Database = {
           usage_count?: number | null
         }
         Relationships: []
+      }
+      messages: {
+        Row: {
+          channel: Database["public"]["Enums"]["message_channel"] | null
+          confidence: number | null
+          contact_id: string
+          content: string
+          created_at: string | null
+          ghl_delivered_at: string | null
+          ghl_message_id: string | null
+          ghl_read_at: string | null
+          ghl_status: string | null
+          id: string
+          scheduled_for: string | null
+          status: Database["public"]["Enums"]["message_status"] | null
+          trainer_id: string
+          updated_at: string | null
+          why_reasons: string[] | null
+        }
+        Insert: {
+          channel?: Database["public"]["Enums"]["message_channel"] | null
+          confidence?: number | null
+          contact_id: string
+          content: string
+          created_at?: string | null
+          ghl_delivered_at?: string | null
+          ghl_message_id?: string | null
+          ghl_read_at?: string | null
+          ghl_status?: string | null
+          id?: string
+          scheduled_for?: string | null
+          status?: Database["public"]["Enums"]["message_status"] | null
+          trainer_id: string
+          updated_at?: string | null
+          why_reasons?: string[] | null
+        }
+        Update: {
+          channel?: Database["public"]["Enums"]["message_channel"] | null
+          confidence?: number | null
+          contact_id?: string
+          content?: string
+          created_at?: string | null
+          ghl_delivered_at?: string | null
+          ghl_message_id?: string | null
+          ghl_read_at?: string | null
+          ghl_status?: string | null
+          id?: string
+          scheduled_for?: string | null
+          status?: Database["public"]["Enums"]["message_status"] | null
+          trainer_id?: string
+          updated_at?: string | null
+          why_reasons?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       queue_items: {
         Row: {
@@ -322,7 +598,21 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      booking_status:
+        | "scheduled"
+        | "confirmed"
+        | "cancelled"
+        | "completed"
+        | "no_show"
+      consent_status: "active" | "pending" | "opted_out"
+      message_channel: "sms" | "email" | "both"
+      message_status:
+        | "draft"
+        | "queued"
+        | "sent"
+        | "delivered"
+        | "read"
+        | "failed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -449,6 +739,24 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      booking_status: [
+        "scheduled",
+        "confirmed",
+        "cancelled",
+        "completed",
+        "no_show",
+      ],
+      consent_status: ["active", "pending", "opted_out"],
+      message_channel: ["sms", "email", "both"],
+      message_status: [
+        "draft",
+        "queued",
+        "sent",
+        "delivered",
+        "read",
+        "failed",
+      ],
+    },
   },
 } as const
