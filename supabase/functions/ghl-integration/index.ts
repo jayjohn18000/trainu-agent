@@ -75,14 +75,24 @@ serve(async (req) => {
         body: JSON.stringify(contactPayload),
       });
 
+      let contact: any;
+      
       if (!contactResponse.ok) {
-        const errorText = await contactResponse.text();
-        console.error('GHL contact creation failed:', errorText);
-        throw new Error(`Failed to create/find contact: ${errorText}`);
+        const errorData = await contactResponse.json();
+        console.log('GHL contact response error:', errorData);
+        
+        // Handle duplicate contact - GHL returns existing contact ID in meta
+        if (errorData.statusCode === 400 && errorData.meta?.contactId) {
+          console.log('Duplicate contact found, using existing ID:', errorData.meta.contactId);
+          contact = { contact: { id: errorData.meta.contactId } };
+        } else {
+          console.error('GHL contact creation failed:', errorData);
+          throw new Error(`Failed to create/find contact: ${JSON.stringify(errorData)}`);
+        }
+      } else {
+        contact = await contactResponse.json();
+        console.log('Contact created/found:', contact.contact?.id);
       }
-
-      const contact = await contactResponse.json();
-      console.log('Contact created/found:', contact.contact?.id);
 
       // Step 2: Send message(s)
       const results: any = { sms: null, email: null };
