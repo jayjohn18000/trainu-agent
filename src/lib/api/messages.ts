@@ -33,4 +33,12 @@ export async function approveMessage(messageId: string) {
   return data as { queued: boolean; scheduled_for?: string; deferred_by_quiet_hours?: boolean };
 }
 
+export async function sendNow(messageId: string) {
+  const { data, error } = await supabase.functions.invoke("send-message", {
+    body: { messageId },
+  });
+  if (error) throw error;
+  return data as { sent?: boolean; deferred?: boolean; scheduled_for?: string };
+}
+
 

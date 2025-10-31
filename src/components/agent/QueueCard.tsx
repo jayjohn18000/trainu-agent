@@ -17,6 +17,7 @@ interface QueueCardProps {
   onApprove?: (id: string) => void;
   onEdit?: (id: string) => void;
   onUndo?: (id: string) => void;
+  onSendNow?: (id: string) => void;
   showUndo?: boolean;
   isSelected?: boolean;
 }
@@ -26,6 +27,7 @@ const QueueCardComponent = ({
   onApprove,
   onEdit,
   onUndo,
+  onSendNow,
   showUndo = false,
   isSelected = false,
 }: QueueCardProps) => {
@@ -187,6 +189,16 @@ const QueueCardComponent = ({
                       Approve
                     </>
                   )}
+                </Button>
+              )}
+              {onSendNow && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onSendNow(item.id)}
+                  aria-label="Send message now"
+                >
+                  Send Now
                 </Button>
               )}
               {onEdit && (

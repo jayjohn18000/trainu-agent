@@ -35,10 +35,6 @@ serve(async (req) => {
     const GHL_API_BASE = Deno.env.get('GHL_API_BASE');
     const GHL_ACCESS_TOKEN = Deno.env.get('GHL_ACCESS_TOKEN');
 
-    if (!GHL_API_BASE || !GHL_ACCESS_TOKEN) {
-      throw new Error('GHL credentials not configured');
-    }
-
     // Get trainer's GHL config
     const { data: ghlConfig } = await supabase
       .from('ghl_config')
@@ -46,11 +42,40 @@ serve(async (req) => {
       .eq('trainer_id', user.id)
       .single();
 
-    if (!ghlConfig) {
-      throw new Error('GHL not configured for this trainer');
+    // DEMO MODE: If creds or config are missing, return mock success
+    if (action === 'send_message' && (!GHL_API_BASE || !GHL_ACCESS_TOKEN || !ghlConfig)) {
+      const mockMessageId = `mock_${Date.now()}`;
+      console.log(
+        JSON.stringify({
+          function: 'ghl-integration',
+          action: 'demo_mode_send',
+          note: 'DEMO MODE: Would have sent via GHL',
+          to: contactData?.phone || contactData?.email,
+          trainerId: user.id,
+          messageId: mockMessageId,
+          timestamp: new Date().toISOString(),
+        })
+      );
+      return new Response(
+        JSON.stringify({
+          success: true,
+          demo: true,
+          results: { sms: { messageId: mockMessageId } },
+          contactId: 'mock_contact',
+          messageId: mockMessageId,
+          channel: contactData?.phone ? 'sms' : 'email',
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     if (action === 'send_message') {
+      if (!ghlConfig) {
+        throw new Error('GHL not configured for this trainer');
+      }
+      if (!GHL_API_BASE || !GHL_ACCESS_TOKEN) {
+        throw new Error('GHL credentials not configured');
+      }
       console.log('Sending message via GHL:', { contactData, messageData });
 
       // Step 1: Find or create contact

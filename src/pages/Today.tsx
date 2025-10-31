@@ -1,7 +1,7 @@
 import { useState, useEffect, memo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getFeed, editQueueItem, batchApproveQueueItems } from "@/lib/api/agent";
-import { listDraftsAndQueued, approveMessage } from "@/lib/api/messages";
+import { listDraftsAndQueued, approveMessage, sendNow } from "@/lib/api/messages";
 import { QueueCard } from "@/components/agent/QueueCard";
 import { ActivityFeed } from "@/components/agent/ActivityFeed";
 import { MessageEditor } from "@/components/agent/MessageEditor";
@@ -36,7 +36,7 @@ import { analytics } from "@/lib/analytics";
 import type { QueueItem } from "@/types/agent";
 
 // Memoized QueueList component for performance
-const QueueList = memo(({ queue, selectedIndex, onApprove, onEdit }: any) => (
+const QueueList = memo(({ queue, selectedIndex, onApprove, onEdit, onSendNow }: any) => (
   <>
     {queue.slice(0, 3).map((item: any, idx: number) => (
       <div 
@@ -48,6 +48,7 @@ const QueueList = memo(({ queue, selectedIndex, onApprove, onEdit }: any) => (
           item={item}
           onApprove={() => onApprove(item.id)}
           onEdit={() => onEdit(item.id)}
+          onSendNow={() => onSendNow(item.id)}
           isSelected={idx === selectedIndex}
         />
       </div>
@@ -100,7 +101,7 @@ export default function Today() {
         {
           event: '*',
           schema: 'public',
-          table: 'queue_items',
+          table: 'messages',
         },
         () => {
           loadQueue();
@@ -115,7 +116,7 @@ export default function Today() {
         {
           event: '*',
           schema: 'public',
-          table: 'activity_feed',
+          table: 'messages',
         },
         () => {
           loadFeed();
@@ -215,7 +216,7 @@ export default function Today() {
 
     try {
       // Approve message via queue-management (messages table)
-      await approveMessage(id);
+      const result = await approveMessage(id);
 
       // Award XP and update stats
       await awardXP(25, "Approved message");
@@ -229,25 +230,37 @@ export default function Today() {
       analytics.track('queue_item_approved', { id });
       analytics.track('xp_earned', { amount: 25, reason: 'Approved message' });
 
-      toast({
-        title: "Message Approved",
-        description: (
-          <div className="flex items-center gap-2">
-            <span>Draft to {item.clientName} sent successfully!</span>
-            <span className="text-primary font-semibold flex items-center gap-1">
-              <Zap className="h-3 w-3" aria-hidden="true" />
-              +25 XP
-            </span>
-          </div>
-        ),
-      });
+      if (result?.deferred_by_quiet_hours && result?.scheduled_for) {
+        toast({
+          title: "Queued for quiet hours",
+          description: `Will send at ${new Date(result.scheduled_for).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+        });
+      } else {
+        toast({
+          title: "Message Approved",
+          description: (
+            <div className="flex items-center gap-2">
+              <span>Draft to {item.clientName} sent successfully!</span>
+              <span className="text-primary font-semibold flex items-center gap-1">
+                <Zap className="h-3 w-3" aria-hidden="true" />
+                +25 XP
+              </span>
+            </div>
+          ),
+        });
+      }
     } catch (error) {
       console.error('Failed to approve:', error);
-      toast({
-        title: "Error",
-        description: "Failed to approve message. Please try again.",
-        variant: "destructive",
-      });
+      const message = (error as any)?.message || '';
+      if (typeof message === 'string' && message.includes('429')) {
+        toast({ title: "Frequency cap reached", description: "Try again tomorrow.", variant: "destructive" });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to approve message. Please try again.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -255,6 +268,25 @@ export default function Today() {
     const item = queue.find((q) => q.id === id);
     if (!item) return;
     setEditingItem(item);
+  };
+
+  const handleSendNow = async (id: string) => {
+    const item = queue.find((q) => q.id === id);
+    if (!item) return;
+    try {
+      const result = await sendNow(id);
+      if (result?.deferred && result?.scheduled_for) {
+        toast({
+          title: "Quiet hours",
+          description: `Deferred to ${new Date(result.scheduled_for).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+        });
+      } else {
+        toast({ title: "Message sent", description: `Sent to ${item.clientName}` });
+      }
+    } catch (error) {
+      console.error('Failed to send now:', error);
+      toast({ title: "Error", description: "Failed to send message.", variant: "destructive" });
+    }
   };
 
   const handleSaveEdit = async (updatedMessage: string, tone: string) => {
@@ -485,6 +517,7 @@ export default function Today() {
                   selectedIndex={selectedIndex}
                   onApprove={handleApprove}
                   onEdit={handleEdit}
+                  onSendNow={handleSendNow}
                 />
                 {queue.length > 3 && (
                   <button

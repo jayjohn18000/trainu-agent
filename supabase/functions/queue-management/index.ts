@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.76.1'
+import { checkQuietHours, checkFrequencyCap } from '../_shared/timeguard.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
