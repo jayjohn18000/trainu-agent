@@ -7,6 +7,11 @@ export interface FeatureFlags {
   GOALS_ENABLED: boolean;
   INBOX_ENABLED: boolean;
   ANALYTICS_ENABLED: boolean;
+  BULK_APPROVE_ENABLED?: boolean;
+  DEMO_MODE?: boolean;
+  AGENT_METRICS_ENABLED?: boolean;
+  SEGMENT_RULES_ENABLED?: boolean;
+  PROGRAMS_SHELL_ENABLED?: boolean;
 }
 
 const defaultFlags: FeatureFlags = {
@@ -16,6 +21,11 @@ const defaultFlags: FeatureFlags = {
   GOALS_ENABLED: true,
   INBOX_ENABLED: true,
   ANALYTICS_ENABLED: true,
+  BULK_APPROVE_ENABLED: false,
+  DEMO_MODE: false,
+  AGENT_METRICS_ENABLED: false,
+  SEGMENT_RULES_ENABLED: false,
+  PROGRAMS_SHELL_ENABLED: false,
 };
 
 export function getFlags(): FeatureFlags {

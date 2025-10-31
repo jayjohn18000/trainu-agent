@@ -1,5 +1,6 @@
 import { Outlet } from "react-router-dom";
 import { TrainerSidebar } from "@/components/navigation/TrainerSidebar";
+import { AgentFAB } from "@/components/agent/AgentFAB";
 import { useState } from "react";
 
 export function UnifiedLayout() {
@@ -17,6 +18,9 @@ export function UnifiedLayout() {
       }`}>
         <Outlet />
       </main>
+      
+      {/* Agent FAB for mobile agent functionality */}
+      <AgentFAB />
     </div>
   );
 }

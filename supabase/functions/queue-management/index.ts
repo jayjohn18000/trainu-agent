@@ -233,6 +233,118 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Approve Draft (new action for drafts table)
+    if (action === 'approveDraft' && req.method === 'POST') {
+      const { draftId } = body;
+      
+      const { data: draft, error: draftError } = await supabase
+        .from('drafts')
+        .select('*')
+        .eq('id', draftId)
+        .eq('trainer_id', user.id)
+        .eq('status', 'pending')
+        .single();
+
+      if (draftError || !draft) {
+        return new Response(JSON.stringify({ error: 'Draft not found' }), {
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Check quiet hours (22:00-04:00 client-local) - simplified for now
+      const now = new Date();
+      const hour = now.getUTCHours();
+      const isQuietHours = hour >= 22 || hour < 4;
+      
+      let updateData: any = { status: 'approved' };
+      
+      if (isQuietHours) {
+        // Schedule for 04:05 next day
+        const tomorrow = new Date(now);
+        tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+        tomorrow.setUTCHours(4, 5, 0, 0);
+        updateData.scheduled_at = tomorrow.toISOString();
+        updateData.status = 'scheduled';
+      }
+
+      const { error: updateError } = await supabase
+        .from('drafts')
+        .update(updateData)
+        .eq('id', draftId);
+
+      if (updateError) {
+        return new Response(JSON.stringify({ error: updateError.message }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      return new Response(JSON.stringify({ success: true, scheduled: isQuietHours }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Bulk Approve Drafts
+    if (action === 'bulkApprove' && req.method === 'POST') {
+      const { draftIds } = body;
+      
+      if (!Array.isArray(draftIds) || draftIds.length === 0) {
+        return new Response(JSON.stringify({ error: 'Invalid draftIds array' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const { data: drafts, error: fetchError } = await supabase
+        .from('drafts')
+        .select('*')
+        .in('id', draftIds)
+        .eq('trainer_id', user.id)
+        .eq('status', 'pending');
+
+      if (fetchError) {
+        return new Response(JSON.stringify({ error: fetchError.message }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      const now = new Date();
+      const hour = now.getUTCHours();
+      const isQuietHours = hour >= 22 || hour < 4;
+      
+      const results = await Promise.all(
+        drafts.map(async (draft) => {
+          let updateData: any = { status: 'approved' };
+          
+          if (isQuietHours) {
+            const tomorrow = new Date(now);
+            tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+            tomorrow.setUTCHours(4, 5, 0, 0);
+            updateData.scheduled_at = tomorrow.toISOString();
+            updateData.status = 'scheduled';
+          }
+
+          const { error } = await supabase
+            .from('drafts')
+            .update(updateData)
+            .eq('id', draft.id);
+
+          return {
+            id: draft.id,
+            success: !error,
+            error: error?.message,
+            scheduled: isQuietHours,
+          };
+        })
+      );
+
+      return new Response(JSON.stringify({ results }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     return new Response(JSON.stringify({ error: 'Invalid action' }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -33,6 +33,7 @@ import { TrainerXPNotification } from "@/components/gamification/TrainerXPNotifi
 import { AchievementUnlockNotification } from "@/components/ui/AchievementUnlockNotification";
 import { Zap, CheckCircle, TrendingUp, Keyboard } from "lucide-react";
 import { analytics } from "@/lib/analytics";
+import { useDraftsStore } from "@/lib/store/useDraftsStore";
 import type { QueueItem } from "@/types/agent";
 
 // Memoized QueueList component for performance
@@ -75,11 +76,13 @@ export default function Today() {
   const { awardXP, progress } = useTrainerGamification();
   const { updateStats, newlyUnlockedAchievements } = useAchievementTracker();
   const isMobile = useIsMobile();
+  const { items: drafts, fetch: fetchDrafts, approveOne: approveDraft } = useDraftsStore();
 
   // Load initial data
   useEffect(() => {
     loadData();
-  }, []);
+    fetchDrafts();
+  }, [fetchDrafts]);
 
   // Check if first visit
   useEffect(() => {
@@ -261,6 +264,15 @@ export default function Today() {
           variant: "destructive",
         });
       }
+    }
+  };
+
+  const handleApproveDraft = async (id: string) => {
+    try {
+      await approveDraft(id);
+      toast({ title: "Approved", description: "Draft scheduled or sent." });
+    } catch (e) {
+      toast({ title: "Error", description: "Failed to approve draft.", variant: "destructive" });
     }
   };
 
@@ -481,6 +493,25 @@ export default function Today() {
             )}
           </div>
         </header>
+
+        {/* New Drafts (Mobile Agent v1) */}
+        {drafts.length > 0 && (
+          <section className="mb-6 space-y-2" aria-label="Pending drafts">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Drafts ({drafts.length})</h2>
+            </div>
+            <div className="space-y-2">
+              {drafts.slice(0, 3).map((d) => (
+                <Card key={d.id} className="p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="text-sm text-foreground">{d.body}</div>
+                    <Button variant="default" size="sm" onClick={() => handleApproveDraft(d.id)}>Approve</Button>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* 2-Column Layout: Queue + Your Impact/Messages */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 lg:gap-8 mb-6 md:mb-8">
