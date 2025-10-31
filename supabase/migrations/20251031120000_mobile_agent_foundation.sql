@@ -3,7 +3,8 @@
 -- 1) Extend GHL config per-trainer
 ALTER TABLE public.ghl_config
   ADD COLUMN IF NOT EXISTS booking_widget_id TEXT,
-  ADD COLUMN IF NOT EXISTS templates JSONB DEFAULT '{}'::jsonb;
+  ADD COLUMN IF NOT EXISTS templates JSONB DEFAULT '{}'::jsonb,
+  ADD COLUMN IF NOT EXISTS backfill_checkpoint TEXT;
 
 -- 2) Link clients to GHL contacts (only if clients table exists)
 DO $$

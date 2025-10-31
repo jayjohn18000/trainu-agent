@@ -1,22 +1,41 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Users, MessageSquare, Calendar, Settings } from "lucide-react";
+import { Home, Users, Folder } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useEffect, useRef, useState } from "react";
 
 const navItems = [
   { label: 'Today', path: '/today', icon: Home },
   { label: 'Clients', path: '/clients', icon: Users },
-  { label: 'Messages', path: '/messages', icon: MessageSquare },
-  { label: 'Calendar', path: '/calendar', icon: Calendar },
-  { label: 'Settings', path: '/settings', icon: Settings },
+  { label: 'Programs', path: '/programs', icon: Folder },
 ];
 
 export function MobileBottomNav() {
   const location = useLocation();
+  const lastScrollY = useRef(0);
+  const [hidden, setHidden] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => {
+      const current = window.scrollY;
+      if (current > lastScrollY.current && current > 24) {
+        setHidden(true);
+      } else {
+        setHidden(false);
+      }
+      lastScrollY.current = current;
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   return (
     <nav 
-      className="fixed bottom-0 left-0 right-0 z-50 bg-card border-t border-border md:hidden"
+      className={cn(
+        "fixed bottom-0 left-0 right-0 z-40 border-t md:hidden transition-transform duration-200",
+        "bg-card/80 backdrop-blur-md border-border/50",
+        hidden ? 'translate-y-full' : 'translate-y-0'
+      )}
       role="navigation"
       aria-label="Mobile navigation"
     >

@@ -26,6 +26,8 @@ import {
 import { TagPicker } from "./TagPicker";
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
+import { useDraftsStore } from "@/lib/store/useDraftsStore";
+import { useToast } from "@/hooks/use-toast";
 
 interface ClientInspectorProps {
   open: boolean;
@@ -49,6 +51,8 @@ export function ClientInspector({
   const [isEditingTags, setIsEditingTags] = useState(false);
   const [newNote, setNewNote] = useState("");
   const [savingNote, setSavingNote] = useState(false);
+  const { addFromQuickAction } = useDraftsStore();
+  const { toast } = useToast();
 
   if (!client) return null;
 
@@ -109,10 +113,63 @@ export function ClientInspector({
 
         <div className="mt-6 space-y-6">
           {/* Quick Actions */}
-          <div className="flex gap-2">
-            <Button onClick={onNudge} className="flex-1">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <Button onClick={onNudge} variant="outline">
               <MessageSquare className="h-4 w-4 mr-2" />
-              Send Nudge
+              Nudge
+            </Button>
+            <Button
+              variant="outline"
+              onClick={async () => {
+                try {
+                  await addFromQuickAction({
+                    client_id: client.id,
+                    channel: "sms",
+                    body: `Hey ${client.name.split(' ')[0]}, quick check-in — how did your last workout go?`
+                  });
+                  toast({ title: "Draft created", description: "Check-in message added to Today." });
+                } catch (e) {
+                  toast({ title: "Error", description: "Failed to create draft.", variant: "destructive" });
+                }
+              }}
+            >
+              Check-in
+            </Button>
+            <Button
+              variant="outline"
+              onClick={async () => {
+                try {
+                  const when = client.nextSession ? new Date(client.nextSession) : null;
+                  const whenStr = when ? when.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'your next session';
+                  await addFromQuickAction({
+                    client_id: client.id,
+                    channel: "sms",
+                    body: `Hi ${client.name.split(' ')[0]}, can you confirm ${whenStr}? Reply YES to confirm or NO to reschedule.`
+                  });
+                  toast({ title: "Draft created", description: "Confirm session message added to Today." });
+                } catch (e) {
+                  toast({ title: "Error", description: "Failed to create draft.", variant: "destructive" });
+                }
+              }}
+            >
+              Confirm
+            </Button>
+            <Button
+              variant="outline"
+              onClick={async () => {
+                try {
+                  await addFromQuickAction({
+                    client_id: client.id,
+                    channel: "sms",
+                    body: `Hey ${client.name.split(' ')[0]}, missed you last time. Everything okay? I can help you get back on track — want to pick a new time?`
+                  });
+                  toast({ title: "Draft created", description: "Recover no-show message added to Today." });
+                } catch (e) {
+                  toast({ title: "Error", description: "Failed to create draft.", variant: "destructive" });
+                }
+              }}
+            >
+              Recover no-show
             </Button>
           </div>
 

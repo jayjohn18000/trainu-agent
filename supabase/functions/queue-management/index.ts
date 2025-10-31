@@ -252,19 +252,66 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Check quiet hours (22:00-04:00 client-local) - simplified for now
+      // Fetch client settings (timezone, opt_out)
+      let clientTz: string | null = null;
+      let clientOptOut = false;
+      if (draft.client_id) {
+        const { data: client } = await supabase
+          .from('clients')
+          .select('timezone, opt_out')
+          .eq('id', draft.client_id)
+          .eq('trainer_id', user.id)
+          .single();
+        clientTz = (client as any)?.timezone ?? null;
+        clientOptOut = !!(client as any)?.opt_out;
+      }
+
+      if (clientOptOut) {
+        return new Response(JSON.stringify({ error: 'opt_out' }), {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Rate limit: max 50 approvals in last hour per trainer
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const { count: approvalsLastHour } = await supabase
+        .from('drafts')
+        .select('id', { count: 'exact', head: true })
+        .eq('trainer_id', user.id)
+        .in('status', ['approved','scheduled','sent'])
+        .gte('updated_at', oneHourAgo);
+      if ((approvalsLastHour ?? 0) >= 50) {
+        return new Response(JSON.stringify({ error: 'rate_limited', limit: 50 }), {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Quiet hours: 22:00–04:00 in client-local timezone (fallback UTC)
       const now = new Date();
-      const hour = now.getUTCHours();
-      const isQuietHours = hour >= 22 || hour < 4;
+      let localHour = now.getUTCHours();
+      if (clientTz) {
+        try {
+          const fmt = new Intl.DateTimeFormat('en-US', { hour: 'numeric', hour12: false, timeZone: clientTz });
+          localHour = Number(fmt.format(now));
+        } catch (_e) {
+          // fallback to UTC
+        }
+      }
+      const isQuietHours = localHour >= 22 || localHour < 4;
       
       let updateData: any = { status: 'approved' };
       
       if (isQuietHours) {
-        // Schedule for 04:05 next day
-        const tomorrow = new Date(now);
-        tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
-        tomorrow.setUTCHours(4, 5, 0, 0);
-        updateData.scheduled_at = tomorrow.toISOString();
+        // Schedule for 04:05 client-local next day
+        const future = new Date(now);
+        // Compute next day 04:05 in client timezone, convert to UTC ISO
+        // Approximation: set to next day 04:05 in localHour baseline
+        const target = new Date(now);
+        target.setUTCDate(target.getUTCDate() + (localHour >= 22 ? 1 : 0));
+        target.setUTCHours(4, 5, 0, 0);
+        updateData.scheduled_at = target.toISOString();
         updateData.status = 'scheduled';
       }
 
@@ -311,18 +358,53 @@ Deno.serve(async (req) => {
       }
 
       const now = new Date();
-      const hour = now.getUTCHours();
-      const isQuietHours = hour >= 22 || hour < 4;
       
       const results = await Promise.all(
         drafts.map(async (draft) => {
+          // Fetch client
+          let clientTz: string | null = null;
+          let clientOptOut = false;
+          if (draft.client_id) {
+            const { data: client } = await supabase
+              .from('clients')
+              .select('timezone, opt_out')
+              .eq('id', draft.client_id)
+              .eq('trainer_id', user.id)
+              .single();
+            clientTz = (client as any)?.timezone ?? null;
+            clientOptOut = !!(client as any)?.opt_out;
+          }
+          if (clientOptOut) {
+            return { id: draft.id, success: false, error: 'opt_out' };
+          }
+
+          // Rate limit check per item (simple shared cap)
+          const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+          const { count: approvalsLastHour } = await supabase
+            .from('drafts')
+            .select('id', { count: 'exact', head: true })
+            .eq('trainer_id', user.id)
+            .in('status', ['approved','scheduled','sent'])
+            .gte('updated_at', oneHourAgo);
+          if ((approvalsLastHour ?? 0) >= 50) {
+            return { id: draft.id, success: false, error: 'rate_limited' };
+          }
+
+          let localHour = now.getUTCHours();
+          if (clientTz) {
+            try {
+              const fmt = new Intl.DateTimeFormat('en-US', { hour: 'numeric', hour12: false, timeZone: clientTz });
+              localHour = Number(fmt.format(now));
+            } catch {}
+          }
+          const isQuietHours = localHour >= 22 || localHour < 4;
           let updateData: any = { status: 'approved' };
           
           if (isQuietHours) {
-            const tomorrow = new Date(now);
-            tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
-            tomorrow.setUTCHours(4, 5, 0, 0);
-            updateData.scheduled_at = tomorrow.toISOString();
+            const target = new Date(now);
+            target.setUTCDate(target.getUTCDate() + (localHour >= 22 ? 1 : 0));
+            target.setUTCHours(4, 5, 0, 0);
+            updateData.scheduled_at = target.toISOString();
             updateData.status = 'scheduled';
           }
 

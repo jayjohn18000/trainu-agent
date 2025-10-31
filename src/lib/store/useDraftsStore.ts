@@ -60,12 +60,11 @@ export const useDraftsStore = create<DraftsState>((set, get) => ({
 
   approveMany: async (ids: string[]) => {
     try {
-      const { data, error } = await supabase.functions.invoke("queue-management", {
+      const { error } = await supabase.functions.invoke("queue-management", {
         body: { action: "bulkApprove", draftIds: ids },
       });
       if (error) throw error;
       await get().fetch();
-      return data?.results || [];
     } catch (e) {
       console.error('Failed to bulk approve:', e);
       throw e;

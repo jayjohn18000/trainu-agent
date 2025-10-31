@@ -16,9 +16,19 @@ verify_jwt = true
 [functions.draft-engine]
 verify_jwt = true
 [functions.send-message]
+verify_jwt = true
 [functions.agent-drafting]
 verify_jwt = true
 [functions.agent-metrics]
 verify_jwt = true
 [functions.agent-segmentation]
 verify_jwt = true
+
+[functions.draft-dispatcher]
+verify_jwt = false
+
+[functions.segment-refresh]
+verify_jwt = false
+
+[functions.ghl-backfill]
+verify_jwt = false

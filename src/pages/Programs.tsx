@@ -6,6 +6,7 @@ import { useAuthStore } from "@/lib/store/useAuthStore";
 import { ProgramCardSkeletonList } from "@/components/skeletons/ProgramCardSkeleton";
 import { Folder, Plus, User, Calendar, CheckCircle2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { getFlags } from "@/lib/flags";
 
 export default function Programs() {
   const { user } = useAuthStore();
@@ -73,16 +74,25 @@ export default function Programs() {
             {user?.role === "gym_admin" && "View all gym programs"}
           </p>
         </div>
-        {user?.role === "trainer" && (
-          <Button
-            onClick={() =>
-              toast({ title: "Create Program", description: "Opening program builder..." })
-            }
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Create Template
-          </Button>
-        )}
+        {user?.role === "trainer" && (() => {
+          const flags = getFlags();
+          const enabled = !!flags.PROGRAMS_SHELL_ENABLED;
+          return (
+            <Button
+              onClick={() =>
+                enabled
+                  ? toast({ title: "Create Program", description: "Opening program builder..." })
+                  : toast({ title: "Coming soon", description: "Enable Programs shell in Dev Flags", variant: "destructive" })
+              }
+              variant={enabled ? "default" : "outline"}
+              disabled={!enabled}
+              title={enabled ? "Create via Agent" : "Programs shell disabled"}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Create via Agent
+            </Button>
+          );
+        })()}
       </div>
 
       {user?.role === "client" && (

@@ -209,6 +209,89 @@ serve(async (req) => {
       );
     }
 
+    // Map emails/phones to GHL contact ids
+    if (action === 'getContactIds') {
+      const { emails = [], phones = [] } = (await req.json());
+      const isDemo = !GHL_API_BASE || !GHL_ACCESS_TOKEN || !ghlConfig;
+      const result: Record<string, string> = {};
+      if (isDemo) {
+        [...emails, ...phones].forEach((k: string) => { result[k] = `mock_${btoa(k).slice(0,8)}`; });
+        return new Response(JSON.stringify({ mapping: result, demo: true }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      // Simple search loop (GHL supports queries by email/phone)
+      for (const email of emails) {
+        const r = await fetch(`${GHL_API_BASE}/contacts/?email=${encodeURIComponent(email)}&locationId=${encodeURIComponent(ghlConfig.location_id)}`, {
+          headers: { 'Authorization': `Bearer ${GHL_ACCESS_TOKEN}`, 'Version': '2021-07-28' },
+        });
+        if (r.ok) {
+          const j = await r.json();
+          const id = j?.contacts?.[0]?.id || j?.contact?.id;
+          if (id) result[email] = String(id);
+        }
+      }
+      for (const phone of phones) {
+        const r = await fetch(`${GHL_API_BASE}/contacts/?phone=${encodeURIComponent(phone)}&locationId=${encodeURIComponent(ghlConfig.location_id)}`, {
+          headers: { 'Authorization': `Bearer ${GHL_ACCESS_TOKEN}`, 'Version': '2021-07-28' },
+        });
+        if (r.ok) {
+          const j = await r.json();
+          const id = j?.contacts?.[0]?.id || j?.contact?.id;
+          if (id) result[phone] = String(id);
+        }
+      }
+      return new Response(JSON.stringify({ mapping: result }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    // Ensure tags and return mapping of name -> id
+    if (action === 'ensureTags') {
+      const { names = [] } = (await req.json());
+      const isDemo = !GHL_API_BASE || !GHL_ACCESS_TOKEN || !ghlConfig;
+      const mapping: Record<string, string> = {};
+      if (isDemo) {
+        names.forEach((n: string) => { mapping[n] = `mock_tag_${btoa(n).slice(0,6)}`; });
+        return new Response(JSON.stringify({ tags: mapping, demo: true }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      for (const name of names) {
+        // Try find existing
+        const list = await fetch(`${GHL_API_BASE}/tags?locationId=${encodeURIComponent(ghlConfig.location_id)}`, { headers: { 'Authorization': `Bearer ${GHL_ACCESS_TOKEN}`, 'Version': '2021-07-28' } });
+        if (list.ok) {
+          const j = await list.json();
+          const found = (j?.tags || []).find((t: any) => t?.name?.toLowerCase() === name.toLowerCase());
+          if (found) { mapping[name] = String(found.id); continue; }
+        }
+        // Create
+        const cr = await fetch(`${GHL_API_BASE}/tags`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${GHL_ACCESS_TOKEN}`, 'Content-Type': 'application/json', 'Version': '2021-07-28' },
+          body: JSON.stringify({ name, locationId: ghlConfig.location_id })
+        });
+        if (cr.ok) {
+          const j = await cr.json();
+          mapping[name] = String(j?.tag?.id || j?.id);
+        }
+      }
+      return new Response(JSON.stringify({ tags: mapping }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    // Apply tag to contacts
+    if (action === 'applyTags') {
+      const { contactIds = [], tagId } = (await req.json());
+      const isDemo = !GHL_API_BASE || !GHL_ACCESS_TOKEN || !ghlConfig;
+      if (isDemo) {
+        return new Response(JSON.stringify({ success: true, demo: true, applied: contactIds.length }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      let applied = 0;
+      for (const id of contactIds) {
+        const r = await fetch(`${GHL_API_BASE}/contacts/${encodeURIComponent(id)}/tags`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${GHL_ACCESS_TOKEN}`, 'Content-Type': 'application/json', 'Version': '2021-07-28' },
+          body: JSON.stringify({ id: tagId, locationId: ghlConfig.location_id })
+        });
+        if (r.ok) applied++;
+      }
+      return new Response(JSON.stringify({ success: true, applied }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     if (action === 'webhook') {
       // Basic webhook handler for GHL events
       const secret = Deno.env.get('GHL_WEBHOOK_SECRET');

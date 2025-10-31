@@ -12,7 +12,7 @@ export function AgentFAB() {
   return (
     <>
       <div 
-        className={`fixed right-4 z-40 ${
+        className={`fixed right-4 z-50 ${
           isMobile ? 'bottom-20' : 'bottom-6'
         }`}
       >
