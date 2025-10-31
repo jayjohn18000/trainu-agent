@@ -38,10 +38,24 @@ export const useDraftsStore = create<DraftsState>((set, get) => ({
   fetch: async () => {
     set({ loading: true });
     const { data, error } = await supabase
-      .from("drafts")
-      .select("*")
+      .from("messages")
+      .select("id, trainer_id, contact_id, channel, content, status, scheduled_for, created_at, updated_at")
+      .in("status", ["draft", "queued"])
       .order("created_at", { ascending: false });
-    if (!error) set({ items: data as DraftItem[] });
+    if (!error) {
+      const mapped = (data || []).map(m => ({
+        id: m.id,
+        trainer_id: m.trainer_id,
+        client_id: m.contact_id,
+        channel: m.channel as "sms" | "email" | "both",
+        body: m.content,
+        status: (m.status === "draft" ? "pending" : m.status === "queued" ? "scheduled" : "pending") as DraftStatus,
+        scheduled_at: m.scheduled_for,
+        created_at: m.created_at,
+        updated_at: m.updated_at,
+      }));
+      set({ items: mapped });
+    }
     set({ loading: false });
   },
 
@@ -76,12 +90,12 @@ export const useDraftsStore = create<DraftsState>((set, get) => ({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
       
-      const { error } = await supabase.from("drafts").insert({
+      const { error } = await supabase.from("messages").insert({
         trainer_id: user.id,
-        client_id: partial.client_id ?? null,
+        contact_id: partial.client_id ?? null,
         channel: partial.channel,
-        body: partial.body,
-        status: "pending",
+        content: partial.body,
+        status: "draft",
       });
       if (error) throw error;
       await get().fetch();

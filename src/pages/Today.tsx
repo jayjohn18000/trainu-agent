@@ -37,6 +37,7 @@ import { analytics } from "@/lib/analytics";
 import { useDraftsStore } from "@/lib/store/useDraftsStore";
 import { resolveGhlLink } from "@/lib/ghl/links";
 import { getFlags } from "@/lib/flags";
+import { cn } from "@/lib/utils";
 import type { QueueItem } from "@/types/agent";
 
 // Memoized QueueList component for performance
@@ -526,7 +527,7 @@ export default function Today() {
                     try {
                       const now = new Date();
                       const in15 = new Date(now.getTime() + 15 * 60 * 1000).toISOString();
-                      await supabase.from('drafts').update({ status: 'scheduled', scheduled_at: in15 }).eq('id', d.id);
+                      await supabase.from('messages').update({ status: 'queued', scheduled_for: in15 }).eq('id', d.id);
                       await fetchDrafts();
                       toast({ title: 'Snoozed', description: 'Draft deferred for 15 minutes.' });
                     } catch {
@@ -573,7 +574,7 @@ export default function Today() {
                           try {
                             const now = new Date();
                             const in15 = new Date(now.getTime() + 15 * 60 * 1000).toISOString();
-                            await supabase.from('drafts').update({ status: 'scheduled', scheduled_at: in15 }).eq('id', d.id);
+                            await supabase.from('messages').update({ status: 'queued', scheduled_for: in15 }).eq('id', d.id);
                             await fetchDrafts();
                             toast({ title: 'Snoozed', description: 'Draft deferred for 15 minutes.' });
                           } catch {
