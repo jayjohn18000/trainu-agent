@@ -10,6 +10,7 @@ import { MessagesWidget } from "@/components/agent/MessagesWidget";
 import { CalendarWidget } from "@/components/agent/CalendarWidget";
 import { AtRiskWidget } from "@/components/agent/AtRiskWidget";
 import { ProgramBuilderCard } from "@/components/agent/ProgramBuilderCard";
+import { DraftCard } from "@/components/agent/DraftCard";
 import { WelcomeModal } from "@/components/onboarding/WelcomeModal";
 import { TourOverlay } from "@/components/onboarding/TourOverlay";
 import { Confetti } from "@/components/effects/Confetti";
@@ -29,7 +30,6 @@ import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useTrainerGamification } from "@/hooks/useTrainerGamification";
 import { useAchievementTracker } from "@/hooks/useAchievementTracker";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useTouchGestures } from "@/hooks/useTouchGestures";
 import { TrainerXPNotification } from "@/components/gamification/TrainerXPNotification";
 import { AchievementUnlockNotification } from "@/components/ui/AchievementUnlockNotification";
 import { Zap, CheckCircle, TrendingUp, Keyboard } from "lucide-react";
@@ -520,73 +520,26 @@ export default function Today() {
               )}
             </div>
             <div className="space-y-2">
-              {drafts.slice(0, 6).map((d) => {
-                const { handlers, swipeDirection, swipeProgress } = useTouchGestures({
-                  onSwipeRight: () => handleApproveDraft(d.id),
-                  onSwipeLeft: async () => {
+              {drafts.slice(0, 6).map((d) => (
+                <DraftCard
+                  key={d.id}
+                  draft={d}
+                  isSelected={selectedIds?.has(d.id) || false}
+                  onApprove={handleApproveDraft}
+                  onSnooze={async (id) => {
                     try {
                       const now = new Date();
                       const in15 = new Date(now.getTime() + 15 * 60 * 1000).toISOString();
-                      await supabase.from('messages').update({ status: 'queued', scheduled_for: in15 }).eq('id', d.id);
+                      await supabase.from('messages').update({ status: 'queued', scheduled_for: in15 }).eq('id', id);
                       await fetchDrafts();
                       toast({ title: 'Snoozed', description: 'Draft deferred for 15 minutes.' });
                     } catch {
                       toast({ title: 'Error', description: 'Failed to snooze draft.', variant: 'destructive' });
                     }
-                  },
-                  threshold: 40,
-                });
-
-                let pressTimer: any;
-                const startPress = () => { pressTimer = setTimeout(() => toggleSelected(d.id), 450); };
-                const endPress = () => { clearTimeout(pressTimer); };
-                const isSelected = selectedIds?.has(d.id);
-
-                return (
-                  <Card
-                    key={d.id}
-                    className={cn(
-                      "p-3 transition-transform",
-                      isSelected && "border-primary ring-1 ring-primary/30"
-                    )}
-                    style={{ transform: swipeProgress && swipeDirection ? `translateX(${swipeDirection === 'right' ? swipeProgress * 24 : -swipeProgress * 24}px)` : undefined }}
-                    {...handlers as any}
-                    onMouseDown={startPress}
-                    onMouseUp={endPress}
-                    onMouseLeave={endPress}
-                    onTouchStart={(e) => { startPress(); (handlers as any).onTouchStart?.(e); }}
-                    onTouchEnd={(e) => { endPress(); (handlers as any).onTouchEnd?.(e); }}
-                    onTouchMove={(e) => { (handlers as any).onTouchMove?.(e); }}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="text-sm text-foreground">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-[10px]">{d.status === 'scheduled' ? 'Scheduled' : 'Pending'}</Badge>
-                          {d.scheduled_at && (
-                            <span className="text-xs text-muted-foreground">{new Date(d.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                          )}
-                          {isSelected && <Badge className="text-[10px]" variant="secondary">Selected</Badge>}
-                        </div>
-                        <div className="mt-1">{d.body}</div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm" onClick={async () => {
-                          try {
-                            const now = new Date();
-                            const in15 = new Date(now.getTime() + 15 * 60 * 1000).toISOString();
-                            await supabase.from('messages').update({ status: 'queued', scheduled_for: in15 }).eq('id', d.id);
-                            await fetchDrafts();
-                            toast({ title: 'Snoozed', description: 'Draft deferred for 15 minutes.' });
-                          } catch {
-                            toast({ title: 'Error', description: 'Failed to snooze draft.', variant: 'destructive' });
-                          }
-                        }}>Snooze</Button>
-                        <Button variant="default" size="sm" onClick={() => handleApproveDraft(d.id)}>Approve</Button>
-                      </div>
-                    </div>
-                  </Card>
-                );
-              })}
+                  }}
+                  onToggleSelected={toggleSelected}
+                />
+              ))}
             </div>
           </section>
         )}
