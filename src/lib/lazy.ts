@@ -12,20 +12,22 @@ export function lazyWithRetry<T extends ComponentType<any>>(
   factory: () => Promise<{ default: T }>,
   retries = 2
 ): LazyExoticComponent<T> {
-  return lazy(() =>
-    factory().catch((error) => {
+  const attempt = async (): Promise<{ default: T }> => {
+    try {
+      return await factory();
+    } catch (error) {
       if (retries > 0) {
         console.warn(`Chunk load failed, retrying... (${retries} attempts remaining)`, error);
-        // Retry after a short delay
-        return new Promise((resolve) => {
-          setTimeout(() => {
-            resolve(lazyWithRetry(factory, retries - 1) as any);
-          }, 1000);
-        });
+        // Wait before retry
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Retry by calling factory again
+        retries--;
+        return attempt();
       }
-      // If all retries fail, throw the error
       throw error;
-    })
-  );
+    }
+  };
+  
+  return lazy(attempt);
 }
 
