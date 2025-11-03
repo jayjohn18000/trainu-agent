@@ -1,8 +1,5 @@
 import { ClientDataProvider } from "./types";
-import { MockClientProvider } from "./mock";
 import { HttpClientProvider } from "./http";
 
-const providerType = import.meta.env.VITE_DATA_PROVIDER || "mock";
-
-export const clientProvider: ClientDataProvider =
-  providerType === "http" ? new HttpClientProvider() : new MockClientProvider();
+// Use HTTP provider to fetch real data from Supabase contacts table
+export const clientProvider: ClientDataProvider = new HttpClientProvider();
