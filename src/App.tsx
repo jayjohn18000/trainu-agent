@@ -17,6 +17,16 @@ import Today from "@/pages/Today";
 // Lazy load secondary routes for better performance with retry logic
 import { lazyWithRetry } from "@/lib/lazy";
 
+// Landing pages
+const LandingHome = lazyWithRetry(() => import("@/pages/landing/Home"));
+const Product = lazyWithRetry(() => import("@/pages/landing/Product"));
+const Pricing = lazyWithRetry(() => import("@/pages/landing/Pricing"));
+const HowItWorks = lazyWithRetry(() => import("@/pages/landing/HowItWorks"));
+const Resources = lazyWithRetry(() => import("@/pages/landing/Resources"));
+const About = lazyWithRetry(() => import("@/pages/landing/About"));
+const Contact = lazyWithRetry(() => import("@/pages/landing/Contact"));
+const Challenge = lazyWithRetry(() => import("@/pages/landing/Challenge"));
+
 const Directory = lazyWithRetry(() => import("@/pages/Directory"));
 const TrainerProfile = lazyWithRetry(() => import("@/pages/TrainerProfile"));
 const Queue = lazyWithRetry(() => import("@/pages/Queue"));
@@ -74,8 +84,20 @@ export default function App() {
         <RedirectHandler />
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
-            {/* Public routes */}
-            <Route path="/" element={<Landing />} />
+            {/* Public landing pages */}
+            <Route path="/" element={<LandingHome />} />
+            <Route path="/product" element={<Product />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/how-it-works" element={<HowItWorks />} />
+            <Route path="/resources" element={<Resources />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/challenge" element={<Challenge />} />
+            
+            {/* Legacy landing */}
+            <Route path="/landing" element={<Landing />} />
+            
+            {/* Public app routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/directory" element={<Directory />} />
             <Route path="/trainers/:slug" element={<TrainerProfile />} />
