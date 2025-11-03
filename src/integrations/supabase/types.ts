@@ -199,6 +199,33 @@ export type Database = {
         }
         Relationships: []
       }
+      conversation_history: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          role: string
+          tool_calls: Json | null
+          trainer_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          role: string
+          tool_calls?: Json | null
+          trainer_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          role?: string
+          tool_calls?: Json | null
+          trainer_id?: string
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           created_at: string | null
@@ -505,6 +532,50 @@ export type Database = {
           why?: string[] | null
         }
         Relationships: []
+      }
+      tag_suggestions: {
+        Row: {
+          applied: boolean | null
+          applied_at: string | null
+          confidence: number | null
+          contact_id: string
+          created_at: string | null
+          id: string
+          reason: string
+          suggested_tag: string
+          trainer_id: string
+        }
+        Insert: {
+          applied?: boolean | null
+          applied_at?: string | null
+          confidence?: number | null
+          contact_id: string
+          created_at?: string | null
+          id?: string
+          reason: string
+          suggested_tag: string
+          trainer_id: string
+        }
+        Update: {
+          applied?: boolean | null
+          applied_at?: string | null
+          confidence?: number | null
+          contact_id?: string
+          created_at?: string | null
+          id?: string
+          reason?: string
+          suggested_tag?: string
+          trainer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tag_suggestions_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       trainer_achievements: {
         Row: {

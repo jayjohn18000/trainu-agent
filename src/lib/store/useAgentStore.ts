@@ -1,44 +1,99 @@
 import { create } from "zustand";
 import { supabase } from "@/integrations/supabase/client";
 
-interface AgentResultCard {
+interface AgentMessage {
   id: string;
-  kind: "draft" | "metric" | "list";
-  payload: unknown;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
 }
 
 interface AgentState {
   input: string;
-  results: AgentResultCard[];
+  messages: AgentMessage[];
   loading: boolean;
+  historyExpanded: boolean;
   setInput: (text: string) => void;
+  toggleHistory: () => void;
   clear: () => void;
-  runNL: () => Promise<void>;
+  sendMessage: (text: string) => Promise<void>;
+  loadHistory: () => Promise<void>;
 }
 
 export const useAgentStore = create<AgentState>((set, get) => ({
   input: "",
-  results: [],
+  messages: [],
   loading: false,
+  historyExpanded: false,
   setInput: (text) => set({ input: text }),
-  clear: () => set({ input: "", results: [] }),
-  runNL: async () => {
-    const text = get().input.trim();
-    if (!text) return;
-    set({ loading: true });
-    const { data, error } = await supabase.functions.invoke("agent-drafting", {
-      body: { action: "nlToDrafts", text },
-    });
-    if (!error) {
-      const cards: AgentResultCard[] = (data?.drafts || []).map((d: unknown, idx: number) => ({
-        id: `draft-${Date.now()}-${idx}`,
-        kind: "draft",
-        payload: d,
-      }));
-      set({ results: cards });
+  toggleHistory: () => set((state) => ({ historyExpanded: !state.historyExpanded })),
+  clear: () => set({ input: "", messages: [] }),
+  
+  loadHistory: async () => {
+    try {
+      const { data, error } = await supabase
+        .from('conversation_history')
+        .select('*')
+        .order('created_at', { ascending: true })
+        .limit(20);
+
+      if (error) throw error;
+
+      if (data) {
+        const msgs: AgentMessage[] = data.map((d) => ({
+          id: d.id,
+          role: d.role as 'user' | 'assistant',
+          content: d.content,
+          timestamp: new Date(d.created_at)
+        }));
+        set({ messages: msgs });
+      }
+    } catch (error) {
+      console.error('Failed to load history:', error);
     }
-    set({ loading: false });
   },
+
+  sendMessage: async (text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+
+    set({ loading: true });
+
+    // Optimistically add user message
+    const userMsg: AgentMessage = {
+      id: `user-${Date.now()}`,
+      role: 'user',
+      content: trimmed,
+      timestamp: new Date()
+    };
+    set((state) => ({ messages: [...state.messages, userMsg] }));
+
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-agent", {
+        body: { message: trimmed }
+      });
+
+      if (error) throw error;
+
+      if (data?.message) {
+        const assistantMsg: AgentMessage = {
+          id: `assistant-${Date.now()}`,
+          role: 'assistant',
+          content: data.message,
+          timestamp: new Date()
+        };
+        set((state) => ({ messages: [...state.messages, assistantMsg] }));
+      }
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      // Remove optimistic message on error
+      set((state) => ({ 
+        messages: state.messages.filter(m => m.id !== userMsg.id) 
+      }));
+    } finally {
+      set({ loading: false, input: "" });
+    }
+  }
 }));
 
 

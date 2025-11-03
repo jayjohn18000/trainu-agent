@@ -2,16 +2,15 @@ import { Outlet } from "react-router-dom";
 import { TrainerSidebar } from "@/components/navigation/TrainerSidebar";
 import { ChatBar } from "@/components/agent/ChatBar";
 import { useAgentStore } from "@/lib/store/useAgentStore";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export function UnifiedLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const { setInput, runNL, loading } = useAgentStore();
+  const { messages, loading, sendMessage, loadHistory } = useAgentStore();
 
-  const handleSubmit = async (message: string) => {
-    setInput(message);
-    await runNL();
-  };
+  useEffect(() => {
+    loadHistory();
+  }, [loadHistory]);
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -27,7 +26,12 @@ export function UnifiedLayout() {
       </main>
       
       {/* Persistent bottom chat bar */}
-      <ChatBar onSubmit={handleSubmit} disabled={loading} sidebarCollapsed={sidebarCollapsed} />
+      <ChatBar 
+        messages={messages} 
+        onSubmit={sendMessage} 
+        loading={loading} 
+        sidebarCollapsed={sidebarCollapsed} 
+      />
     </div>
   );
 }
