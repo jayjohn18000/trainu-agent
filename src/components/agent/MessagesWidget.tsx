@@ -1,51 +1,68 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { MessageSquare } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-
-interface Message {
-  id: string;
-  name: string;
-  avatar: string;
-  preview: string;
-  timestamp: string;
-  unread: number;
-}
-
-const mockMessages: Message[] = [
-  {
-    id: "1",
-    name: "John Doe",
-    avatar: "https://i.pravatar.cc/150?img=10",
-    preview: "Thanks for the great session today!",
-    timestamp: "2m ago",
-    unread: 2,
-  },
-  {
-    id: "2",
-    name: "Sarah Wilson",
-    avatar: "https://i.pravatar.cc/150?img=11",
-    preview: "Can we reschedule tomorrow's session?",
-    timestamp: "1h ago",
-    unread: 1,
-  },
-  {
-    id: "3",
-    name: "Mike Johnson",
-    avatar: "https://i.pravatar.cc/150?img=12",
-    preview: "Perfect, see you then!",
-    timestamp: "3h ago",
-    unread: 0,
-  },
-];
+import { useRecentMessages } from "@/hooks/queries/useRecentMessages";
 
 interface MessagesWidgetProps {
   onOpenMessages: () => void;
 }
 
 export function MessagesWidget({ onOpenMessages }: MessagesWidgetProps) {
-  const unreadCount = mockMessages.reduce((sum, msg) => sum + msg.unread, 0);
+  const { data: messages = [], isLoading } = useRecentMessages();
+  const unreadCount = messages.reduce((sum, msg) => sum + msg.unread, 0);
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base flex items-center gap-2">
+              <MessageSquare className="h-4 w-4" />
+              Messages
+            </CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex items-start gap-3 p-2">
+              <Skeleton className="h-8 w-8 rounded-full" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-3 w-full" />
+              </div>
+            </div>
+          ))}
+          <Skeleton className="h-9 w-full rounded-md" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (messages.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base flex items-center gap-2">
+              <MessageSquare className="h-4 w-4" />
+              Messages
+            </CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground text-center py-4">
+            No recent messages
+          </p>
+          <Button variant="outline" size="sm" className="w-full" onClick={onOpenMessages}>
+            View All Messages
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -63,7 +80,7 @@ export function MessagesWidget({ onOpenMessages }: MessagesWidgetProps) {
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
-        {mockMessages.map((msg) => (
+        {messages.map((msg) => (
           <div
             key={msg.id}
             className="flex items-start gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"

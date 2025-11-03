@@ -2,47 +2,60 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { formatDistanceToNow } from "date-fns";
-
-interface Session {
-  id: string;
-  clientName: string;
-  type: string;
-  time: Date;
-  duration: number;
-}
-
-const mockSessions: Session[] = [
-  {
-    id: "1",
-    clientName: "John Doe",
-    type: "PT",
-    time: new Date(Date.now() + 2 * 60 * 60 * 1000), // 2 hours from now
-    duration: 60,
-  },
-  {
-    id: "2",
-    clientName: "Sarah Wilson",
-    type: "Strength",
-    time: new Date(Date.now() + 24 * 60 * 60 * 1000), // Tomorrow
-    duration: 45,
-  },
-  {
-    id: "3",
-    clientName: "Mike Johnson",
-    type: "Cardio",
-    time: new Date(Date.now() + 48 * 60 * 60 * 1000), // 2 days from now
-    duration: 30,
-  },
-];
+import { useUpcomingSessions } from "@/hooks/queries/useUpcomingSessions";
 
 interface CalendarWidgetProps {
   onOpenCalendar: () => void;
 }
 
 export function CalendarWidget({ onOpenCalendar }: CalendarWidgetProps) {
-  const nextSession = mockSessions[0];
+  const { data: sessions = [], isLoading } = useUpcomingSessions();
+  const nextSession = sessions[0];
   const timeUntil = nextSession ? formatDistanceToNow(nextSession.time, { addSuffix: true }) : null;
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            Calendar
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <Skeleton className="h-20 w-full rounded-lg" />
+          <div className="space-y-2">
+            <Skeleton className="h-14 w-full rounded-lg" />
+            <Skeleton className="h-14 w-full rounded-lg" />
+          </div>
+          <Skeleton className="h-9 w-full rounded-md" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (sessions.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            Calendar
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground text-center py-4">
+            No upcoming sessions scheduled
+          </p>
+          <Button variant="outline" size="sm" className="w-full" onClick={onOpenCalendar}>
+            View Full Calendar
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -65,7 +78,7 @@ export function CalendarWidget({ onOpenCalendar }: CalendarWidgetProps) {
         )}
 
         <div className="space-y-2">
-          {mockSessions.slice(1).map((session) => (
+          {sessions.slice(1).map((session) => (
             <div
               key={session.id}
               className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"

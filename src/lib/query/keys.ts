@@ -23,6 +23,15 @@ export const queryKeys = {
     conversations: () => [...queryKeys.messages.all, 'conversations'] as const,
     conversation: (id: string) => [...queryKeys.messages.all, 'conversation', id] as const,
     messages: (conversationId: string) => [...queryKeys.messages.all, 'messages', conversationId] as const,
+    recent: () => [...queryKeys.messages.all, 'recent'] as const,
+  },
+  atRisk: {
+    all: ['at-risk'] as const,
+    clients: () => [...queryKeys.atRisk.all, 'clients'] as const,
+  },
+  sessions: {
+    all: ['sessions'] as const,
+    upcoming: () => [...queryKeys.sessions.all, 'upcoming'] as const,
   },
 };
 
