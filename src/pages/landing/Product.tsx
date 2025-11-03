@@ -30,7 +30,7 @@ Retain and Grow</span>
                 <Brain className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <h2 className="text-3xl font-bold">Smart AI Inbox</h2>
+                <h2 className="text-3xl font-bold">Leverage our AI Fitness Agent</h2>
                 <p className="text-muted-foreground">Never lose a client to silence again</p>
               </div>
             </div>
