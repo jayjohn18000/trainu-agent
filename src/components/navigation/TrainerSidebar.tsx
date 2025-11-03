@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Users, MessageSquare, Calendar, Settings, ChevronLeft, ChevronRight } from "lucide-react";
+import { Home, Users, MessageSquare, Calendar, Settings, ChevronLeft, ChevronRight, FolderKanban } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { TrainerLevelDisplay } from "@/components/gamification/TrainerLevelDisplay";
@@ -20,10 +20,12 @@ interface TrainerSidebarProps {
 const navItems = [
   { label: 'Today', path: '/today', icon: Home, shortcut: '1', isModal: false },
   { label: 'Clients', path: '/clients', icon: Users, shortcut: '2', isModal: false },
-  { label: 'Messages', icon: MessageSquare, shortcut: '3', isModal: true },
-  { label: 'Calendar', icon: Calendar, shortcut: '4', isModal: true },
-  { label: 'Settings', icon: Settings, shortcut: '5', isModal: true },
+  { label: 'Programs', path: '/programs', icon: FolderKanban, shortcut: '3', isModal: false },
+  { label: 'Messages', icon: MessageSquare, shortcut: '4', isModal: true },
+  { label: 'Calendar', icon: Calendar, shortcut: '5', isModal: true },
 ];
+
+const settingsItem = { label: 'Settings', icon: Settings, shortcut: '6', isModal: true };
 
 export function TrainerSidebar({ collapsed, onToggle }: TrainerSidebarProps) {
   const location = useLocation();
@@ -145,11 +147,15 @@ export function TrainerSidebar({ collapsed, onToggle }: TrainerSidebarProps) {
               }
 
               if (item.isModal) {
+                const hasGlow = item.label === 'Messages';
                 return (
                   <Button
                     key={item.label}
                     variant="ghost"
-                    className="w-full justify-start"
+                    className={cn(
+                      "w-full justify-start",
+                      hasGlow && "ring-1 ring-blue-500/30 shadow-[0_0_10px_rgba(59,130,246,0.3)]"
+                    )}
                     onClick={() => handleNavClick(item)}
                   >
                     <Icon className="h-5 w-5 mr-3" />
@@ -181,24 +187,58 @@ export function TrainerSidebar({ collapsed, onToggle }: TrainerSidebarProps) {
             })}
           </nav>
 
-          {/* Footer - Trainer Level */}
-          <div className="p-3 border-t border-border" data-tour="level">
+          {/* Footer - Settings & Trainer Level */}
+          <div className="p-2 border-t border-border space-y-1">
+            {/* Settings Button */}
             {collapsed ? (
               <Tooltip delayDuration={0}>
                 <TooltipTrigger asChild>
-                  <div className="flex justify-center">
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <span className="text-xs font-bold">T</span>
-                    </div>
-                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="w-10 h-10 mx-auto ring-1 ring-blue-500/30 shadow-[0_0_10px_rgba(59,130,246,0.3)]"
+                    onClick={() => handleNavClick(settingsItem)}
+                  >
+                    <Settings className="h-5 w-5" />
+                  </Button>
                 </TooltipTrigger>
                 <TooltipContent side="right">
-                  <TrainerLevelDisplay />
+                  <p>{settingsItem.label} ({settingsItem.shortcut})</p>
                 </TooltipContent>
               </Tooltip>
             ) : (
-              <TrainerLevelDisplay />
+              <Button
+                variant="ghost"
+                className="w-full justify-start ring-1 ring-blue-500/30 shadow-[0_0_10px_rgba(59,130,246,0.3)]"
+                onClick={() => handleNavClick(settingsItem)}
+              >
+                <Settings className="h-5 w-5 mr-3" />
+                <span>{settingsItem.label}</span>
+                <Badge variant="outline" className="ml-auto text-xs">
+                  {settingsItem.shortcut}
+                </Badge>
+              </Button>
             )}
+
+            {/* Trainer Level */}
+            <div className="pt-2" data-tour="level">
+              {collapsed ? (
+                <Tooltip delayDuration={0}>
+                  <TooltipTrigger asChild>
+                    <div className="flex justify-center">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                        <span className="text-xs font-bold">T</span>
+                      </div>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    <TrainerLevelDisplay />
+                  </TooltipContent>
+                </Tooltip>
+              ) : (
+                <TrainerLevelDisplay />
+              )}
+            </div>
           </div>
         </div>
       </aside>
