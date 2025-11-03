@@ -6,6 +6,56 @@ interface IntentResult {
   confidence: number;
 }
 
+// Generate AI draft using Lovable AI Gateway
+async function generateAIDraft(context: {
+  firstName: string;
+  sessionType: string;
+  scheduledAt: string;
+}): Promise<string> {
+  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+  
+  if (!LOVABLE_API_KEY) {
+    console.error('LOVABLE_API_KEY not configured');
+    return `Hi ${context.firstName}! Your ${context.sessionType} is confirmed for ${context.scheduledAt}. Looking forward to seeing you!`;
+  }
+
+  try {
+    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { 
+            role: 'system', 
+            content: 'You are a friendly, motivating personal trainer. Generate brief, warm confirmation messages for training sessions. Keep it under 160 characters for SMS. Be enthusiastic but professional.' 
+          },
+          { 
+            role: 'user', 
+            content: `Client ${context.firstName} just booked a ${context.sessionType} session for ${context.scheduledAt}. Write a warm 2-sentence confirmation message.` 
+          }
+        ],
+        max_completion_tokens: 100
+      })
+    });
+
+    if (!aiResponse.ok) {
+      const errorText = await aiResponse.text();
+      console.error('AI Gateway error:', aiResponse.status, errorText);
+      return `Hi ${context.firstName}! Your ${context.sessionType} is confirmed for ${context.scheduledAt}. Looking forward to seeing you!`;
+    }
+
+    const draft = await aiResponse.json();
+    return draft.choices[0].message.content.trim();
+  } catch (error) {
+    console.error('AI draft generation failed:', error);
+    return `Hi ${context.firstName}! Your ${context.sessionType} is confirmed for ${context.scheduledAt}. Looking forward to seeing you!`;
+  }
+}
+
 // Extract helper for name parsing
 function getFirstName(clientName: string | null): string {
   return clientName ? clientName.split(' ')[0] : 'there';
@@ -97,6 +147,71 @@ Deno.serve(async (req) => {
 
     const body = req.method === 'POST' ? await req.json() : {};
     const action = body?.action;
+
+    // Handle AI draft generation from appointment
+    if (action === 'generateFromAppointment' && req.method === 'POST') {
+      const { contactId, appointmentId, context } = body;
+      
+      if (!contactId || !context) {
+        return errorResponse('contactId and context required', 400);
+      }
+
+      console.log('[agent-drafting] Generating AI draft for appointment:', appointmentId);
+
+      try {
+        // Generate AI draft
+        const aiDraft = await generateAIDraft({
+          firstName: context.firstName || 'there',
+          sessionType: context.sessionType || 'training session',
+          scheduledAt: context.scheduledAt || 'soon'
+        });
+
+        console.log('[agent-drafting] AI draft generated:', aiDraft);
+
+        // Insert into messages table as draft
+        const { data: message, error: insertError } = await supabase
+          .from('messages')
+          .insert({
+            trainer_id: user.id,
+            contact_id: contactId,
+            content: aiDraft,
+            channel: 'sms',
+            status: 'draft',
+            confidence: 0.85,
+            why_reasons: ['appointment_confirmation', 'ai_generated']
+          })
+          .select()
+          .single();
+
+        if (insertError) {
+          console.error('[agent-drafting] Failed to insert message:', insertError);
+          return errorResponse('Failed to create draft message', 500);
+        }
+
+        console.log('[agent-drafting] Draft message created:', message.id);
+
+        // Track event
+        console.log(JSON.stringify({ 
+          event: 'message_drafted', 
+          properties: { 
+            contactId, 
+            appointmentId,
+            messageId: message.id,
+            confidence: 0.85,
+            source: 'ai_appointment'
+          } 
+        }));
+
+        return jsonResponse({ 
+          success: true, 
+          draft: aiDraft, 
+          messageId: message.id 
+        });
+      } catch (error) {
+        console.error('[agent-drafting] Error generating draft:', error);
+        return errorResponse(error instanceof Error ? error.message : 'Unknown error', 500);
+      }
+    }
 
     if (action === 'nlToDrafts' && req.method === 'POST') {
       const { text, context } = body;

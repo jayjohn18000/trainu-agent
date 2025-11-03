@@ -228,6 +228,19 @@ Deno.serve(async (req) => {
         }
       }
 
+      // Track events for batch approval
+      items.forEach((item: any) => {
+        console.log(JSON.stringify({ 
+          event: 'trainer_approved', 
+          properties: { 
+            queueItemId: item.id,
+            clientId: item.client_id,
+            trainerId: user.id,
+            confidence: item.confidence
+          } 
+        }));
+      });
+
       return new Response(JSON.stringify({ approved: items.length }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });

@@ -73,6 +73,17 @@ serve(async (req) => {
     await supabase.from('messages').update({ status: 'sent', ghl_status: 'sent', ghl_message_id: (ghlResult as any)?.messageId ?? null }).eq('id', message.id);
     console.log(JSON.stringify({ function: 'send-message', action: 'message_sent', messageId: message.id, trainerId: user.id, channel: message.channel, timestamp: new Date().toISOString() }));
 
+    // Track event
+    console.log(JSON.stringify({ 
+      event: 'message_sent', 
+      properties: { 
+        messageId: message.id,
+        channel: message.channel,
+        contactId: message.contact_id,
+        trainerId: user.id
+      } 
+    }));
+
     return new Response(JSON.stringify({ sent: true, result: ghlResult }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   } catch (e) {
     console.error('send-message error', e);

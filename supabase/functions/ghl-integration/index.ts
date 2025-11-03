@@ -336,6 +336,37 @@ serve(async (req) => {
               status: (appt.status ?? 'scheduled'),
               session_type: appt.title ?? 'Session',
             }, { onConflict: 'ghl_appointment_id' });
+
+            // Trigger AI draft generation for new appointment
+            if (event === 'appointment.created') {
+              console.log('[appointment.created] Triggering AI draft generation...');
+              
+              try {
+                const { error: draftErr } = await supabase.functions.invoke('agent-drafting', {
+                  body: {
+                    action: 'generateFromAppointment',
+                    contactId: c.id,
+                    appointmentId: appt.id,
+                    context: {
+                      firstName: appt.contact?.firstName || appt.contact?.name?.split(' ')[0] || 'there',
+                      sessionType: appt.title || 'training session',
+                      scheduledAt: new Date(appt.startTime).toLocaleString('en-US', { 
+                        dateStyle: 'short', 
+                        timeStyle: 'short' 
+                      })
+                    }
+                  }
+                });
+
+                if (draftErr) {
+                  console.error('[appointment.created] Draft generation failed:', draftErr);
+                } else {
+                  console.log('[appointment.created] AI draft generation triggered successfully');
+                }
+              } catch (draftError) {
+                console.error('[appointment.created] Error triggering draft generation:', draftError);
+              }
+            }
           }
         }
       }

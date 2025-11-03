@@ -23,6 +23,8 @@ verify_jwt = true
 verify_jwt = true
 [functions.agent-segmentation]
 verify_jwt = true
+[functions.health]
+verify_jwt = false
 
 [functions.draft-dispatcher]
 verify_jwt = false
