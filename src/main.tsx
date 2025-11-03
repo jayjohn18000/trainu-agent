@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { ErrorBoundary } from "@/components/system/ErrorBoundary";
 import { QueryErrorBoundary } from "@/components/system/QueryErrorBoundary";
 import { QueryProvider } from "@/providers/QueryProvider";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import posthog from 'posthog-js';
 import * as Sentry from "@sentry/react";
 
@@ -37,10 +38,12 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ErrorBoundary>
       <QueryProvider>
-        <QueryErrorBoundary>
-          <App />
-        </QueryErrorBoundary>
-        <Toaster />
+        <TooltipProvider>
+          <QueryErrorBoundary>
+            <App />
+          </QueryErrorBoundary>
+          <Toaster />
+        </TooltipProvider>
       </QueryProvider>
     </ErrorBoundary>
   </StrictMode>
