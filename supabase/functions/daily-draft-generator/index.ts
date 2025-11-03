@@ -57,20 +57,39 @@ serve(async (req) => {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    const { error: deleteError, count: deletedCount } = await supabase
+    const { error: draftDeleteError, count: draftDeletedCount } = await supabase
       .from("messages")
       .delete({ count: "exact" })
       .eq("trainer_id", user.id)
-      .in("status", ["draft", "queued"])
+      .eq("status", "draft")
       .lt("created_at", sevenDaysAgo.toISOString());
 
-    if (deleteError) {
-      console.error("Error cleaning up old drafts:", deleteError);
+    if (draftDeleteError) {
+      console.error("Error cleaning up old drafts:", draftDeleteError);
     } else {
-      console.log(`[daily-draft-generator] Cleaned up ${deletedCount || 0} old drafts`);
+      console.log(`[daily-draft-generator] Cleaned up ${draftDeletedCount || 0} old drafts`);
     }
 
-    // Step 2: Fetch contacts with insights and bookings
+    // Step 2: Clean up orphaned queued messages (older than 24 hours)
+    const oneDayAgo = new Date();
+    oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+
+    const { error: queuedDeleteError, count: queuedDeletedCount } = await supabase
+      .from("messages")
+      .delete({ count: "exact" })
+      .eq("trainer_id", user.id)
+      .eq("status", "queued")
+      .lt("created_at", oneDayAgo.toISOString());
+
+    if (queuedDeleteError) {
+      console.error("Error cleaning up orphaned queued messages:", queuedDeleteError);
+    } else {
+      console.log(`[daily-draft-generator] Cleaned up ${queuedDeletedCount || 0} orphaned queued messages`);
+    }
+
+    const totalCleaned = (draftDeletedCount || 0) + (queuedDeletedCount || 0);
+
+    // Step 3: Fetch contacts with insights and bookings
     const { data: contacts, error: contactsError } = await supabase
       .from("contacts")
       .select("id, first_name, last_name, trainer_id, last_message_sent_at")
@@ -99,7 +118,7 @@ serve(async (req) => {
       bookingMap.get(b.contact_id)!.push(b);
     });
 
-    // Step 3: Analyze each contact and identify draft candidates
+    // Step 4: Analyze each contact and identify draft candidates
     const candidates: DraftCandidate[] = [];
     const now = new Date();
 
@@ -177,14 +196,14 @@ serve(async (req) => {
       }
     }
 
-    // Step 4: Sort by priority and select top 2-5 candidates
+    // Step 5: Sort by priority and select top 2-5 candidates
     candidates.sort((a, b) => b.priority - a.priority);
     const selectedCount = Math.min(5, Math.max(2, candidates.length));
     const selected = candidates.slice(0, selectedCount);
 
     console.log(`[daily-draft-generator] Generated ${selected.length} candidates from ${candidates.length} total`);
 
-    // Step 5: Generate messages using templates
+    // Step 6: Generate messages using templates
     const templates: Record<string, string[]> = {
       high_risk: [
         "Hey {name}! Haven't heard from you in a while. How are things going?",
@@ -262,9 +281,9 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         generated: newDrafts.length,
-        cleaned: deletedCount || 0,
+        cleaned: totalCleaned,
         candidates: candidates.length,
-        message: `Generated ${newDrafts.length} new drafts, cleaned ${deletedCount || 0} expired drafts`,
+        message: `Generated ${newDrafts.length} new drafts, cleaned ${totalCleaned} expired/orphaned messages`,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
