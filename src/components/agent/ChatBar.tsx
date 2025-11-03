@@ -8,6 +8,7 @@ interface ChatBarProps {
   onSubmit: (message: string) => Promise<void>;
   placeholder?: string;
   disabled?: boolean;
+  sidebarCollapsed?: boolean;
 }
 
 const placeholders = [
@@ -17,7 +18,7 @@ const placeholders = [
   "What's my next action?",
 ];
 
-export function ChatBar({ onSubmit, placeholder, disabled }: ChatBarProps) {
+export function ChatBar({ onSubmit, placeholder, disabled, sidebarCollapsed = false }: ChatBarProps) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [currentPlaceholder, setCurrentPlaceholder] = useState(0);
@@ -59,9 +60,10 @@ export function ChatBar({ onSubmit, placeholder, disabled }: ChatBarProps) {
     <form
       onSubmit={handleSubmit}
       className={`
-        fixed left-0 right-0 z-10 border-t bg-card/95 backdrop-blur-sm
+        fixed right-0 z-10 border-t bg-card/95 backdrop-blur-sm
         flex items-center gap-2 p-3 px-4
-        ${isMobile ? 'bottom-16' : 'bottom-0'}
+        ${isMobile ? 'bottom-16 left-0' : 'bottom-0'}
+        ${!isMobile ? (sidebarCollapsed ? 'left-14' : 'left-60') : ''}
         transition-all duration-200
       `}
     >

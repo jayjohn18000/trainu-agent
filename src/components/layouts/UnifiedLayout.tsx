@@ -27,7 +27,7 @@ export function UnifiedLayout() {
       </main>
       
       {/* Persistent bottom chat bar */}
-      <ChatBar onSubmit={handleSubmit} disabled={loading} />
+      <ChatBar onSubmit={handleSubmit} disabled={loading} sidebarCollapsed={sidebarCollapsed} />
     </div>
   );
 }
