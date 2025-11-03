@@ -3,6 +3,10 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Trophy, Star, TrendingUp, Users, Gift } from "lucide-react";
+import { ScrollReveal } from "@/components/landing/ScrollReveal";
+import { AnimatedCounter } from "@/components/landing/AnimatedCounter";
+import trainerGroupImage from "@/assets/group-training-class.jpg";
+import gradientBg from "@/assets/gradient-mesh-bg.svg";
 
 const topTrainers = [
   { rank: 1, name: "Sarah Mitchell", city: "Chicago, IL", rating: 4.9, reviews: 247, badge: "🥇" },
@@ -24,8 +28,11 @@ export default function Challenge() {
     <LandingLayout>
       {/* Hero */}
       <section className="relative overflow-hidden bg-gradient-to-br from-primary/20 via-background to-background">
-        <div className="container mx-auto px-4 py-20">
-          <div className="max-w-4xl mx-auto text-center">
+        <div className="absolute inset-0 opacity-20">
+          <img src={gradientBg} alt="" className="w-full h-full object-cover" />
+        </div>
+        <div className="container mx-auto px-4 py-20 relative z-10">
+          <ScrollReveal className="max-w-4xl mx-auto text-center">
             <Badge className="mb-6 text-sm px-4 py-2">
               <Trophy className="h-4 w-4 mr-2" />
               Live Challenge - Ends March 31, 2025
@@ -55,19 +62,25 @@ export default function Challenge() {
             {/* Stats */}
             <div className="mt-12 grid grid-cols-3 gap-6 max-w-2xl mx-auto">
               <div>
-                <p className="text-3xl font-bold text-primary">8,243</p>
+                <p className="text-3xl font-bold text-primary">
+                  <AnimatedCounter end={8243} duration={1500} />
+                </p>
                 <p className="text-sm text-muted-foreground">Ratings Submitted</p>
               </div>
               <div>
-                <p className="text-3xl font-bold text-success">2,156</p>
+                <p className="text-3xl font-bold text-success">
+                  <AnimatedCounter end={2156} duration={1500} />
+                </p>
                 <p className="text-sm text-muted-foreground">Trainers Rated</p>
               </div>
               <div>
-                <p className="text-3xl font-bold text-warning">$10k</p>
+                <p className="text-3xl font-bold text-warning">
+                  $<AnimatedCounter end={10} suffix="k" duration={1500} />
+                </p>
                 <p className="text-sm text-muted-foreground">Prize Pool</p>
               </div>
             </div>
-          </div>
+          </ScrollReveal>
         </div>
       </section>
 
@@ -75,10 +88,13 @@ export default function Challenge() {
       <section className="py-20 bg-card/50">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-3xl font-bold text-center mb-12">How It Works</h2>
+            <ScrollReveal>
+              <h2 className="text-3xl font-bold text-center mb-12">How It Works</h2>
+            </ScrollReveal>
             
             <div className="grid md:grid-cols-2 gap-6">
-              <Card className="p-6">
+              <ScrollReveal delay={100}>
+              <Card className="p-6 hover:shadow-glow transition-all hover:scale-[1.02]">
                 <div className="flex items-start gap-4">
                   <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 text-primary font-bold">
                     1
@@ -91,8 +107,10 @@ export default function Challenge() {
                   </div>
                 </div>
               </Card>
+              </ScrollReveal>
 
-              <Card className="p-6">
+              <ScrollReveal delay={150}>
+              <Card className="p-6 hover:shadow-glow transition-all hover:scale-[1.02]">
                 <div className="flex items-start gap-4">
                   <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 text-primary font-bold">
                     2
@@ -105,8 +123,10 @@ export default function Challenge() {
                   </div>
                 </div>
               </Card>
+              </ScrollReveal>
 
-              <Card className="p-6">
+              <ScrollReveal delay={200}>
+              <Card className="p-6 hover:shadow-glow transition-all hover:scale-[1.02]">
                 <div className="flex items-start gap-4">
                   <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 text-primary font-bold">
                     3
@@ -119,8 +139,10 @@ export default function Challenge() {
                   </div>
                 </div>
               </Card>
+              </ScrollReveal>
 
-              <Card className="p-6">
+              <ScrollReveal delay={250}>
+              <Card className="p-6 hover:shadow-glow transition-all hover:scale-[1.02]">
                 <div className="flex items-start gap-4">
                   <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 text-primary font-bold">
                     4
@@ -133,6 +155,7 @@ export default function Challenge() {
                   </div>
                 </div>
               </Card>
+              </ScrollReveal>
             </div>
           </div>
         </div>
@@ -142,17 +165,20 @@ export default function Challenge() {
       <section className="py-20">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-3xl font-bold">Current Top 5</h2>
+            <ScrollReveal>
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-3xl font-bold">Current Top 5</h2>
               <Badge variant="outline">
                 <TrendingUp className="h-4 w-4 mr-2" />
                 Updates Live
               </Badge>
-            </div>
+              </div>
+            </ScrollReveal>
 
             <div className="space-y-4">
-              {topTrainers.map((trainer) => (
-                <Card key={trainer.rank} className={`p-6 hover:border-primary/30 transition-all ${trainer.rank <= 3 ? 'border-primary/20' : ''}`}>
+              {topTrainers.map((trainer, index) => (
+                <ScrollReveal key={trainer.rank} delay={index * 100}>
+                <Card className={`p-6 hover:border-primary/30 transition-all hover:scale-[1.01] ${trainer.rank <= 3 ? 'border-primary/20' : ''}`}>
                   <div className="flex items-center gap-6">
                     <div className="flex-shrink-0 text-center">
                       <div className="text-4xl mb-1">{trainer.badge || `#${trainer.rank}`}</div>
@@ -180,6 +206,7 @@ export default function Challenge() {
                     </div>
                   </div>
                 </Card>
+                </ScrollReveal>
               ))}
             </div>
 
@@ -316,9 +343,13 @@ export default function Challenge() {
       </section>
 
       {/* CTA */}
-      <section className="py-20">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto text-center p-12 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
+      <section className="py-20 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-20">
+          <img src={trainerGroupImage} alt="" className="w-full h-full object-cover" />
+        </div>
+        <div className="container mx-auto px-4 relative z-10">
+          <ScrollReveal>
+          <div className="max-w-3xl mx-auto text-center p-12 rounded-2xl backdrop-blur-xl bg-card/90 border-primary/20 shadow-glow">
             <h2 className="text-4xl font-bold mb-4">Rate Your Trainer Today</h2>
             <p className="text-xl text-muted-foreground mb-8">
               Help them win. Takes 2 minutes. Every verified rating counts.
@@ -331,6 +362,7 @@ export default function Challenge() {
               Challenge ends March 31, 2025 at 11:59 PM CT
             </p>
           </div>
+          </ScrollReveal>
         </div>
       </section>
     </LandingLayout>

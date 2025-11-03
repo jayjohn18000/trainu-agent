@@ -5,6 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { BookOpen, TrendingUp, Users, Brain, Download, Mail } from "lucide-react";
+import { ScrollReveal } from "@/components/landing/ScrollReveal";
+import { AnimatedCounter } from "@/components/landing/AnimatedCounter";
+import trainerYogaImage from "@/assets/trainer-home-yoga.jpg";
+import gradientBg from "@/assets/gradient-mesh-bg.svg";
 
 const articles = [
   {
@@ -82,9 +86,13 @@ export default function Resources() {
   return (
     <LandingLayout>
       {/* Hero */}
-      <section className="container mx-auto px-4 py-20">
-        <div className="max-w-3xl mx-auto text-center">
-          <h1 className="text-5xl font-bold mb-6">
+      <section className="relative overflow-hidden py-20">
+        <div className="absolute inset-0 opacity-30">
+          <img src={gradientBg} alt="" className="w-full h-full object-cover" />
+        </div>
+        <div className="container mx-auto px-4 relative z-10">
+          <ScrollReveal className="max-w-3xl mx-auto text-center">
+            <h1 className="text-5xl font-bold mb-6">
             Learn How to{" "}
             <span className="bg-gradient-to-r from-primary to-primary-hover bg-clip-text text-transparent">
               Retain More Clients
@@ -93,6 +101,7 @@ export default function Resources() {
           <p className="text-xl text-muted-foreground">
             Evidence-based strategies, case studies, and tools to grow your training business.
           </p>
+          </ScrollReveal>
         </div>
       </section>
 
@@ -100,7 +109,8 @@ export default function Resources() {
       <section className="py-20 bg-card/50">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
-            <Card className="overflow-hidden border-primary/20">
+            <ScrollReveal>
+            <Card className="overflow-hidden border-primary/20 hover:shadow-glow transition-all">
               <div className="grid md:grid-cols-2">
                 <div className="p-8 md:p-12">
                   <Badge className="mb-4">Featured</Badge>
@@ -122,6 +132,7 @@ export default function Resources() {
                 </div>
               </div>
             </Card>
+            </ScrollReveal>
           </div>
         </div>
       </section>
@@ -129,11 +140,14 @@ export default function Resources() {
       {/* Article Grid */}
       <section className="py-20">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold mb-12">Latest Articles</h2>
+          <ScrollReveal>
+            <h2 className="text-3xl font-bold mb-12">Latest Articles</h2>
+          </ScrollReveal>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {articles.map((article, index) => (
-              <Card key={index} className="p-6 hover:border-primary/30 transition-all group cursor-pointer">
+              <ScrollReveal key={index} delay={index * 100}>
+              <Card className="p-6 hover:border-primary/30 transition-all group cursor-pointer hover:scale-[1.02]">
                 <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <article.icon className="h-6 w-6 text-primary" />
                 </div>
@@ -158,6 +172,7 @@ export default function Resources() {
                   </Button>
                 </div>
               </Card>
+              </ScrollReveal>
             ))}
           </div>
         </div>
@@ -192,16 +207,20 @@ export default function Resources() {
       </section>
 
       {/* Newsletter */}
-      <section className="py-20">
-        <div className="container mx-auto px-4">
-          <Card className="max-w-3xl mx-auto p-12 bg-gradient-to-br from-card to-background border-primary/20">
+      <section className="py-20 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-20">
+          <img src={trainerYogaImage} alt="" className="w-full h-full object-cover" />
+        </div>
+        <div className="container mx-auto px-4 relative z-10">
+          <ScrollReveal>
+          <Card className="max-w-3xl mx-auto p-12 backdrop-blur-xl bg-card/90 border-primary/20 shadow-glow">
             <div className="text-center mb-8">
               <div className="h-16 w-16 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
                 <Mail className="h-8 w-8 text-primary" />
               </div>
               <h2 className="text-3xl font-bold mb-4">Get Weekly Retention Insights</h2>
               <p className="text-muted-foreground">
-                Join 1,200+ trainers getting actionable tips, case studies, and industry data every Tuesday.
+                Join <AnimatedCounter end={1200} suffix="+" duration={1500} /> trainers getting actionable tips, case studies, and industry data every Tuesday.
               </p>
             </div>
 
@@ -220,6 +239,7 @@ export default function Resources() {
               No spam. Unsubscribe anytime. We respect your inbox.
             </p>
           </Card>
+          </ScrollReveal>
         </div>
       </section>
 

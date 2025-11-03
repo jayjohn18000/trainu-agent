@@ -4,6 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { Zap, Settings, Brain, MessageSquare, TrendingUp, Play } from "lucide-react";
+import { ScrollReveal } from "@/components/landing/ScrollReveal";
+import { AnimatedCounter } from "@/components/landing/AnimatedCounter";
+import trainerGroupImage from "@/assets/group-training-class.jpg";
+import gradientBg from "@/assets/gradient-mesh-bg.svg";
 
 const onboardingSteps = [
   {
@@ -67,9 +71,13 @@ export default function HowItWorks() {
   return (
     <LandingLayout>
       {/* Hero */}
-      <section className="container mx-auto px-4 py-20">
-        <div className="max-w-3xl mx-auto text-center">
-          <h1 className="text-5xl font-bold mb-6">
+      <section className="relative overflow-hidden py-20">
+        <div className="absolute inset-0 opacity-30">
+          <img src={gradientBg} alt="" className="w-full h-full object-cover" />
+        </div>
+        <div className="container mx-auto px-4 relative z-10">
+          <ScrollReveal className="max-w-3xl mx-auto text-center">
+            <h1 className="text-5xl font-bold mb-6">
             From Setup to{" "}
             <span className="bg-gradient-to-r from-primary to-primary-hover bg-clip-text text-transparent">
               Results in 30 Minutes
@@ -89,19 +97,23 @@ export default function HowItWorks() {
               Watch Demo Video
             </Button>
           </div>
+          </ScrollReveal>
         </div>
       </section>
 
       {/* Onboarding Timeline */}
       <section className="py-20 bg-card/50">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">
-            4 Steps to Go Live
-          </h2>
+          <ScrollReveal>
+            <h2 className="text-3xl font-bold text-center mb-12">
+              4 Steps to Go Live
+            </h2>
+          </ScrollReveal>
 
           <div className="max-w-4xl mx-auto space-y-6">
             {onboardingSteps.map((step, index) => (
-              <Card key={index} className="p-6 hover:border-primary/30 transition-all">
+              <ScrollReveal key={index} delay={index * 150}>
+              <Card className="p-6 hover:border-primary/30 transition-all hover:scale-[1.02]">
                 <div className="flex items-start gap-6">
                   <div className="flex-shrink-0">
                     <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg">
@@ -130,6 +142,7 @@ export default function HowItWorks() {
                   <div className="ml-6 mt-4 mb-0 h-8 w-0.5 bg-gradient-to-b from-primary/50 to-transparent"></div>
                 )}
               </Card>
+              </ScrollReveal>
             ))}
           </div>
         </div>
@@ -159,6 +172,7 @@ export default function HowItWorks() {
               ))}
             </div>
 
+            <ScrollReveal delay={200}>
             <div className="mt-12 p-8 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
               <div className="flex items-center justify-between">
                 <div>
@@ -166,11 +180,14 @@ export default function HowItWorks() {
                   <p className="text-muted-foreground">~10 minutes per day vs. 2+ hours manual follow-up</p>
                 </div>
                 <div className="text-right">
-                  <div className="text-4xl font-bold text-primary">85%</div>
+                  <div className="text-4xl font-bold text-primary">
+                    <AnimatedCounter end={85} suffix="%" duration={1500} />
+                  </div>
                   <div className="text-sm text-muted-foreground">Time Saved</div>
                 </div>
               </div>
             </div>
+            </ScrollReveal>
           </div>
         </div>
       </section>
@@ -350,9 +367,13 @@ export default function HowItWorks() {
       </section>
 
       {/* Demo CTA */}
-      <section className="py-20">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto text-center p-12 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
+      <section className="py-20 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-20">
+          <img src={trainerGroupImage} alt="" className="w-full h-full object-cover" />
+        </div>
+        <div className="container mx-auto px-4 relative z-10">
+          <ScrollReveal>
+          <div className="max-w-3xl mx-auto text-center p-12 rounded-2xl backdrop-blur-xl bg-card/90 border-primary/20 shadow-glow">
             <h2 className="text-4xl font-bold mb-4">See It Live</h2>
             <p className="text-xl text-muted-foreground mb-8">
               Book a 15-minute walkthrough with our team or dive in with a free trial
@@ -369,6 +390,7 @@ export default function HowItWorks() {
               </Link>
             </div>
           </div>
+          </ScrollReveal>
         </div>
       </section>
     </LandingLayout>

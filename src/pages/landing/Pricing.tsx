@@ -10,6 +10,10 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { ScrollReveal } from "@/components/landing/ScrollReveal";
+import { AnimatedCounter } from "@/components/landing/AnimatedCounter";
+import trainerClientImage from "@/assets/trainer-client-gym.jpg";
+import gradientBg from "@/assets/gradient-mesh-bg.svg";
 
 const tiers = [
   {
@@ -116,17 +120,21 @@ export default function Pricing() {
   return (
     <LandingLayout>
       {/* Hero */}
-      <section className="container mx-auto px-4 py-20">
-        <div className="max-w-3xl mx-auto text-center">
-          <h1 className="text-5xl font-bold mb-6">
-            Pricing That{" "}
-            <span className="bg-gradient-to-r from-primary to-primary-hover bg-clip-text text-transparent">
-              Pays for Itself
-            </span>
-          </h1>
-          <p className="text-xl text-muted-foreground mb-8">
-            Transparent pricing designed to scale with your business. No hidden fees, no long-term contracts.
-          </p>
+      <section className="relative overflow-hidden py-20">
+        <div className="absolute inset-0 opacity-30">
+          <img src={gradientBg} alt="" className="w-full h-full object-cover" />
+        </div>
+        <div className="container mx-auto px-4 relative z-10">
+          <ScrollReveal className="max-w-3xl mx-auto text-center">
+            <h1 className="text-5xl font-bold mb-6">
+              Pricing That{" "}
+              <span className="bg-gradient-to-r from-primary to-primary-hover bg-clip-text text-transparent">
+                Pays for Itself
+              </span>
+            </h1>
+            <p className="text-xl text-muted-foreground mb-8">
+              Transparent pricing designed to scale with your business. No hidden fees, no long-term contracts.
+            </p>
           <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <Zap className="h-4 w-4 text-primary" />
@@ -141,6 +149,7 @@ export default function Pricing() {
               <span>Cancel anytime</span>
             </div>
           </div>
+          </ScrollReveal>
         </div>
       </section>
 
@@ -148,7 +157,8 @@ export default function Pricing() {
       <section className="py-20">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {tiers.map((tier) => (
+            {tiers.map((tier, index) => (
+              <ScrollReveal key={tier.name} delay={index * 100}>
               <Card
                 key={tier.name}
                 className={`p-8 relative ${
@@ -167,7 +177,9 @@ export default function Pricing() {
                   <h3 className="text-2xl font-bold mb-2">{tier.name}</h3>
                   <p className="text-sm text-muted-foreground mb-6">{tier.description}</p>
                   <div className="mb-2">
-                    <span className="text-5xl font-bold">${tier.price}</span>
+                    <span className="text-5xl font-bold">
+                      $<AnimatedCounter end={tier.price} duration={1200} />
+                    </span>
                     <span className="text-muted-foreground">/month</span>
                   </div>
                   <p className="text-xs text-success">{tier.roi}</p>
@@ -201,6 +213,7 @@ export default function Pricing() {
                   ))}
                 </ul>
               </Card>
+              </ScrollReveal>
             ))}
           </div>
 
@@ -230,7 +243,9 @@ export default function Pricing() {
       <section className="py-20 bg-card/50">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-3xl font-bold text-center mb-12">Frequently Asked Questions</h2>
+            <ScrollReveal>
+              <h2 className="text-3xl font-bold text-center mb-12">Frequently Asked Questions</h2>
+            </ScrollReveal>
             <Accordion type="single" collapsible className="space-y-4">
               {faqs.map((faq, index) => (
                 <AccordionItem key={index} value={`item-${index}`} className="border border-border rounded-lg px-6">
@@ -248,9 +263,13 @@ export default function Pricing() {
       </section>
 
       {/* Enterprise CTA */}
-      <section className="py-20">
-        <div className="container mx-auto px-4">
-          <Card className="max-w-4xl mx-auto p-12 bg-gradient-to-br from-card to-background border-primary/20">
+      <section className="py-20 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-20">
+          <img src={trainerClientImage} alt="" className="w-full h-full object-cover" />
+        </div>
+        <div className="container mx-auto px-4 relative z-10">
+          <ScrollReveal>
+          <Card className="max-w-4xl mx-auto p-12 backdrop-blur-xl bg-card/90 border-primary/20 shadow-glow">
             <div className="text-center">
               <h2 className="text-3xl font-bold mb-4">Need a Custom Plan?</h2>
               <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
@@ -270,6 +289,7 @@ export default function Pricing() {
               </div>
             </div>
           </Card>
+          </ScrollReveal>
         </div>
       </section>
     </LandingLayout>

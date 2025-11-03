@@ -11,6 +11,9 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { ScrollReveal } from "@/components/landing/ScrollReveal";
+import trainerOverheadImage from "@/assets/trainer-client-overhead.jpg";
+import gradientBg from "@/assets/gradient-mesh-bg.svg";
 
 const faqs = [
   {
@@ -39,9 +42,13 @@ export default function Contact() {
   return (
     <LandingLayout>
       {/* Hero */}
-      <section className="container mx-auto px-4 py-20">
-        <div className="max-w-3xl mx-auto text-center">
-          <h1 className="text-5xl font-bold mb-6">
+      <section className="relative overflow-hidden py-20">
+        <div className="absolute inset-0 opacity-30">
+          <img src={gradientBg} alt="" className="w-full h-full object-cover" />
+        </div>
+        <div className="container mx-auto px-4 relative z-10">
+          <ScrollReveal className="max-w-3xl mx-auto text-center">
+            <h1 className="text-5xl font-bold mb-6">
             Let's{" "}
             <span className="bg-gradient-to-r from-primary to-primary-hover bg-clip-text text-transparent">
               Talk
@@ -50,6 +57,7 @@ export default function Contact() {
           <p className="text-xl text-muted-foreground">
             Whether you need a demo, have questions, or want custom pricing—we're here to help.
           </p>
+          </ScrollReveal>
         </div>
       </section>
 
@@ -58,9 +66,10 @@ export default function Contact() {
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-2 gap-12 max-w-6xl mx-auto">
             {/* Form */}
+            <ScrollReveal>
             <div>
               <h2 className="text-2xl font-bold mb-6">Send Us a Message</h2>
-              <Card className="p-6">
+              <Card className="p-6 hover:shadow-glow transition-all">
                 <form className="space-y-4">
                   <div>
                     <Label htmlFor="name">Full Name</Label>
@@ -106,13 +115,15 @@ export default function Contact() {
                 </form>
               </Card>
             </div>
+            </ScrollReveal>
 
             {/* Right Side */}
             <div className="space-y-8">
               {/* Calendly Embed */}
+              <ScrollReveal delay={100}>
               <div>
                 <h2 className="text-2xl font-bold mb-6">Book a Demo</h2>
-                <Card className="p-6">
+                <Card className="p-6 hover:shadow-glow transition-all">
                   <p className="text-muted-foreground mb-4">
                     Schedule a 15-minute walkthrough with our team. We'll show you the platform live and answer your questions.
                   </p>
@@ -124,9 +135,11 @@ export default function Contact() {
                   </Button>
                 </Card>
               </div>
+              </ScrollReveal>
 
               {/* Contact Info */}
-              <Card className="p-6">
+              <ScrollReveal delay={200}>
+              <Card className="p-6 hover:shadow-glow transition-all">
                 <h3 className="font-semibold mb-4">Other Ways to Reach Us</h3>
                 <div className="space-y-4">
                   <div className="flex items-start gap-3">
@@ -171,9 +184,11 @@ export default function Contact() {
                   </div>
                 </div>
               </Card>
+              </ScrollReveal>
 
               {/* Social */}
-              <Card className="p-6">
+              <ScrollReveal delay={300}>
+              <Card className="p-6 hover:shadow-glow transition-all">
                 <h3 className="font-semibold mb-4">Connect With Us</h3>
                 <div className="flex gap-3">
                   <Button variant="outline" size="sm" className="flex-1">
@@ -187,6 +202,7 @@ export default function Contact() {
                   </Button>
                 </div>
               </Card>
+              </ScrollReveal>
             </div>
           </div>
         </div>
@@ -196,7 +212,8 @@ export default function Contact() {
       <section className="py-20 bg-card/50">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-3xl font-bold text-center mb-4">Quick Answers</h2>
+            <ScrollReveal>
+              <h2 className="text-3xl font-bold text-center mb-4">Quick Answers</h2>
             <p className="text-center text-muted-foreground mb-12">
               Common questions we hear from trainers considering TrainU
             </p>
@@ -222,18 +239,25 @@ export default function Contact() {
                 View All FAQs
               </Button>
             </div>
+            </ScrollReveal>
           </div>
         </div>
       </section>
 
       {/* Support */}
-      <section className="py-20">
-        <div className="container mx-auto px-4">
+      <section className="py-20 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-20">
+          <img src={trainerOverheadImage} alt="" className="w-full h-full object-cover" />
+        </div>
+        <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-3xl font-bold text-center mb-12">Need Support?</h2>
+            <ScrollReveal>
+              <h2 className="text-3xl font-bold text-center mb-12">Need Support?</h2>
+            </ScrollReveal>
             
             <div className="grid md:grid-cols-3 gap-6">
-              <Card className="p-6 text-center">
+              <ScrollReveal delay={100}>
+              <Card className="p-6 text-center backdrop-blur-xl bg-card/90 hover:shadow-glow transition-all">
                 <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
                   <MessageSquare className="h-6 w-6 text-primary" />
                 </div>
@@ -245,8 +269,10 @@ export default function Contact() {
                   Start Chat
                 </Button>
               </Card>
+              </ScrollReveal>
 
-              <Card className="p-6 text-center">
+              <ScrollReveal delay={200}>
+              <Card className="p-6 text-center backdrop-blur-xl bg-card/90 hover:shadow-glow transition-all">
                 <div className="h-12 w-12 rounded-xl bg-success/10 flex items-center justify-center mx-auto mb-4">
                   <Mail className="h-6 w-6 text-success" />
                 </div>
@@ -258,8 +284,10 @@ export default function Contact() {
                   Visit Help Center
                 </Button>
               </Card>
+              </ScrollReveal>
 
-              <Card className="p-6 text-center">
+              <ScrollReveal delay={300}>
+              <Card className="p-6 text-center backdrop-blur-xl bg-card/90 hover:shadow-glow transition-all">
                 <div className="h-12 w-12 rounded-xl bg-info/10 flex items-center justify-center mx-auto mb-4">
                   <Phone className="h-6 w-6 text-info" />
                 </div>
@@ -271,6 +299,7 @@ export default function Contact() {
                   Upgrade Plan
                 </Button>
               </Card>
+              </ScrollReveal>
             </div>
           </div>
         </div>
