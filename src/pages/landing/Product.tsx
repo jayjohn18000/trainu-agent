@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ScrollReveal } from "@/components/landing/ScrollReveal";
 import { AnimatedCounter } from "@/components/landing/AnimatedCounter";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import trainerClientGym from "@/assets/trainer-client-gym.jpg";
 import trainerOverhead from "@/assets/trainer-client-overhead.jpg";
 import groupTraining from "@/assets/group-training-class.jpg";
@@ -46,20 +47,62 @@ export default function Product() {
       {/* Features Deep Dive */}
       <section className="py-24 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-card/50 to-transparent" />
-        <div className="container mx-auto px-4 space-y-32 relative z-10">
-          {/* AI Inbox */}
+        <div className="container mx-auto px-4 relative z-10">
           <ScrollReveal>
-            <div>
-              <div className="flex items-center gap-4 mb-12">
-                <div className="h-16 w-16 rounded-2xl bg-primary/10 backdrop-blur-sm flex items-center justify-center border border-primary/30 shadow-glow">
-                  <Brain className="h-8 w-8 text-primary" />
-                </div>
-                <div>
-                  <h2 className="text-4xl md:text-5xl font-bold mb-2">AI Fitness Agent</h2>
-                  <p className="text-lg text-muted-foreground">Never lose a client to silence again</p>
-                </div>
-              </div>
+            <div className="text-center mb-12">
+              <h2 className="text-4xl md:text-5xl font-bold mb-4">Explore Our Features</h2>
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                Three powerful systems working together to transform your fitness business
+              </p>
+            </div>
+          </ScrollReveal>
 
+          <Tabs defaultValue="ai" className="w-full">
+            <TabsList className="grid w-full max-w-3xl mx-auto grid-cols-3 h-auto p-2 mb-16 backdrop-blur-xl bg-card/90 shadow-glow">
+              <TabsTrigger 
+                value="ai" 
+                className="flex flex-col items-center gap-2 py-4 data-[state=active]:bg-primary/10 data-[state=active]:shadow-glow transition-all"
+              >
+                <Brain className="h-6 w-6" />
+                <div className="text-center">
+                  <div className="font-semibold">AI Inbox</div>
+                  <div className="text-xs text-muted-foreground hidden sm:block">Predictive Engagement</div>
+                </div>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="gamification" 
+                className="flex flex-col items-center gap-2 py-4 data-[state=active]:bg-warning/10 data-[state=active]:shadow-glow transition-all"
+              >
+                <MessageSquare className="h-6 w-6" />
+                <div className="text-center">
+                  <div className="font-semibold">Gamification</div>
+                  <div className="text-xs text-muted-foreground hidden sm:block">Social Accountability</div>
+                </div>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="analytics" 
+                className="flex flex-col items-center gap-2 py-4 data-[state=active]:bg-info/10 data-[state=active]:shadow-glow transition-all"
+              >
+                <BarChart3 className="h-6 w-6" />
+                <div className="text-center">
+                  <div className="font-semibold">Analytics</div>
+                  <div className="text-xs text-muted-foreground hidden sm:block">Data-Driven Insights</div>
+                </div>
+              </TabsTrigger>
+            </TabsList>
+
+            {/* AI Inbox Tab */}
+            <TabsContent value="ai" className="animate-fade-in">
+              <div className="max-w-6xl mx-auto">
+                <div className="flex items-center gap-4 mb-12 justify-center">
+                  <div className="h-16 w-16 rounded-2xl bg-primary/10 backdrop-blur-sm flex items-center justify-center border border-primary/30 shadow-glow">
+                    <Brain className="h-8 w-8 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="text-4xl md:text-5xl font-bold mb-2">AI Fitness Agent</h3>
+                    <p className="text-lg text-muted-foreground">Never lose a client to silence again</p>
+                  </div>
+                </div>
               <div className="grid md:grid-cols-2 gap-8">
                 <Card className="p-8 hover:shadow-glow transition-all duration-300 hover:scale-[1.02] border-primary/20 relative overflow-hidden group">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-all" />
@@ -171,22 +214,22 @@ export default function Product() {
                 </div>
               </div>
             </div>
-          </ScrollReveal>
+            </TabsContent>
 
-          {/* Gamification */}
-          <ScrollReveal delay={100}>
-            <div>
-              <div className="flex items-center gap-4 mb-12">
-                <div className="h-16 w-16 rounded-2xl bg-warning/10 backdrop-blur-sm flex items-center justify-center border border-warning/30 shadow-glow">
-                  <MessageSquare className="h-8 w-8 text-warning" />
+            {/* Gamification Tab */}
+            <TabsContent value="gamification" className="animate-fade-in">
+              <div className="max-w-6xl mx-auto">
+                <div className="flex items-center gap-4 mb-12 justify-center">
+                  <div className="h-16 w-16 rounded-2xl bg-warning/10 backdrop-blur-sm flex items-center justify-center border border-warning/30 shadow-glow">
+                    <MessageSquare className="h-8 w-8 text-warning" />
+                  </div>
+                  <div>
+                    <h3 className="text-4xl md:text-5xl font-bold mb-2">Gamified Client Experience</h3>
+                    <p className="text-lg text-muted-foreground">Make fitness addictive through social accountability</p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-4xl md:text-5xl font-bold mb-2">Gamified Client Experience</h2>
-                  <p className="text-lg text-muted-foreground">Make fitness addictive through social accountability</p>
-                </div>
-              </div>
 
-              <div className="grid md:grid-cols-3 gap-8 mb-12">
+                <div className="grid md:grid-cols-3 gap-8 mb-12">
                 <Card className="p-8 hover:shadow-glow transition-all duration-300 hover:scale-[1.02] text-center group">
                   <div className="text-6xl mb-6 group-hover:scale-110 transition-transform duration-300">🔥</div>
                   <h3 className="text-2xl font-bold mb-4">Streak Tracking</h3>
@@ -270,21 +313,22 @@ export default function Product() {
                 </div>
               </div>
             </div>
-          </ScrollReveal>
+            </TabsContent>
 
-          {/* Analytics */}
-          <div>
-            <div className="flex items-center gap-3 mb-6">
-              <div className="h-12 w-12 rounded-xl bg-info/10 flex items-center justify-center">
-                <BarChart3 className="h-6 w-6 text-info" />
-              </div>
-              <div>
-                <h2 className="text-3xl font-bold">Predictive Analytics Dashboard</h2>
-                <p className="text-muted-foreground">Make data-driven decisions with real-time insights</p>
-              </div>
-            </div>
+            {/* Analytics Tab */}
+            <TabsContent value="analytics" className="animate-fade-in">
+              <div className="max-w-6xl mx-auto">
+                <div className="flex items-center gap-4 mb-12 justify-center">
+                  <div className="h-16 w-16 rounded-2xl bg-info/10 backdrop-blur-sm flex items-center justify-center border border-info/30 shadow-glow">
+                    <BarChart3 className="h-8 w-8 text-info" />
+                  </div>
+                  <div>
+                    <h3 className="text-4xl md:text-5xl font-bold mb-2">Predictive Analytics Dashboard</h3>
+                    <p className="text-lg text-muted-foreground">Make data-driven decisions with real-time insights</p>
+                  </div>
+                </div>
 
-            <div className="grid md:grid-cols-2 gap-8">
+                <div className="grid md:grid-cols-2 gap-8">
               <Card className="p-6">
                 <h3 className="text-xl font-semibold mb-3">Client Risk Scoring</h3>
                 <p className="text-muted-foreground mb-4">
@@ -369,7 +413,9 @@ export default function Product() {
                 </ul>
               </Card>
             </div>
-          </div>
+              </div>
+          </TabsContent>
+        </Tabs>
         </div>
       </section>
 
