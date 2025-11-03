@@ -3,7 +3,12 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
-import { Target, Users, TrendingUp, Heart, Zap, Play } from "lucide-react";
+import { Target, Users, TrendingUp, Heart, Zap, Play, Sparkles } from "lucide-react";
+import { ScrollReveal } from "@/components/landing/ScrollReveal";
+import { AnimatedCounter } from "@/components/landing/AnimatedCounter";
+import trainerClientGym from "@/assets/trainer-client-gym.jpg";
+import trainerOverhead from "@/assets/trainer-client-overhead.jpg";
+import gradientBg from "@/assets/gradient-mesh-bg.svg";
 
 const milestones = [
   { year: "2022", event: "Founded", description: "Two frustrated trainers lose 40% of clients to silent churn" },
@@ -41,71 +46,98 @@ export default function About() {
   return (
     <LandingLayout>
       {/* Hero */}
-      <section className="container mx-auto px-4 py-20">
-        <div className="max-w-3xl mx-auto text-center">
-          <h1 className="text-5xl font-bold mb-6">
-            We're on a Mission to{" "}
-            <span className="bg-gradient-to-r from-primary to-primary-hover bg-clip-text text-transparent">
-              Stop Silent Churn
-            </span>
-          </h1>
-          <p className="text-xl text-muted-foreground">
-            Every day, talented trainers lose clients not because they're bad coaches, but because they're drowning in admin work and can't catch warning signs early enough.
-          </p>
+      <section className="relative overflow-hidden py-24">
+        <div 
+          className="absolute inset-0 opacity-20"
+          style={{
+            backgroundImage: `url(${gradientBg})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center'
+          }}
+        />
+        <div className="container mx-auto px-4 relative z-10">
+          <ScrollReveal>
+            <div className="max-w-4xl mx-auto text-center">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 backdrop-blur-sm border border-primary/30 text-primary text-sm font-semibold mb-8 shadow-glow">
+                <Sparkles className="h-4 w-4" />
+                <span>Our Story</span>
+              </div>
+              <h1 className="text-6xl md:text-7xl font-black mb-8 leading-[1.1]">
+                We're on a Mission to{" "}
+                <span className="bg-gradient-to-r from-primary via-primary-hover to-primary bg-clip-text text-transparent animate-gradient-shift" style={{ backgroundSize: '200% auto' }}>
+                  Stop Silent Churn
+                </span>
+              </h1>
+              <p className="text-2xl text-foreground/80 leading-relaxed font-light max-w-3xl mx-auto">
+                Every day, talented trainers lose clients not because they're bad coaches, but because they're drowning in admin work.
+              </p>
+            </div>
+          </ScrollReveal>
         </div>
       </section>
 
       {/* Origin Story */}
-      <section className="py-20 bg-card/50">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
-            <div className="grid md:grid-cols-2 gap-12 items-center mb-12">
-              <div>
-                <h2 className="text-3xl font-bold mb-4">The Problem We Lived</h2>
-                <div className="space-y-4 text-muted-foreground">
-                  <p>
-                    In 2022, our founders Sarah and Marcus were running thriving training businesses in Chicago. Both had waitlists for new clients. Both were working 70-hour weeks.
-                  </p>
-                  <p>
-                    Then they noticed something: despite full schedules, they were losing 30-40% of clients every quarter. Not because of bad training—because clients quietly disengaged and they didn't catch it in time.
-                  </p>
-                  <p>
-                    They'd spend 15+ hours weekly on admin: texting check-ins, tracking no-shows, manually reviewing who needed attention. By the time they noticed a problem, it was too late.
-                  </p>
-                  <p className="font-semibold text-foreground">
-                    The turning point: Sarah lost a VIP client she'd trained for 2 years. Not because the client was unhappy—Sarah just missed the early warning signs while buried in admin work.
-                  </p>
+      <section className="py-24 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-card/50 to-transparent" />
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-5xl mx-auto">
+            <ScrollReveal>
+              <div className="grid md:grid-cols-2 gap-16 items-center mb-16">
+                <div>
+                  <h2 className="text-4xl md:text-5xl font-bold mb-8">The Problem We Lived</h2>
+                  <div className="space-y-6 text-lg text-foreground/80 leading-relaxed">
+                    <p>
+                      In 2022, our founders Sarah and Marcus were running thriving training businesses in Chicago. Both had waitlists for new clients. Both were working 70-hour weeks.
+                    </p>
+                    <p>
+                      Then they noticed something: despite full schedules, they were losing 30-40% of clients every quarter. Not because of bad training—because clients quietly disengaged.
+                    </p>
+                    <p>
+                      They'd spend 15+ hours weekly on admin: texting check-ins, tracking no-shows, manually reviewing who needed attention.
+                    </p>
+                    <p className="font-bold text-foreground text-xl">
+                      The turning point: Sarah lost a VIP client she'd trained for 2 years. Not because the client was unhappy—Sarah just missed the early warning signs.
+                    </p>
+                  </div>
                 </div>
+                <Card className="p-10 bg-gradient-to-br from-danger/10 to-danger/5 border-danger/30 shadow-2xl shadow-danger/20 backdrop-blur-xl">
+                  <h3 className="text-2xl font-bold mb-8">The Real Cost</h3>
+                  <div className="space-y-8">
+                    <div>
+                      <p className="text-5xl font-bold text-danger mb-3">
+                        <AnimatedCounter end={40} suffix="%" />
+                      </p>
+                      <p className="text-sm text-foreground/80">Average annual churn rate for solo trainers</p>
+                    </div>
+                    <div>
+                      <p className="text-5xl font-bold text-warning mb-3">
+                        <AnimatedCounter end={15} suffix="h" />
+                      </p>
+                      <p className="text-sm text-foreground/80">Weekly time wasted on manual admin</p>
+                    </div>
+                    <div>
+                      <p className="text-5xl font-bold text-muted-foreground mb-3">
+                        $<AnimatedCounter end={42} suffix="k" />
+                      </p>
+                      <p className="text-sm text-foreground/80">Lost revenue per trainer per year</p>
+                    </div>
+                  </div>
+                </Card>
               </div>
-              <Card className="p-8 bg-gradient-to-br from-danger/10 to-danger/5 border-danger/20">
-                <h3 className="text-xl font-semibold mb-6">The Real Cost</h3>
-                <div className="space-y-6">
-                  <div>
-                    <p className="text-4xl font-bold text-danger mb-2">40%</p>
-                    <p className="text-sm text-muted-foreground">Average annual churn rate for solo trainers</p>
-                  </div>
-                  <div>
-                    <p className="text-4xl font-bold text-warning mb-2">15hrs</p>
-                    <p className="text-sm text-muted-foreground">Weekly time wasted on manual admin</p>
-                  </div>
-                  <div>
-                    <p className="text-4xl font-bold text-muted-foreground mb-2">$42k</p>
-                    <p className="text-sm text-muted-foreground">Lost revenue per trainer per year</p>
-                  </div>
-                </div>
-              </Card>
-            </div>
+            </ScrollReveal>
 
-            <Card className="p-8 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
-              <h3 className="text-xl font-semibold mb-4">The Insight</h3>
-              <p className="text-muted-foreground mb-4">
-                What if AI could analyze client behavior 24/7, predict churn 7 days early, and draft personalized interventions—while trainers maintained full control?
-              </p>
-              <p className="text-muted-foreground">
-                Not "AI replacing trainers." Not "chatbots pretending to be human." But{" "}
-                <span className="font-semibold text-foreground">AI-assisted, trainer-approved automation that scales human relationships.</span>
-              </p>
-            </Card>
+            <ScrollReveal delay={200}>
+              <Card className="p-10 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/30 backdrop-blur-xl shadow-2xl shadow-primary/20">
+                <h3 className="text-2xl font-bold mb-6">The Insight</h3>
+                <p className="text-lg text-foreground/80 mb-6 leading-relaxed">
+                  What if AI could analyze client behavior 24/7, predict churn 7 days early, and draft personalized interventions—while trainers maintained full control?
+                </p>
+                <p className="text-lg text-foreground/80 leading-relaxed">
+                  Not "AI replacing trainers." Not "chatbots pretending to be human." But{" "}
+                  <span className="font-bold text-foreground text-xl">AI-assisted, trainer-approved automation that scales human relationships.</span>
+                </p>
+              </Card>
+            </ScrollReveal>
           </div>
         </div>
       </section>
@@ -226,31 +258,49 @@ export default function About() {
       </section>
 
       {/* Stats */}
-      <section className="py-20">
+      <section className="py-24">
         <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-3xl font-bold mb-12 text-center">Impact So Far</h2>
+          <div className="max-w-5xl mx-auto">
+            <ScrollReveal>
+              <h2 className="text-4xl md:text-5xl font-bold mb-16 text-center">Impact So Far</h2>
+            </ScrollReveal>
             
-            <div className="grid md:grid-cols-4 gap-6">
-              <Card className="p-6 text-center">
-                <p className="text-4xl font-bold text-primary mb-2">100+</p>
-                <p className="text-sm text-muted-foreground">Active Trainers</p>
-              </Card>
+            <div className="grid md:grid-cols-4 gap-8">
+              <ScrollReveal delay={100}>
+                <Card className="p-8 text-center hover:shadow-glow transition-all duration-300 hover:scale-[1.02] border-primary/20">
+                  <p className="text-5xl font-bold text-primary mb-3">
+                    <AnimatedCounter end={100} suffix="+" />
+                  </p>
+                  <p className="text-sm text-muted-foreground">Active Trainers</p>
+                </Card>
+              </ScrollReveal>
 
-              <Card className="p-6 text-center">
-                <p className="text-4xl font-bold text-success mb-2">3,000+</p>
-                <p className="text-sm text-muted-foreground">Clients Retained</p>
-              </Card>
+              <ScrollReveal delay={200}>
+                <Card className="p-8 text-center hover:shadow-glow transition-all duration-300 hover:scale-[1.02] border-success/20">
+                  <p className="text-5xl font-bold text-success mb-3">
+                    <AnimatedCounter end={3000} suffix="+" />
+                  </p>
+                  <p className="text-sm text-muted-foreground">Clients Retained</p>
+                </Card>
+              </ScrollReveal>
 
-              <Card className="p-6 text-center">
-                <p className="text-4xl font-bold text-warning mb-2">50k+</p>
-                <p className="text-sm text-muted-foreground">AI Messages Drafted</p>
-              </Card>
+              <ScrollReveal delay={300}>
+                <Card className="p-8 text-center hover:shadow-glow transition-all duration-300 hover:scale-[1.02] border-warning/20">
+                  <p className="text-5xl font-bold text-warning mb-3">
+                    <AnimatedCounter end={50} suffix="k+" />
+                  </p>
+                  <p className="text-sm text-muted-foreground">AI Messages Drafted</p>
+                </Card>
+              </ScrollReveal>
 
-              <Card className="p-6 text-center">
-                <p className="text-4xl font-bold text-info mb-2">92%</p>
-                <p className="text-sm text-muted-foreground">Satisfaction Rate</p>
-              </Card>
+              <ScrollReveal delay={400}>
+                <Card className="p-8 text-center hover:shadow-glow transition-all duration-300 hover:scale-[1.02] border-info/20">
+                  <p className="text-5xl font-bold text-info mb-3">
+                    <AnimatedCounter end={92} suffix="%" />
+                  </p>
+                  <p className="text-sm text-muted-foreground">Satisfaction Rate</p>
+                </Card>
+              </ScrollReveal>
             </div>
           </div>
         </div>

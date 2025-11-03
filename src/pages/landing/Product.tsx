@@ -1,186 +1,276 @@
 import { LandingLayout } from "@/components/landing/LandingLayout";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Brain, MessageSquare, BarChart3, Zap, Shield, CheckCircle2 } from "lucide-react";
+import { Brain, MessageSquare, BarChart3, Zap, Shield, CheckCircle2, Sparkles, Target } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { ScrollReveal } from "@/components/landing/ScrollReveal";
+import { AnimatedCounter } from "@/components/landing/AnimatedCounter";
+import trainerClientGym from "@/assets/trainer-client-gym.jpg";
+import trainerOverhead from "@/assets/trainer-client-overhead.jpg";
+import groupTraining from "@/assets/group-training-class.jpg";
+import gradientBg from "@/assets/gradient-mesh-bg.svg";
 export default function Product() {
   return <LandingLayout>
       {/* Hero */}
-      <section className="container mx-auto px-4 py-20">
-        <div className="max-w-3xl mx-auto text-center">
-          <h1 className="text-5xl font-bold mb-6">
-            Everything You Need to{" "}
-            <span className="bg-gradient-to-r from-primary to-primary-hover bg-clip-text text-transparent">
-Retain and Grow</span>
-          </h1>
-          <p className="text-xl text-muted-foreground">
-            Three powerful features working together to automate retention, boost engagement, and maximize revenue.
-          </p>
+      <section className="relative overflow-hidden py-24">
+        <div 
+          className="absolute inset-0 opacity-20"
+          style={{
+            backgroundImage: `url(${gradientBg})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center'
+          }}
+        />
+        <div className="container mx-auto px-4 relative z-10">
+          <ScrollReveal>
+            <div className="max-w-4xl mx-auto text-center">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 backdrop-blur-sm border border-primary/30 text-primary text-sm font-semibold mb-8 shadow-glow">
+                <Sparkles className="h-4 w-4" />
+                <span>Full Platform Overview</span>
+              </div>
+              <h1 className="text-6xl md:text-7xl font-black mb-8 leading-[1.1]">
+                Everything You Need to{" "}
+                <span className="bg-gradient-to-r from-primary via-primary-hover to-primary bg-clip-text text-transparent animate-gradient-shift" style={{ backgroundSize: '200% auto' }}>
+                  Retain and Grow
+                </span>
+              </h1>
+              <p className="text-2xl text-foreground/80 leading-relaxed font-light max-w-3xl mx-auto">
+                Three powerful features working together to automate retention, boost engagement, and maximize revenue.
+              </p>
+            </div>
+          </ScrollReveal>
         </div>
       </section>
 
       {/* Features Deep Dive */}
-      <section className="py-20 bg-card/50">
-        <div className="container mx-auto px-4 space-y-24">
+      <section className="py-24 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-card/50 to-transparent" />
+        <div className="container mx-auto px-4 space-y-32 relative z-10">
           {/* AI Inbox */}
-          <div>
-            <div className="flex items-center gap-3 mb-6">
-              <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Brain className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <h2 className="text-3xl font-bold">Leverage our AI Fitness Agent</h2>
-                <p className="text-muted-foreground">Never lose a client to silence again</p>
-              </div>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-8">
-              <Card className="p-6">
-                <h3 className="text-xl font-semibold mb-3">Predictive At-Risk Detection</h3>
-                <p className="text-muted-foreground mb-4">
-                  AI analyzes 15+ engagement signals to catch clients before they ghost. Get alerts 7 days early.
-                </p>
-                <ul className="space-y-2">
-                  <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                    <CheckCircle2 className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
-                    <span>Session attendance tracking</span>
-                  </li>
-                  <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                    <CheckCircle2 className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
-                    <span>Message response rate analysis</span>
-                  </li>
-                  <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                    <CheckCircle2 className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
-                    <span>Booking pattern recognition</span>
-                  </li>
-                </ul>
-              </Card>
-
-              <Card className="p-6">
-                <h3 className="text-xl font-semibold mb-3">Context-Aware Message Drafts</h3>
-                <p className="text-muted-foreground mb-4">
-                  AI reads client history, recent workouts, and engagement to craft personalized check-ins.
-                </p>
-                <ul className="space-y-2">
-                  <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                    <CheckCircle2 className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
-                    <span>References specific client goals</span>
-                  </li>
-                  <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                    <CheckCircle2 className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
-                    <span>Matches your brand voice</span>
-                  </li>
-                  <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                    <CheckCircle2 className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
-                    <span>Suggests optimal send times</span>
-                  </li>
-                </ul>
-              </Card>
-
-              <Card className="p-6">
-                <h3 className="text-xl font-semibold mb-3">5-Stage Approval Workflow</h3>
-                <p className="text-muted-foreground mb-4">
-                  You're in full control. Review, edit, approve, or discard AI drafts with one tap.
-                </p>
-                <div className="flex flex-wrap gap-2 mt-4">
-                  <Badge variant="outline">Draft</Badge>
-                  <span className="text-muted-foreground">→</span>
-                  <Badge variant="outline">Review</Badge>
-                  <span className="text-muted-foreground">→</span>
-                  <Badge variant="outline">Approved</Badge>
-                  <span className="text-muted-foreground">→</span>
-                  <Badge variant="outline">Scheduled</Badge>
-                  <span className="text-muted-foreground">→</span>
-                  <Badge className="bg-success text-success-foreground">Sent</Badge>
+          <ScrollReveal>
+            <div>
+              <div className="flex items-center gap-4 mb-12">
+                <div className="h-16 w-16 rounded-2xl bg-primary/10 backdrop-blur-sm flex items-center justify-center border border-primary/30 shadow-glow">
+                  <Brain className="h-8 w-8 text-primary" />
                 </div>
-              </Card>
+                <div>
+                  <h2 className="text-4xl md:text-5xl font-bold mb-2">AI Fitness Agent</h2>
+                  <p className="text-lg text-muted-foreground">Never lose a client to silence again</p>
+                </div>
+              </div>
 
-              <Card className="p-6">
-                <h3 className="text-xl font-semibold mb-3">Multi-Channel Communication</h3>
-                <p className="text-muted-foreground mb-4">
-                  Reach clients where they are: SMS, email, in-app notifications. All unified in one inbox.
-                </p>
-                <ul className="space-y-2">
-                  <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                    <CheckCircle2 className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
-                    <span>SMS with TCPA compliance built-in</span>
-                  </li>
-                  <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                    <CheckCircle2 className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
-                    <span>Email templates with tracking</span>
-                  </li>
-                  <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                    <CheckCircle2 className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
-                    <span>Push notifications for urgent alerts</span>
-                  </li>
-                </ul>
-              </Card>
+              <div className="grid md:grid-cols-2 gap-8">
+                <Card className="p-8 hover:shadow-glow transition-all duration-300 hover:scale-[1.02] border-primary/20 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-all" />
+                  <h3 className="text-2xl font-bold mb-4 relative">Predictive At-Risk Detection</h3>
+                  <p className="text-foreground/80 mb-6 text-lg leading-relaxed relative">
+                    AI analyzes <span className="font-semibold text-primary">15+ engagement signals</span> to catch clients before they ghost. Get alerts 7 days early.
+                  </p>
+                  <ul className="space-y-3 relative">
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 className="h-6 w-6 text-success flex-shrink-0 mt-0.5" />
+                      <span className="text-foreground/80">Session attendance tracking</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 className="h-6 w-6 text-success flex-shrink-0 mt-0.5" />
+                      <span className="text-foreground/80">Message response rate analysis</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 className="h-6 w-6 text-success flex-shrink-0 mt-0.5" />
+                      <span className="text-foreground/80">Booking pattern recognition</span>
+                    </li>
+                  </ul>
+                </Card>
+
+                <Card className="p-8 hover:shadow-glow transition-all duration-300 hover:scale-[1.02] border-primary/20 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-all" />
+                  <h3 className="text-2xl font-bold mb-4 relative">Context-Aware Message Drafts</h3>
+                  <p className="text-foreground/80 mb-6 text-lg leading-relaxed relative">
+                    AI reads client history, recent workouts, and engagement to craft personalized check-ins.
+                  </p>
+                  <ul className="space-y-3 relative">
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 className="h-6 w-6 text-success flex-shrink-0 mt-0.5" />
+                      <span className="text-foreground/80">References specific client goals</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 className="h-6 w-6 text-success flex-shrink-0 mt-0.5" />
+                      <span className="text-foreground/80">Matches your brand voice</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 className="h-6 w-6 text-success flex-shrink-0 mt-0.5" />
+                      <span className="text-foreground/80">Suggests optimal send times</span>
+                    </li>
+                  </ul>
+                </Card>
+
+                <Card className="p-8 hover:shadow-glow transition-all duration-300 hover:scale-[1.02] border-primary/20 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-warning/5 rounded-full blur-3xl group-hover:bg-warning/10 transition-all" />
+                  <h3 className="text-2xl font-bold mb-4 relative">5-Stage Approval Workflow</h3>
+                  <p className="text-foreground/80 mb-6 text-lg leading-relaxed relative">
+                    You're in full control. Review, edit, approve, or discard AI drafts with one tap.
+                  </p>
+                  <div className="flex flex-wrap gap-3 mt-6 relative items-center">
+                    <Badge variant="outline" className="text-base px-4 py-2">Draft</Badge>
+                    <span className="text-muted-foreground text-xl">→</span>
+                    <Badge variant="outline" className="text-base px-4 py-2">Review</Badge>
+                    <span className="text-muted-foreground text-xl">→</span>
+                    <Badge variant="outline" className="text-base px-4 py-2">Approved</Badge>
+                    <span className="text-muted-foreground text-xl">→</span>
+                    <Badge variant="outline" className="text-base px-4 py-2">Scheduled</Badge>
+                    <span className="text-muted-foreground text-xl">→</span>
+                    <Badge className="bg-success text-success-foreground text-base px-4 py-2 shadow-glow">Sent</Badge>
+                  </div>
+                </Card>
+
+                <Card className="p-8 hover:shadow-glow transition-all duration-300 hover:scale-[1.02] border-primary/20 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-info/5 rounded-full blur-3xl group-hover:bg-info/10 transition-all" />
+                  <h3 className="text-2xl font-bold mb-4 relative">Multi-Channel Communication</h3>
+                  <p className="text-foreground/80 mb-6 text-lg leading-relaxed relative">
+                    Reach clients where they are: SMS, email, in-app. All unified in one inbox.
+                  </p>
+                  <ul className="space-y-3 relative">
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 className="h-6 w-6 text-success flex-shrink-0 mt-0.5" />
+                      <span className="text-foreground/80">SMS with TCPA compliance built-in</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 className="h-6 w-6 text-success flex-shrink-0 mt-0.5" />
+                      <span className="text-foreground/80">Email templates with tracking</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <CheckCircle2 className="h-6 w-6 text-success flex-shrink-0 mt-0.5" />
+                      <span className="text-foreground/80">Push notifications for urgent alerts</span>
+                    </li>
+                  </ul>
+                </Card>
+              </div>
+
+              {/* Feature Image */}
+              <div className="mt-12 rounded-3xl overflow-hidden border border-primary/30 shadow-2xl shadow-primary/20 relative group">
+                <img 
+                  src={trainerClientGym} 
+                  alt="Personal Training Session" 
+                  className="w-full h-[400px] object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-8">
+                  <div className="backdrop-blur-xl bg-card/80 p-6 rounded-2xl border border-primary/30">
+                    <div className="flex items-center gap-4 mb-4">
+                      <Target className="h-8 w-8 text-primary" />
+                      <div>
+                        <p className="text-sm text-muted-foreground">Early Alert System</p>
+                        <p className="text-2xl font-bold text-primary">
+                          <AnimatedCounter end={7} /> Days Warning
+                        </p>
+                      </div>
+                    </div>
+                    <p className="text-sm text-foreground/80">AI predicts churn before clients ghost</p>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+          </ScrollReveal>
 
           {/* Gamification */}
-          <div>
-            <div className="flex items-center gap-3 mb-6">
-              <div className="h-12 w-12 rounded-xl bg-warning/10 flex items-center justify-center">
-                <MessageSquare className="h-6 w-6 text-warning" />
+          <ScrollReveal delay={100}>
+            <div>
+              <div className="flex items-center gap-4 mb-12">
+                <div className="h-16 w-16 rounded-2xl bg-warning/10 backdrop-blur-sm flex items-center justify-center border border-warning/30 shadow-glow">
+                  <MessageSquare className="h-8 w-8 text-warning" />
+                </div>
+                <div>
+                  <h2 className="text-4xl md:text-5xl font-bold mb-2">Gamified Client Experience</h2>
+                  <p className="text-lg text-muted-foreground">Make fitness addictive through social accountability</p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-3xl font-bold">Gamified Client Experience</h2>
-                <p className="text-muted-foreground">Make fitness addictive through social accountability</p>
+
+              <div className="grid md:grid-cols-3 gap-8 mb-12">
+                <Card className="p-8 hover:shadow-glow transition-all duration-300 hover:scale-[1.02] text-center group">
+                  <div className="text-6xl mb-6 group-hover:scale-110 transition-transform duration-300">🔥</div>
+                  <h3 className="text-2xl font-bold mb-4">Streak Tracking</h3>
+                  <p className="text-foreground/80 leading-relaxed">
+                    Visualize workout consistency. Breaking a streak creates powerful motivation.
+                  </p>
+                </Card>
+
+                <Card className="p-8 hover:shadow-glow transition-all duration-300 hover:scale-[1.02] text-center group">
+                  <div className="text-6xl mb-6 group-hover:scale-110 transition-transform duration-300">🏆</div>
+                  <h3 className="text-2xl font-bold mb-4">Leaderboards</h3>
+                  <p className="text-foreground/80 leading-relaxed">
+                    Community rankings turn fitness into friendly competition that drives consistency.
+                  </p>
+                </Card>
+
+                <Card className="p-8 hover:shadow-glow transition-all duration-300 hover:scale-[1.02] text-center group">
+                  <div className="text-6xl mb-6 group-hover:scale-110 transition-transform duration-300">⭐</div>
+                  <h3 className="text-2xl font-bold mb-4">Achievement Badges</h3>
+                  <p className="text-foreground/80 leading-relaxed">
+                    Unlock milestones for streaks, PRs, and consistency. Clients love collecting them.
+                  </p>
+                </Card>
+
+                <Card className="p-8 hover:shadow-glow transition-all duration-300 hover:scale-[1.02] text-center group">
+                  <div className="text-6xl mb-6 group-hover:scale-110 transition-transform duration-300">💪</div>
+                  <h3 className="text-2xl font-bold mb-4">Community Challenges</h3>
+                  <p className="text-foreground/80 leading-relaxed">
+                    Time-bound challenges create group accountability and higher completion rates.
+                  </p>
+                </Card>
+
+                <Card className="p-8 hover:shadow-glow transition-all duration-300 hover:scale-[1.02] text-center group">
+                  <div className="text-6xl mb-6 group-hover:scale-110 transition-transform duration-300">📊</div>
+                  <h3 className="text-2xl font-bold mb-4">XP & Leveling</h3>
+                  <p className="text-foreground/80 leading-relaxed">
+                    Every workout earns XP. Level up to unlock rewards and community status.
+                  </p>
+                </Card>
+
+                <Card className="p-8 hover:shadow-glow transition-all duration-300 hover:scale-[1.02] text-center group">
+                  <div className="text-6xl mb-6 group-hover:scale-110 transition-transform duration-300">🎯</div>
+                  <h3 className="text-2xl font-bold mb-4">Progress Milestones</h3>
+                  <p className="text-foreground/80 leading-relaxed">
+                    Celebrate wins automatically. Small wins compound into long-term retention.
+                  </p>
+                </Card>
+              </div>
+
+              {/* Gamification Image */}
+              <div className="rounded-3xl overflow-hidden border border-warning/30 shadow-2xl shadow-warning/20 relative group">
+                <img 
+                  src={groupTraining} 
+                  alt="Group Training Class" 
+                  className="w-full h-[400px] object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-8">
+                  <div className="backdrop-blur-xl bg-card/80 p-6 rounded-2xl border border-warning/30">
+                    <div className="grid grid-cols-3 gap-6 text-center">
+                      <div>
+                        <p className="text-3xl font-bold text-warning mb-1">
+                          <AnimatedCounter end={3} />x
+                        </p>
+                        <p className="text-xs text-muted-foreground">More Consistent</p>
+                      </div>
+                      <div>
+                        <p className="text-3xl font-bold text-success mb-1">
+                          <AnimatedCounter end={87} />%
+                        </p>
+                        <p className="text-xs text-muted-foreground">Engagement Rate</p>
+                      </div>
+                      <div>
+                        <p className="text-3xl font-bold text-primary mb-1">
+                          <AnimatedCounter end={92} />%
+                        </p>
+                        <p className="text-xs text-muted-foreground">Retention</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-
-            <div className="grid md:grid-cols-3 gap-8">
-              <Card className="p-6">
-                <div className="text-4xl mb-4">🔥</div>
-                <h3 className="text-xl font-semibold mb-3">Streak Tracking</h3>
-                <p className="text-muted-foreground">
-                  Clients see their workout consistency visualized. Breaking a streak creates powerful motivation to keep going.
-                </p>
-              </Card>
-
-              <Card className="p-6">
-                <div className="text-4xl mb-4">🏆</div>
-                <h3 className="text-xl font-semibold mb-3">Leaderboards</h3>
-                <p className="text-muted-foreground">
-                  Community-wide or private group rankings. Turn fitness into friendly competition that drives consistency.
-                </p>
-              </Card>
-
-              <Card className="p-6">
-                <div className="text-4xl mb-4">⭐</div>
-                <h3 className="text-xl font-semibold mb-3">Achievement Badges</h3>
-                <p className="text-muted-foreground">
-                  Unlock milestones for streaks, PRs, and consistency. Clients love collecting them and showing them off.
-                </p>
-              </Card>
-
-              <Card className="p-6">
-                <div className="text-4xl mb-4">💪</div>
-                <h3 className="text-xl font-semibold mb-3">Community Challenges</h3>
-                <p className="text-muted-foreground">
-                  Create time-bound challenges (7-day streak, 10k steps daily). Group accountability = higher completion rates.
-                </p>
-              </Card>
-
-              <Card className="p-6">
-                <div className="text-4xl mb-4">📊</div>
-                <h3 className="text-xl font-semibold mb-3">XP & Leveling</h3>
-                <p className="text-muted-foreground">
-                  Every workout earns XP. Level up to unlock rewards, recognition, and status within your training community.
-                </p>
-              </Card>
-
-              <Card className="p-6">
-                <div className="text-4xl mb-4">🎯</div>
-                <h3 className="text-xl font-semibold mb-3">Progress Milestones</h3>
-                <p className="text-muted-foreground">
-                  Celebrate wins automatically: first month, 10 sessions, 50 workouts. Small wins compound into long-term retention.
-                </p>
-              </Card>
-            </div>
-          </div>
+          </ScrollReveal>
 
           {/* Analytics */}
           <div>
