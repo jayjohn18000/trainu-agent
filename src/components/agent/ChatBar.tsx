@@ -59,7 +59,7 @@ export function ChatBar({ onSubmit, placeholder, disabled }: ChatBarProps) {
     <form
       onSubmit={handleSubmit}
       className={`
-        fixed left-0 right-0 z-30 border-t bg-card backdrop-blur
+        fixed left-0 right-0 z-10 border-t bg-card/95 backdrop-blur-sm
         flex items-center gap-2 p-3 px-4
         ${isMobile ? 'bottom-16' : 'bottom-0'}
         transition-all duration-200
