@@ -1,108 +1,156 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ConversationList } from "@/components/messages/ConversationList";
 import { ChatWindow } from "@/components/messages/ChatWindow";
 import { toast } from "@/hooks/use-toast";
+import { listConversations, listMessagesForContact, sendMessage } from "@/lib/api/messages";
+import { supabase } from "@/integrations/supabase/client";
 
 interface MessagesModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-const mockConversations = [
-  {
-    id: "c1",
-    name: "John Doe",
-    avatar: "https://i.pravatar.cc/150?img=10",
-    lastMessage: "Thanks for the great session today!",
-    timestamp: "2m ago",
-    unread: 2,
-    online: true,
-  },
-  {
-    id: "c2",
-    name: "Sarah Wilson",
-    avatar: "https://i.pravatar.cc/150?img=11",
-    lastMessage: "Can we reschedule tomorrow's session?",
-    timestamp: "1h ago",
-    unread: 1,
-    online: true,
-  },
-  {
-    id: "c3",
-    name: "Mike Johnson",
-    avatar: "https://i.pravatar.cc/150?img=12",
-    lastMessage: "Perfect, see you then!",
-    timestamp: "3h ago",
-    unread: 0,
-    online: false,
-  },
-];
+type DisplayMessage = {
+  id: string;
+  senderId: string;
+  content: string;
+  timestamp: string;
+  type: "text";
+};
 
-const mockMessages = {
-  c1: [
-    {
-      id: "m1",
-      senderId: "c1",
-      content: "Hey! Ready for tomorrow's session?",
-      timestamp: "10:30 AM",
-      type: "text" as const,
-    },
-    {
-      id: "m2",
-      senderId: "current",
-      content: "Absolutely! Looking forward to it.",
-      timestamp: "10:32 AM",
-      type: "text" as const,
-    },
-  ],
-  c2: [
-    {
-      id: "m1",
-      senderId: "c2",
-      content: "Can we reschedule tomorrow's session?",
-      timestamp: "1h ago",
-      type: "text" as const,
-    },
-  ],
-  c3: [
-    {
-      id: "m1",
-      senderId: "c3",
-      content: "Perfect, see you then!",
-      timestamp: "3h ago",
-      type: "text" as const,
-    },
-  ],
+type DisplayConversation = {
+  id: string;
+  name: string;
+  avatar: string;
+  lastMessage: string;
+  timestamp: string;
+  unread: number;
+  online: boolean;
 };
 
 export function MessagesModal({ open, onOpenChange }: MessagesModalProps) {
-  const [selectedConvId, setSelectedConvId] = useState(mockConversations[0].id);
-  const [messages, setMessages] = useState(mockMessages);
+  const [conversations, setConversations] = useState<DisplayConversation[]>([]);
+  const [selectedConvId, setSelectedConvId] = useState<string>("");
+  const [messages, setMessages] = useState<DisplayMessage[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const selectedConv = mockConversations.find((c) => c.id === selectedConvId)!;
-  const conversationMessages = messages[selectedConvId as keyof typeof messages] || [];
+  useEffect(() => {
+    if (open) {
+      loadConversations();
+    }
+  }, [open]);
 
-  const handleSendMessage = (content: string, file?: File) => {
-    const newMessage = {
-      id: `m${Date.now()}`,
-      senderId: "current",
-      content,
-      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      type: file ? (file.type.startsWith("image/") ? "image" : "file") : "text",
-      fileUrl: file ? URL.createObjectURL(file) : undefined,
-      fileName: file?.name,
-    } as const;
+  useEffect(() => {
+    if (selectedConvId && open) {
+      loadMessages(selectedConvId);
+    }
+  }, [selectedConvId, open]);
 
-    setMessages((prev) => ({
-      ...prev,
-      [selectedConvId]: [...(prev[selectedConvId as keyof typeof prev] || []), newMessage],
-    }));
+  // Setup realtime subscriptions
+  useEffect(() => {
+    if (!open) return;
 
-    toast({
-      title: "Message sent",
-      description: file ? `Sent ${file.name}` : "Your message has been delivered",
-    });
+    const channel = supabase
+      .channel('messages-modal-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'messages',
+        },
+        () => {
+          loadConversations();
+          if (selectedConvId) loadMessages(selectedConvId);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [open, selectedConvId]);
+
+  const loadConversations = async () => {
+    try {
+      const data = await listConversations();
+      const displayConvos: DisplayConversation[] = data.map(conv => ({
+        id: conv.contact_id,
+        name: conv.contact_name,
+        avatar: `https://i.pravatar.cc/150?u=${conv.contact_id}`,
+        lastMessage: conv.last_message,
+        timestamp: formatTimestamp(conv.last_message_time),
+        unread: conv.unread_count,
+        online: false,
+      }));
+      setConversations(displayConvos);
+      
+      if (displayConvos.length > 0 && !selectedConvId) {
+        setSelectedConvId(displayConvos[0].id);
+      }
+    } catch (error) {
+      console.error('Failed to load conversations:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadMessages = async (contactId: string) => {
+    try {
+      const data = await listMessagesForContact(contactId);
+      const displayMsgs: DisplayMessage[] = data.map(msg => ({
+        id: msg.id,
+        senderId: msg.status === 'draft' ? 'current' : 'contact',
+        content: msg.content,
+        timestamp: new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        type: 'text',
+      }));
+      setMessages(displayMsgs);
+    } catch (error) {
+      console.error('Failed to load messages:', error);
+    }
+  };
+
+  const formatTimestamp = (isoString: string): string => {
+    const date = new Date(isoString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    return date.toLocaleDateString();
+  };
+
+  const selectedConv = conversations.find((c) => c.id === selectedConvId);
+
+  const handleSendMessage = async (content: string) => {
+    if (!selectedConvId) return;
+
+    try {
+      await sendMessage(selectedConvId, content);
+
+      toast({
+        title: "Message sent",
+        description: "Your message has been delivered",
+      });
+
+      // Reload messages
+      await loadMessages(selectedConvId);
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      toast({
+        title: "Error",
+        description: "Failed to send message. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -113,20 +161,28 @@ export function MessagesModal({ open, onOpenChange }: MessagesModalProps) {
             <div className="p-4 border-b">
               <DialogTitle>Messages</DialogTitle>
             </div>
-            <ConversationList
-              conversations={mockConversations}
-              selectedId={selectedConvId}
-              onSelect={setSelectedConvId}
-            />
+            {isLoading ? (
+              <div className="p-4 text-center text-muted-foreground">Loading...</div>
+            ) : conversations.length === 0 ? (
+              <div className="p-4 text-center text-muted-foreground">No conversations yet</div>
+            ) : (
+              <ConversationList
+                conversations={conversations}
+                selectedId={selectedConvId}
+                onSelect={setSelectedConvId}
+              />
+            )}
           </div>
 
           <div className="col-span-2">
-            <ChatWindow
-              conversation={selectedConv}
-              messages={conversationMessages}
-              currentUserId="current"
-              onSendMessage={handleSendMessage}
-            />
+            {!isLoading && selectedConv && (
+              <ChatWindow
+                conversation={selectedConv}
+                messages={messages}
+                currentUserId="current"
+                onSendMessage={handleSendMessage}
+              />
+            )}
           </div>
         </div>
       </DialogContent>
