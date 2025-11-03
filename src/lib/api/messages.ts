@@ -25,12 +25,12 @@ export async function listConversations(): Promise<Conversation[]> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
-  // Get all messages with contact info
+  // Get all messages with contact info (including queued to show pending messages)
   const { data: messages, error: messagesError } = await supabase
     .from('messages')
     .select('id, contact_id, content, created_at, status')
     .eq('trainer_id', user.id)
-    .in('status', ['sent', 'delivered', 'read'])
+    .in('status', ['queued', 'sent', 'delivered', 'read'])
     .order('created_at', { ascending: false });
 
   if (messagesError) throw messagesError;
