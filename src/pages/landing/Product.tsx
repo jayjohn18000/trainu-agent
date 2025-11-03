@@ -4,18 +4,15 @@ import { Badge } from "@/components/ui/badge";
 import { Brain, MessageSquare, BarChart3, Zap, Shield, CheckCircle2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-
 export default function Product() {
-  return (
-    <LandingLayout>
+  return <LandingLayout>
       {/* Hero */}
       <section className="container mx-auto px-4 py-20">
         <div className="max-w-3xl mx-auto text-center">
           <h1 className="text-5xl font-bold mb-6">
             Everything You Need to{" "}
             <span className="bg-gradient-to-r from-primary to-primary-hover bg-clip-text text-transparent">
-              Retain and Grow
-            </span>
+Retain and Grow</span>
           </h1>
           <p className="text-xl text-muted-foreground">
             Three powerful features working together to automate retention, boost engagement, and maximize revenue.
@@ -417,6 +414,5 @@ export default function Product() {
           </div>
         </div>
       </section>
-    </LandingLayout>
-  );
+    </LandingLayout>;
 }
