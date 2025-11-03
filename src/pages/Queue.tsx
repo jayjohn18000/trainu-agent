@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useTrainerGamification } from "@/hooks/useTrainerGamification";
-import { ArrowLeft, Zap, CheckCircle, Loader2 } from "lucide-react";
+import { ArrowLeft, Zap, CheckCircle, Loader2, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { listDraftsAndQueued, approveMessage, sendNow, type Message } from "@/lib/api/messages";
 import type { QueueItem } from "@/types/agent";
@@ -18,6 +18,7 @@ export default function Queue() {
   const [contacts, setContacts] = useState<Record<string, { first_name: string; last_name?: string }>>({});
   const [editingItem, setEditingItem] = useState<Message | null>(null);
   const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
   const { toast } = useToast();
   const { awardXP } = useTrainerGamification();
 
@@ -154,6 +155,30 @@ export default function Queue() {
     }
   };
 
+  const handleGenerateNewDrafts = async () => {
+    setGenerating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("daily-draft-generator");
+      
+      if (error) throw error;
+      
+      await loadQueue();
+      toast({
+        title: "Drafts generated!",
+        description: `Generated ${data.generated} new drafts, cleaned ${data.cleaned} expired ones.`,
+      });
+    } catch (error) {
+      console.error("Failed to generate drafts:", error);
+      toast({
+        title: "Generation failed",
+        description: error instanceof Error ? error.message : "Please try again",
+        variant: "destructive",
+      });
+    } finally {
+      setGenerating(false);
+    }
+  };
+
   const handleApproveAllSafe = async () => {
     try {
       const safeMessages = messages.filter((item) => (item.confidence || 0) >= 0.8);
@@ -209,15 +234,35 @@ export default function Queue() {
           </p>
         </div>
 
-        {safeItemsCount > 0 && (
+        <div className="flex gap-2">
           <Button 
-            variant="default" 
-            onClick={handleApproveAllSafe}
+            variant="outline" 
+            onClick={handleGenerateNewDrafts}
+            disabled={generating}
           >
-            <Zap className="h-4 w-4 mr-2" />
-            Approve {safeItemsCount} Safe
+            {generating ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-4 w-4 mr-2" />
+                Generate New
+              </>
+            )}
           </Button>
-        )}
+
+          {safeItemsCount > 0 && (
+            <Button 
+              variant="default" 
+              onClick={handleApproveAllSafe}
+            >
+              <Zap className="h-4 w-4 mr-2" />
+              Approve {safeItemsCount} Safe
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Stats Bar */}

@@ -34,3 +34,9 @@ verify_jwt = false
 
 [functions.ghl-backfill]
 verify_jwt = false
+
+[functions.daily-draft-generator]
+verify_jwt = true
+
+[functions.calculate-insights]
+verify_jwt = true

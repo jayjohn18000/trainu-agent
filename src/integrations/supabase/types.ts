@@ -403,6 +403,8 @@ export type Database = {
           contact_id: string
           content: string
           created_at: string | null
+          expires_at: string | null
+          generated_by: string | null
           ghl_delivered_at: string | null
           ghl_message_id: string | null
           ghl_read_at: string | null
@@ -420,6 +422,8 @@ export type Database = {
           contact_id: string
           content: string
           created_at?: string | null
+          expires_at?: string | null
+          generated_by?: string | null
           ghl_delivered_at?: string | null
           ghl_message_id?: string | null
           ghl_read_at?: string | null
@@ -437,6 +441,8 @@ export type Database = {
           contact_id?: string
           content?: string
           created_at?: string | null
+          expires_at?: string | null
+          generated_by?: string | null
           ghl_delivered_at?: string | null
           ghl_message_id?: string | null
           ghl_read_at?: string | null
