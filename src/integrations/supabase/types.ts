@@ -255,6 +255,7 @@ export type Database = {
       }
       ghl_config: {
         Row: {
+          booking_widget_id: string | null
           contact_field_mapping: Json | null
           created_at: string | null
           default_channel: string | null
@@ -266,11 +267,13 @@ export type Database = {
           quiet_hours_end: string | null
           quiet_hours_start: string | null
           sms_enabled: boolean | null
+          templates: Json | null
           trainer_id: string
           updated_at: string | null
           webhook_registered: boolean | null
         }
         Insert: {
+          booking_widget_id?: string | null
           contact_field_mapping?: Json | null
           created_at?: string | null
           default_channel?: string | null
@@ -282,11 +285,13 @@ export type Database = {
           quiet_hours_end?: string | null
           quiet_hours_start?: string | null
           sms_enabled?: boolean | null
+          templates?: Json | null
           trainer_id: string
           updated_at?: string | null
           webhook_registered?: boolean | null
         }
         Update: {
+          booking_widget_id?: string | null
           contact_field_mapping?: Json | null
           created_at?: string | null
           default_channel?: string | null
@@ -298,6 +303,7 @@ export type Database = {
           quiet_hours_end?: string | null
           quiet_hours_start?: string | null
           sms_enabled?: boolean | null
+          templates?: Json | null
           trainer_id?: string
           updated_at?: string | null
           webhook_registered?: boolean | null

@@ -37,7 +37,7 @@ export function ValueMetricsWidget({ queueCount = 0, feedCount = 0 }: ValueMetri
           supabase.from('messages').select('id', { count: 'exact', head: true }).in('status', ['draft']),
           supabase.from('insights').select('id', { count: 'exact', head: true }).gte('risk_score', 75),
           supabase.from('bookings').select('id', { count: 'exact', head: true }).eq('status', 'confirmed').gte('updated_at', isoStart),
-          supabase.from('bookings').select('id', { count: 'exact', head: true }).eq('status', 'rescheduled').gte('updated_at', isoStart),
+          supabase.from('bookings').select('id', { count: 'exact', head: true }).eq('status', 'cancelled').gte('updated_at', isoStart),
         ]);
         setDraftsCount(draftQ.count ?? 0);
         setAtRiskCount(riskQ.count ?? 0);

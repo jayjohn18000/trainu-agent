@@ -13,6 +13,7 @@ import { MessagesWidget } from "@/components/agent/MessagesWidget";
 import { CalendarWidget } from "@/components/agent/CalendarWidget";
 import { AtRiskWidget } from "@/components/agent/AtRiskWidget";
 import { ProgramBuilderCard } from "@/components/agent/ProgramBuilderCard";
+import { DraftCard } from "@/components/agent/DraftCard";
 import { WelcomeModal } from "@/components/onboarding/WelcomeModal";
 import { TourOverlay } from "@/components/onboarding/TourOverlay";
 import { Confetti } from "@/components/effects/Confetti";
@@ -37,6 +38,8 @@ import { AchievementUnlockNotification } from "@/components/ui/AchievementUnlock
 import { Zap, CheckCircle, TrendingUp, Keyboard } from "lucide-react";
 import { analytics } from "@/lib/analytics";
 import { resolveGhlLink } from "@/lib/ghl/links";
+import { getFlags } from "@/lib/flags";
+import { cn } from "@/lib/utils";
 import type { QueueItem } from "@/types/agent";
 
 // Memoized QueueList component for performance
@@ -498,6 +501,7 @@ export default function Today() {
           </div>
         </header>
 
+<<<<<<< HEAD
         {/* WIP Banner */}
         <div className="mb-4 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
           <p className="text-sm text-yellow-700 dark:text-yellow-300">
@@ -515,6 +519,48 @@ export default function Today() {
                   key={insight.id}
                   insight={insight}
                   onViewDraft={(draftId) => navigate(`/queue#${draftId}`)}
+=======
+        {/* New Drafts (Mobile Agent v1) */}
+        {drafts.length > 0 && (
+          <section className="mb-6 space-y-2" aria-label="Pending drafts">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Drafts ({drafts.length})</h2>
+              {selectedIds && selectedIds.size > 0 && getFlags().BULK_APPROVE_ENABLED && (
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="text-xs">{selectedIds.size} selected</Badge>
+                  <Button variant="default" size="sm" onClick={async () => {
+                    try {
+                      await approveMany(Array.from(selectedIds));
+                      clearSelected();
+                      toast({ title: 'Approved', description: 'Selected drafts approved.' });
+                    } catch {
+                      toast({ title: 'Error', description: 'Bulk approve failed.', variant: 'destructive' });
+                    }
+                  }}>Approve Selected</Button>
+                  <Button variant="ghost" size="sm" onClick={clearSelected}>Clear</Button>
+                </div>
+              )}
+            </div>
+            <div className="space-y-2">
+              {drafts.slice(0, 6).map((d) => (
+                <DraftCard
+                  key={d.id}
+                  draft={d}
+                  isSelected={selectedIds?.has(d.id) || false}
+                  onApprove={handleApproveDraft}
+                  onSnooze={async (id) => {
+                    try {
+                      const now = new Date();
+                      const in15 = new Date(now.getTime() + 15 * 60 * 1000).toISOString();
+                      await supabase.from('messages').update({ status: 'queued', scheduled_for: in15 }).eq('id', id);
+                      await fetchDrafts();
+                      toast({ title: 'Snoozed', description: 'Draft deferred for 15 minutes.' });
+                    } catch {
+                      toast({ title: 'Error', description: 'Failed to snooze draft.', variant: 'destructive' });
+                    }
+                  }}
+                  onToggleSelected={toggleSelected}
+>>>>>>> 5041d9a44f4685a77d509231cd3a0693613d31e8
                 />
               ))}
             </div>

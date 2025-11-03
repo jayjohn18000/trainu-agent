@@ -147,7 +147,7 @@ Deno.serve(async (req) => {
             source: 'nlToDrafts', 
             intent: 'general', 
             confidence: confidence - 0.10, 
-            variant: 'casual' 
+            parsed_at: new Date().toISOString(),
           },
         });
       }
