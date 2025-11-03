@@ -1,7 +1,7 @@
 import { useState, useEffect, memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { getFeed, editQueueItem, batchApproveQueueItems } from "@/lib/api/agent";
+import { getFeed } from "@/lib/api/agent";
 import { listDraftsAndQueued, approveMessage, sendNow } from "@/lib/api/messages";
 import { QueueCard } from "@/components/agent/QueueCard";
 import { ActivityFeed } from "@/components/agent/ActivityFeed";
@@ -312,8 +312,11 @@ export default function Today() {
     if (!editingItem) return;
     
     try {
-      // Call API to edit
-      await editQueueItem(editingItem.id, { message: updatedMessage, tone });
+      // Update message content directly
+      await supabase
+        .from("messages")
+        .update({ content: updatedMessage })
+        .eq("id", editingItem.id);
 
       // Award XP and update stats
       await awardXP(50, "Edited message");
@@ -354,18 +357,17 @@ export default function Today() {
     }
 
     try {
-      // Call batch approve API
-      const result = await batchApproveQueueItems(0.8);
+      // Approve all safe items individually
+      await Promise.all(safeItems.map(item => approveMessage(item.id)));
 
       // Award XP for batch efficiency
-      if (safeItems.length >= 3) {
-        await awardXP(75, "Efficiency bonus");
-        analytics.track('xp_earned', { amount: 75, reason: 'Efficiency bonus' });
-      }
+      const totalXP = safeItems.length * 25 + (safeItems.length >= 3 ? 75 : 0);
+      await awardXP(totalXP, `Batch approved ${safeItems.length} messages`);
+      analytics.track('xp_earned', { amount: totalXP, reason: 'Batch approval' });
 
       toast({
-        title: `Approved ${result.approved || safeItems.length} messages`,
-        description: `+${(result.approved || safeItems.length) * 25 + (safeItems.length >= 3 ? 75 : 0)} XP total`,
+        title: `Approved ${safeItems.length} messages`,
+        description: `+${totalXP} XP total`,
       });
     } catch (error) {
       console.error('Failed to batch approve:', error);

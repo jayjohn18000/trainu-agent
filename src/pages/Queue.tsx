@@ -8,31 +8,43 @@ import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useTrainerGamification } from "@/hooks/useTrainerGamification";
 import { ArrowLeft, Zap, CheckCircle, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { listDraftsAndQueued, approveMessage, sendNow, type Message } from "@/lib/api/messages";
 import type { QueueItem } from "@/types/agent";
-import * as agentAPI from "@/lib/api/agent";
-import { isQuietHours } from "@/lib/utils/quietHours";
 
 export default function Queue() {
   const navigate = useNavigate();
-  const [queue, setQueue] = useState<QueueItem[]>([]);
-  const [editingItem, setEditingItem] = useState<QueueItem | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [contacts, setContacts] = useState<Record<string, { first_name: string; last_name?: string }>>({});
+  const [editingItem, setEditingItem] = useState<Message | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const { awardXP } = useTrainerGamification();
 
-  useEffect(() => {
-    loadQueue();
-  }, []);
-
   const loadQueue = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const data = await agentAPI.getQueue();
-      setQueue(data);
+      const data = await listDraftsAndQueued(50);
+      setMessages(data);
+      
+      // Hydrate contact names
+      const uniqueContactIds = [...new Set(data.map(m => m.contact_id))];
+      const { data: contactData } = await supabase
+        .from("contacts")
+        .select("id, first_name, last_name")
+        .in("id", uniqueContactIds);
+      
+      if (contactData) {
+        const contactMap = Object.fromEntries(
+          contactData.map(c => [c.id, { first_name: c.first_name, last_name: c.last_name || "" }])
+        );
+        setContacts(contactMap);
+      }
     } catch (error) {
+      console.error("Failed to load queue:", error);
       toast({
         title: "Error loading queue",
-        description: error instanceof Error ? error.message : "Failed to load queue",
+        description: error instanceof Error ? error.message : "Please try again",
         variant: "destructive",
       });
     } finally {
@@ -40,26 +52,42 @@ export default function Queue() {
     }
   };
 
+  useEffect(() => {
+    loadQueue();
+    
+    // Real-time subscription
+    const channel = supabase
+      .channel("messages-changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "messages" },
+        () => loadQueue()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   const handleApprove = async (id: string) => {
-    const item = queue.find((q) => q.id === id);
-    if (!item) return;
-
     try {
-      await agentAPI.approveQueueItem(id);
-      setQueue((prev) => prev.filter((q) => q.id !== id));
+      const result = await approveMessage(id);
+      setMessages((prev) => prev.filter((item) => item.id !== id));
+      await awardXP(25, "Approved AI draft");
       
-      await awardXP(25, "Approved message");
-
-      const inQuietHoursNow = isQuietHours();
+      const description = result.deferred_by_quiet_hours 
+        ? `Scheduled for ${result.scheduled_for}` 
+        : "Message queued for sending";
+      
       toast({
-        title: "Message approved",
-        description: inQuietHoursNow
-          ? `Queued for delivery (quiet hours: 9 PM - 8 AM CT). +25 XP`
-          : `Draft to ${item.clientName} will be sent. +25 XP`,
+        title: "Approved!",
+        description,
       });
     } catch (error) {
+      console.error("Failed to approve:", error);
       toast({
-        title: "Failed to approve",
+        title: "Approval failed",
         description: error instanceof Error ? error.message : "Please try again",
         variant: "destructive",
       });
@@ -67,36 +95,59 @@ export default function Queue() {
   };
 
   const handleEdit = (id: string) => {
-    const item = queue.find((q) => q.id === id);
-    if (!item) return;
-    setEditingItem(item);
+    const item = messages.find((i) => i.id === id);
+    if (item) setEditingItem(item);
   };
 
-  const handleSaveEdit = async (updatedMessage: string, tone: string) => {
+  const handleSaveEdit = async (id: string, updatedMessage: string, tone: string) => {
     if (!editingItem) return;
-    
     try {
-      await agentAPI.editQueueItem(editingItem.id, { message: updatedMessage, tone });
+      await supabase
+        .from("messages")
+        .update({ content: updatedMessage })
+        .eq("id", id);
       
-      setQueue((prev) =>
-        prev.map((q) =>
-          q.id === editingItem.id
-            ? { ...q, preview: updatedMessage }
-            : q
+      setMessages((prev) =>
+        prev.map((item) =>
+          item.id === id
+            ? { ...item, content: updatedMessage }
+            : item
         )
       );
-
-      await awardXP(50, "Edited message");
-
-      toast({
-        title: "Message updated",
-        description: `Draft updated with ${tone} tone. +50 XP`,
-      });
-
+      await awardXP(50, "Edited AI draft");
       setEditingItem(null);
-    } catch (error) {
       toast({
-        title: "Failed to save edit",
+        title: "Saved!",
+        description: `Your changes have been saved with ${tone} tone.`,
+      });
+    } catch (error) {
+      console.error("Failed to save edit:", error);
+      toast({
+        title: "Save failed",
+        description: error instanceof Error ? error.message : "Please try again",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSendNow = async (id: string) => {
+    try {
+      const result = await sendNow(id);
+      setMessages((prev) => prev.filter((item) => item.id !== id));
+      await awardXP(20, "Sent message immediately");
+      
+      const description = result.deferred 
+        ? `Scheduled for ${result.scheduled_for}` 
+        : "Message sent successfully";
+      
+      toast({
+        title: "Sent!",
+        description,
+      });
+    } catch (error) {
+      console.error("Failed to send:", error);
+      toast({
+        title: "Send failed",
         description: error instanceof Error ? error.message : "Please try again",
         variant: "destructive",
       });
@@ -104,29 +155,31 @@ export default function Queue() {
   };
 
   const handleApproveAllSafe = async () => {
-    const safeItems = queue.filter(item => item.confidence >= 0.8);
-    
-    if (safeItems.length === 0) {
-      toast({
-        title: "No safe items",
-        description: "All items need manual review.",
-      });
-      return;
-    }
-
     try {
-      const result = await agentAPI.batchApproveQueueItems(0.8);
+      const safeMessages = messages.filter((item) => (item.confidence || 0) >= 0.8);
       
-      setQueue((prev) => prev.filter(item => item.confidence < 0.8));
+      if (safeMessages.length === 0) {
+        toast({
+          title: "No safe items",
+          description: "All items need manual review.",
+        });
+        return;
+      }
 
-      const xpAmount = result.approved * 25 + (result.approved >= 3 ? 75 : 0);
-      await awardXP(xpAmount, "Batch approval");
+      await Promise.all(safeMessages.map(msg => approveMessage(msg.id)));
+      
+      setMessages((prev) => prev.filter((item) => (item.confidence || 0) < 0.8));
+      await awardXP(
+        safeMessages.length * 25 + (safeMessages.length >= 3 ? 75 : 0),
+        `Batch approved ${safeMessages.length} messages`
+      );
 
       toast({
-        title: `Approved ${result.approved} messages`,
-        description: `+${xpAmount} XP earned`,
+        title: "Batch approved!",
+        description: `Approved ${safeMessages.length} high-confidence messages.`,
       });
     } catch (error) {
+      console.error("Failed to batch approve:", error);
       toast({
         title: "Batch approval failed",
         description: error instanceof Error ? error.message : "Please try again",
@@ -135,7 +188,7 @@ export default function Queue() {
     }
   };
 
-  const safeItemsCount = queue.filter(item => item.confidence >= 0.8).length;
+  const safeItemsCount = messages.filter((item) => (item.confidence || 0) >= 0.8).length;
 
   return (
     <div className="container mx-auto px-4 md:px-6 py-6 max-w-[1200px]">
@@ -170,7 +223,7 @@ export default function Queue() {
       {/* Stats Bar */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         <Card className="p-4">
-          <div className="text-2xl font-bold">{queue.length}</div>
+          <div className="text-2xl font-bold">{messages.length}</div>
           <div className="text-sm text-muted-foreground">Total in Queue</div>
         </Card>
         <Card className="p-4">
@@ -179,7 +232,7 @@ export default function Queue() {
         </Card>
         <Card className="p-4">
           <div className="text-2xl font-bold text-warning">
-            {queue.filter(item => item.confidence < 0.8).length}
+            {messages.filter(item => (item.confidence || 0) < 0.8).length}
           </div>
           <div className="text-sm text-muted-foreground">Needs Review</div>
         </Card>
@@ -191,7 +244,7 @@ export default function Queue() {
           <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-muted-foreground" />
           <p className="text-muted-foreground">Loading queue...</p>
         </Card>
-      ) : queue.length === 0 ? (
+      ) : messages.length === 0 ? (
         <Card className="p-12 text-center">
           <div className="flex flex-col items-center gap-4">
             <CheckCircle className="h-16 w-16 text-success" />
@@ -208,14 +261,31 @@ export default function Queue() {
         </Card>
       ) : (
         <div className="space-y-4">
-          {queue.map((item) => (
-            <QueueCard
-              key={item.id}
-              item={item}
-              onApprove={() => handleApprove(item.id)}
-              onEdit={() => handleEdit(item.id)}
-            />
-          ))}
+          {messages.map((msg) => {
+            const contact = contacts[msg.contact_id];
+            const clientName = contact 
+              ? `${contact.first_name} ${contact.last_name}`.trim()
+              : "Unknown Client";
+            
+            return (
+              <QueueCard
+                key={msg.id}
+                item={{
+                  id: msg.id,
+                  clientId: msg.contact_id,
+                  clientName,
+                  preview: msg.content,
+                  confidence: msg.confidence || 0.8,
+                  status: msg.status as any,
+                  why: msg.why_reasons || [],
+                  createdAt: msg.created_at,
+                }}
+                onApprove={() => handleApprove(msg.id)}
+                onEdit={() => handleEdit(msg.id)}
+                onSendNow={() => handleSendNow(msg.id)}
+              />
+            );
+          })}
           <ProgramBuilderCard />
         </div>
       )}
@@ -225,7 +295,13 @@ export default function Queue() {
         <MessageEditor
           open={!!editingItem}
           onOpenChange={(open) => !open && setEditingItem(null)}
-          queueItem={editingItem}
+          queueItem={{
+            id: editingItem.id,
+            clientName: contacts[editingItem.contact_id]?.first_name || "Unknown",
+            preview: editingItem.content,
+            confidence: editingItem.confidence || 0.8,
+            why: editingItem.why_reasons || [],
+          }}
           onSave={handleSaveEdit}
         />
       )}

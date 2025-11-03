@@ -1,11 +1,10 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { QueueItem, FeedItem } from "@/types/agent";
+import type { FeedItem } from "@/types/agent";
 
 const AGENT_MOCK = import.meta.env.VITE_AGENT_MOCK === "1";
 
 export async function getAgentStatus() {
   if (AGENT_MOCK) {
-    // Use local fixtures in mock mode
     return {
       state: "active" as const,
       currentAction: "Monitoring 12 clients",
@@ -26,23 +25,6 @@ export async function getAgentStatus() {
   }
 }
 
-export async function getQueue(): Promise<QueueItem[]> {
-  if (AGENT_MOCK) {
-    // Use local fixtures in mock mode
-    const { fixtures } = await import("@/lib/fixtures");
-    return fixtures.queue;
-  }
-
-  try {
-    const { data, error } = await supabase.functions.invoke("agent-queue");
-    if (error) throw error;
-    return data || [];
-  } catch (error) {
-    console.error("Failed to fetch queue:", error);
-    throw new Error("Unable to load queue items. Please refresh the page.");
-  }
-}
-
 export async function getFeed(): Promise<FeedItem[]> {
   if (AGENT_MOCK) {
     // Use local fixtures in mock mode
@@ -60,47 +42,6 @@ export async function getFeed(): Promise<FeedItem[]> {
   }
 }
 
-export async function approveQueueItem(id: string) {
-  try {
-    const { data, error } = await supabase.functions.invoke("queue-management", {
-      body: { action: 'approve', id },
-      method: 'POST',
-    });
-    if (error) throw error;
-    return data;
-  } catch (error) {
-    console.error("Failed to approve item:", error);
-    throw new Error("Unable to approve item. Please try again.");
-  }
-}
-
-export async function editQueueItem(id: string, payload: { message: string; tone?: string }) {
-  try {
-    const { data, error } = await supabase.functions.invoke("queue-management", {
-      body: { action: 'edit', id, message: payload.message, tone: payload.tone },
-      method: 'POST',
-    });
-    if (error) throw error;
-    return data;
-  } catch (error) {
-    console.error("Failed to edit item:", error);
-    throw new Error("Unable to save changes. Please try again.");
-  }
-}
-
-export async function batchApproveQueueItems(minConfidence: number = 0.8) {
-  try {
-    const { data, error } = await supabase.functions.invoke("queue-management", {
-      body: { action: 'batchApprove', minConfidence },
-      method: 'POST',
-    });
-    if (error) throw error;
-    return data;
-  } catch (error) {
-    console.error("Failed to batch approve:", error);
-    throw new Error("Unable to batch approve items. Please try again.");
-  }
-}
 
 export async function updateAgentStatus(state: 'active' | 'paused') {
   try {

@@ -1,3 +1,7 @@
+// DEPRECATED: This edge function is no longer used.
+// The Queue page now queries the messages table directly for better consistency.
+// This function remains for backwards compatibility only.
+
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.76.1'
 
 const corsHeaders = {
