@@ -59,7 +59,8 @@ const QueueCardComponent = ({
     try {
       await onApprove(item.id);
     } finally {
-      // Keep loading state active until parent removes the card
+      setIsApproving(false);
+      setIsSliding(false);
     }
   };
 
@@ -123,15 +124,18 @@ const QueueCardComponent = ({
               REQUIRES APPROVAL
             </Badge>
           )}
-          {inQuietHours && (
-            <Badge variant="secondary" className="text-xs">
-              Will queue (quiet hours)
-            </Badge>
-          )}
-          {/* Quiet hours badge if scheduled in future */}
-          {Boolean((item as any).scheduledFor) && new Date((item as any).scheduledFor) > new Date() && (
+          {Boolean((item as any).scheduledFor) && new Date((item as any).scheduledFor) > new Date() ? (
             <Badge variant="outline" className="text-xs">
-              ⏰ Queued for {new Date((item as any).scheduledFor).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              ⏰ Queued for {new Date((item as any).scheduledFor).toLocaleString([], { 
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit', 
+                minute: '2-digit' 
+              })}
+            </Badge>
+          ) : inQuietHours && (
+            <Badge variant="secondary" className="text-xs">
+              Will send after quiet hours (8 AM)
             </Badge>
           )}
         </div>

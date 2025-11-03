@@ -249,9 +249,15 @@ export default function Today() {
       analytics.track('xp_earned', { amount: 25, reason: 'Approved message' });
 
       if (result?.deferred_by_quiet_hours && result?.scheduled_for) {
+        const scheduledDate = new Date(result.scheduled_for);
         toast({
           title: "Queued for quiet hours",
-          description: `Will send at ${new Date(result.scheduled_for).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+          description: `Will send ${scheduledDate.toLocaleString([], { 
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit', 
+            minute: '2-digit' 
+          })}`,
         });
       } else {
         toast({
