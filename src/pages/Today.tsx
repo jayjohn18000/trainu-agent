@@ -620,24 +620,7 @@ export default function Today() {
                 <ValueMetricsWidget queueCount={queue.length} feedCount={feed.length} />
               )}
             </div>
-            <div className="flex items-center justify-between">
-              <MessagesWidget onOpenMessages={() => setMessagesOpen(true)} />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={async () => {
-                  const { url, disabled, reason } = await resolveGhlLink({ type: 'calendar' });
-                  if (disabled || !url) {
-                    toast({ title: 'GHL calendar unavailable', description: reason || 'Missing configuration', variant: 'destructive' });
-                    return;
-                  }
-                  window.open(url, '_blank');
-                }}
-                aria-label="Open GHL Calendar"
-              >
-                Open GHL Calendar
-              </Button>
-            </div>
+            <MessagesWidget onOpenMessages={() => setMessagesOpen(true)} />
           </section>
         </div>
 
