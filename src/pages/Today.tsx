@@ -543,10 +543,10 @@ export default function Today() {
             {isLoading ? <ActivityFeedSkeleton /> : <ActivityFeed items={feed.slice(0, Math.max(8, queue.length))} />}
           </section>
           
-          {/* Right Column: Calendar + AtRisk */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-4">
-            <CalendarWidget onOpenCalendar={() => setCalendarOpen(true)} />
+          {/* Right Column: AtRisk + Calendar */}
+          <div className="grid grid-cols-1 gap-4">
             <AtRiskWidget />
+            <CalendarWidget onOpenCalendar={() => setCalendarOpen(true)} />
           </div>
         </div>
       </main>
