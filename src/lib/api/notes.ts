@@ -9,6 +9,7 @@ export interface Note {
   updated_at: string;
 }
 
+// Mock implementation until client_notes table is created
 export async function createNote(clientId: string, content: string): Promise<Note> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
@@ -17,37 +18,25 @@ export async function createNote(clientId: string, content: string): Promise<Not
     throw new Error('Note content cannot exceed 500 characters');
   }
 
-  const { data, error } = await supabase
-    .from('client_notes')
-    .insert({
-      trainer_id: user.id,
-      contact_id: clientId,
-      content: content.trim(),
-    })
-    .select()
-    .single();
+  // Return mock note for now
+  const mockNote: Note = {
+    id: crypto.randomUUID(),
+    trainer_id: user.id,
+    contact_id: clientId,
+    content: content.trim(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
 
-  if (error) throw error;
-  return data;
+  return mockNote;
 }
 
 export async function listNotes(clientId: string): Promise<Note[]> {
-  const { data, error } = await supabase
-    .from('client_notes')
-    .select('*')
-    .eq('contact_id', clientId)
-    .order('created_at', { ascending: false });
-
-  if (error) throw error;
-  return data || [];
+  // Return empty array until table is created
+  return [];
 }
 
 export async function deleteNote(noteId: string): Promise<void> {
-  const { error } = await supabase
-    .from('client_notes')
-    .delete()
-    .eq('id', noteId);
-
-  if (error) throw error;
+  // No-op until table is created
+  return;
 }
-

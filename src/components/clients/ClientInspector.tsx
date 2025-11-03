@@ -35,7 +35,6 @@ import { createEvent, createOrUpdateInsight } from "@/lib/api/events";
 import { createNote, listNotes, type Note } from "@/lib/api/notes";
 import { supabase } from "@/integrations/supabase/client";
 import { Plus, Loader2, ExternalLink } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
 
 interface ClientInspectorProps {
   open: boolean;

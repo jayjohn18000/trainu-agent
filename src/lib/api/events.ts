@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 
 export interface Event {
   id: string;
@@ -6,7 +7,7 @@ export interface Event {
   event_type: string;
   entity_type: string;
   entity_id: string;
-  metadata?: Record<string, unknown>;
+  metadata?: Json;
   created_at: string;
 }
 
@@ -29,11 +30,11 @@ export async function createEvent(data: {
   event_type: string;
   entity_type: string;
   entity_id: string;
-  metadata?: Record<string, unknown>;
+  metadata?: Json;
 }): Promise<{ id: string }> {
   const { data: result, error } = await supabase
     .from('events')
-    .insert(data)
+    .insert([data])
     .select('id')
     .single();
 

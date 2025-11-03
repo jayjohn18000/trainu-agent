@@ -57,15 +57,13 @@ export function CalendarModal({ open, onOpenChange }: CalendarModalProps) {
     try {
       const { data, error: fetchError } = await supabase
         .from('ghl_config')
-        .select('booking_widget_id, booking_widget_url')
+        .select('booking_widget_id')
         .single();
 
       if (fetchError) throw fetchError;
 
-      if (data?.booking_widget_url) {
-        setGhlUrl(data.booking_widget_url);
-      } else if (data?.booking_widget_id) {
-        // Construct URL from widget ID if needed
+      if (data?.booking_widget_id) {
+        // Construct URL from widget ID
         setGhlUrl(`https://calendar.appoint.ly/${data.booking_widget_id}`);
       } else {
         setError('No GHL calendar configured');
