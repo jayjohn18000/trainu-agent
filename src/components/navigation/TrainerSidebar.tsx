@@ -147,7 +147,7 @@ export function TrainerSidebar({ collapsed, onToggle }: TrainerSidebarProps) {
               }
 
               if (item.isModal) {
-                const hasGlow = item.label === 'Messages';
+                const hasGlow = item.label === 'Messages' || item.label === 'Calendar';
                 return (
                   <Button
                     key={item.label}
@@ -196,7 +196,7 @@ export function TrainerSidebar({ collapsed, onToggle }: TrainerSidebarProps) {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="w-10 h-10 mx-auto ring-1 ring-blue-500/30 shadow-[0_0_10px_rgba(59,130,246,0.3)]"
+                    className="w-10 h-10 mx-auto"
                     onClick={() => handleNavClick(settingsItem)}
                   >
                     <Settings className="h-5 w-5" />
@@ -209,7 +209,7 @@ export function TrainerSidebar({ collapsed, onToggle }: TrainerSidebarProps) {
             ) : (
               <Button
                 variant="ghost"
-                className="w-full justify-start ring-1 ring-blue-500/30 shadow-[0_0_10px_rgba(59,130,246,0.3)]"
+                className="w-full justify-start"
                 onClick={() => handleNavClick(settingsItem)}
               >
                 <Settings className="h-5 w-5 mr-3" />
