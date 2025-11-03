@@ -43,27 +43,20 @@ import { cn } from "@/lib/utils";
 import type { QueueItem } from "@/types/agent";
 
 // Memoized QueueList component for performance
-const QueueList = memo(({ queue, selectedIndex, onApprove, onEdit, onSendNow }: any) => (
-  <>
-    {queue.slice(0, 3).map((item: any, idx: number) => (
-      <div 
-        key={item.id}
-        className="animate-slide-in-from-left"
-        style={{ animationDelay: `${idx * 50}ms` }}
-      >
-        <QueueCard
-          item={item}
-          onApprove={() => onApprove(item.id)}
-          onEdit={() => onEdit(item.id)}
-          onSendNow={() => onSendNow(item.id)}
-          isSelected={idx === selectedIndex}
-        />
-      </div>
-    ))}
-  </>
-));
+const QueueList = memo(({
+  queue,
+  selectedIndex,
+  onApprove,
+  onEdit,
+  onSendNow
+}: any) => <>
+    {queue.slice(0, 3).map((item: any, idx: number) => <div key={item.id} className="animate-slide-in-from-left" style={{
+    animationDelay: `${idx * 50}ms`
+  }}>
+        <QueueCard item={item} onApprove={() => onApprove(item.id)} onEdit={() => onEdit(item.id)} onSendNow={() => onSendNow(item.id)} isSelected={idx === selectedIndex} />
+      </div>)}
+  </>);
 QueueList.displayName = 'QueueList';
-
 export default function Today() {
   const navigate = useNavigate();
   const [queue, setQueue] = useState<QueueItem[]>([]);
@@ -80,9 +73,17 @@ export default function Today() {
   const [isLoading, setIsLoading] = useState(true);
   const [previousLevel, setPreviousLevel] = useState<number | null>(null);
   const [insights, setInsights] = useState<Awaited<ReturnType<typeof getRecentInsightsWithDrafts>>>([]);
-  const { toast } = useToast();
-  const { awardXP, progress } = useTrainerGamification();
-  const { updateStats, newlyUnlockedAchievements } = useAchievementTracker();
+  const {
+    toast
+  } = useToast();
+  const {
+    awardXP,
+    progress
+  } = useTrainerGamification();
+  const {
+    updateStats,
+    newlyUnlockedAchievements
+  } = useAchievementTracker();
   const isMobile = useIsMobile();
 
   // Load initial data
@@ -98,47 +99,32 @@ export default function Today() {
     }
 
     // Track page view
-    analytics.track('page_viewed', { page: 'today' });
+    analytics.track('page_viewed', {
+      page: 'today'
+    });
   }, []);
 
   // Setup realtime subscriptions
   useEffect(() => {
-    const queueChannel = supabase
-      .channel('queue-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'messages',
-        },
-        () => {
-          loadQueue();
-        }
-      )
-      .subscribe();
-
-    const feedChannel = supabase
-      .channel('feed-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'messages',
-        },
-        () => {
-          loadFeed();
-        }
-      )
-      .subscribe();
-
+    const queueChannel = supabase.channel('queue-changes').on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'messages'
+    }, () => {
+      loadQueue();
+    }).subscribe();
+    const feedChannel = supabase.channel('feed-changes').on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'messages'
+    }, () => {
+      loadFeed();
+    }).subscribe();
     return () => {
       supabase.removeChannel(queueChannel);
       supabase.removeChannel(feedChannel);
     };
   }, []);
-
   const loadInsights = async () => {
     try {
       const data = await getRecentInsightsWithDrafts(5);
@@ -147,32 +133,29 @@ export default function Today() {
       console.error('Failed to load insights:', error);
     }
   };
-
   const loadData = async () => {
     setIsLoading(true);
     await Promise.all([loadQueue(), loadFeed(), loadInsights()]);
     setIsLoading(false);
   };
-
   const loadQueue = async () => {
     try {
       // Fetch messages from messages table, then hydrate client names
       const msgs = await listDraftsAndQueued(20);
-      const contactIds = Array.from(new Set(msgs.map((m) => m.contact_id)));
+      const contactIds = Array.from(new Set(msgs.map(m => m.contact_id)));
       let idToName: Record<string, string> = {};
       if (contactIds.length > 0) {
-        const { data: contacts, error } = await supabase
-          .from("contacts")
-          .select("id, first_name, last_name")
-          .in("id", contactIds);
+        const {
+          data: contacts,
+          error
+        } = await supabase.from("contacts").select("id, first_name, last_name").in("id", contactIds);
         if (error) throw error;
         idToName = (contacts || []).reduce((acc: any, c: any) => {
           acc[c.id] = [c.first_name, c.last_name].filter(Boolean).join(" ") || "Client";
           return acc;
         }, {} as Record<string, string>);
       }
-
-      const mapped = msgs.map((m) => ({
+      const mapped = msgs.map(m => ({
         id: m.id,
         clientId: m.contact_id,
         clientName: idToName[m.contact_id] || "Client",
@@ -181,20 +164,18 @@ export default function Today() {
         why: m.why_reasons || ["AI suggestion"],
         status: "review",
         createdAt: m.created_at,
-        scheduledFor: m.scheduled_for,
+        scheduledFor: m.scheduled_for
       })) as unknown as QueueItem[];
-
       setQueue(mapped);
     } catch (error) {
       console.error('Failed to load queue:', error);
       toast({
         title: "Error",
         description: "Failed to load queue. Please refresh.",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
-
   const loadFeed = async () => {
     try {
       const data = await getFeed();
@@ -212,26 +193,23 @@ export default function Today() {
       setShowConfetti(true);
       setTimeout(() => setShowConfetti(false), 3000);
       setPreviousLevel(progress.level);
-      analytics.track('level_up', { level: progress.level });
+      analytics.track('level_up', {
+        level: progress.level
+      });
     }
   }, [progress.level, previousLevel]);
-
   const handleStartTour = () => {
     setTourActive(true);
   };
-
   const handleCompleteTour = () => {
     setTourActive(false);
   };
-
   const handleSkipTour = () => {
     setTourActive(false);
   };
-
   const handleApprove = async (id: string) => {
-    const item = queue.find((q) => q.id === id);
+    const item = queue.find(q => q.id === id);
     if (!item) return;
-
     try {
       // Approve message via queue-management (messages table)
       const result = await approveMessage(id);
@@ -241,127 +219,136 @@ export default function Today() {
       updateStats({
         messagesSentToday: feed.length + 1,
         messagesSentTotal: feed.length + 1,
-        timeSavedHours: ((feed.length + 1) * 5) / 60,
+        timeSavedHours: (feed.length + 1) * 5 / 60
       });
 
       // Track analytics
-      analytics.track('queue_item_approved', { id });
-      analytics.track('xp_earned', { amount: 25, reason: 'Approved message' });
-
+      analytics.track('queue_item_approved', {
+        id
+      });
+      analytics.track('xp_earned', {
+        amount: 25,
+        reason: 'Approved message'
+      });
       if (result?.deferred_by_quiet_hours && result?.scheduled_for) {
         const scheduledDate = new Date(result.scheduled_for);
         toast({
           title: "Queued for quiet hours",
-          description: `Will send ${scheduledDate.toLocaleString([], { 
+          description: `Will send ${scheduledDate.toLocaleString([], {
             month: 'short',
             day: 'numeric',
-            hour: '2-digit', 
-            minute: '2-digit' 
-          })}`,
+            hour: '2-digit',
+            minute: '2-digit'
+          })}`
         });
       } else {
         toast({
           title: "Message Approved",
-          description: (
-            <div className="flex items-center gap-2">
+          description: <div className="flex items-center gap-2">
               <span>Draft to {item.clientName} sent successfully!</span>
               <span className="text-primary font-semibold flex items-center gap-1">
                 <Zap className="h-3 w-3" aria-hidden="true" />
                 +25 XP
               </span>
             </div>
-          ),
         });
       }
     } catch (error) {
       console.error('Failed to approve:', error);
       const message = (error as any)?.message || '';
       if (typeof message === 'string' && message.includes('429')) {
-        toast({ title: "Frequency cap reached", description: "Try again tomorrow.", variant: "destructive" });
+        toast({
+          title: "Frequency cap reached",
+          description: "Try again tomorrow.",
+          variant: "destructive"
+        });
       } else {
         toast({
           title: "Error",
           description: "Failed to approve message. Please try again.",
-          variant: "destructive",
+          variant: "destructive"
         });
       }
     }
   };
-
-
   const handleEdit = (id: string) => {
-    const item = queue.find((q) => q.id === id);
+    const item = queue.find(q => q.id === id);
     if (!item) return;
     setEditingItem(item);
   };
-
   const handleSendNow = async (id: string) => {
-    const item = queue.find((q) => q.id === id);
+    const item = queue.find(q => q.id === id);
     if (!item) return;
     try {
       const result = await sendNow(id);
       if (result?.deferred && result?.scheduled_for) {
         toast({
           title: "Quiet hours",
-          description: `Deferred to ${new Date(result.scheduled_for).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+          description: `Deferred to ${new Date(result.scheduled_for).toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit'
+          })}`
         });
       } else {
-        toast({ title: "Message sent", description: `Sent to ${item.clientName}` });
+        toast({
+          title: "Message sent",
+          description: `Sent to ${item.clientName}`
+        });
       }
     } catch (error) {
       console.error('Failed to send now:', error);
-      toast({ title: "Error", description: "Failed to send message.", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Failed to send message.",
+        variant: "destructive"
+      });
     }
   };
-
   const handleSaveEdit = async (updatedMessage: string, tone: string) => {
     if (!editingItem) return;
-    
     try {
       // Update message content directly
-      await supabase
-        .from("messages")
-        .update({ content: updatedMessage })
-        .eq("id", editingItem.id);
+      await supabase.from("messages").update({
+        content: updatedMessage
+      }).eq("id", editingItem.id);
 
       // Award XP and update stats
       await awardXP(50, "Edited message");
       updateStats({
-        messagesEdited: (feed.filter(f => f.action === 'sent').length || 0) + 1,
+        messagesEdited: (feed.filter(f => f.action === 'sent').length || 0) + 1
       });
 
       // Track analytics
-      analytics.track('queue_item_edited', { id: editingItem.id });
-      analytics.track('xp_earned', { amount: 50, reason: 'Edited message' });
-
+      analytics.track('queue_item_edited', {
+        id: editingItem.id
+      });
+      analytics.track('xp_earned', {
+        amount: 50,
+        reason: 'Edited message'
+      });
       toast({
         title: "Message updated",
-        description: `Draft updated with ${tone} tone. +50 XP`,
+        description: `Draft updated with ${tone} tone. +50 XP`
       });
-
       setEditingItem(null);
     } catch (error) {
       console.error('Failed to edit:', error);
       toast({
         title: "Error",
         description: "Failed to save changes. Please try again.",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
-
-
   const handleApproveAllSafe = async () => {
     const safeItems = queue.filter(item => item.confidence >= 0.8);
-    
     if (safeItems.length === 0) {
       toast({
         title: "No safe items",
-        description: "All items need manual review.",
+        description: "All items need manual review."
       });
       return;
     }
-
     try {
       // Approve all safe items individually
       await Promise.all(safeItems.map(item => approveMessage(item.id)));
@@ -369,172 +356,129 @@ export default function Today() {
       // Award XP for batch efficiency
       const totalXP = safeItems.length * 25 + (safeItems.length >= 3 ? 75 : 0);
       await awardXP(totalXP, `Batch approved ${safeItems.length} messages`);
-      analytics.track('xp_earned', { amount: totalXP, reason: 'Batch approval' });
-
+      analytics.track('xp_earned', {
+        amount: totalXP,
+        reason: 'Batch approval'
+      });
       toast({
         title: `Approved ${safeItems.length} messages`,
-        description: `+${totalXP} XP total`,
+        description: `+${totalXP} XP total`
       });
     } catch (error) {
       console.error('Failed to batch approve:', error);
       toast({
         title: "Error",
         description: "Failed to approve messages. Please try again.",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
 
   // Keyboard shortcuts
-  useKeyboardShortcuts([
-    {
-      key: "j",
-      callback: () => {
-        if (queue.length > 0) {
-          setSelectedIndex(prev => Math.min(prev + 1, queue.length - 1));
-          analytics.track('shortcut_used', { key: 'j', action: 'next_queue_item' });
-        }
-      },
-      description: "Next item in queue",
+  useKeyboardShortcuts([{
+    key: "j",
+    callback: () => {
+      if (queue.length > 0) {
+        setSelectedIndex(prev => Math.min(prev + 1, queue.length - 1));
+        analytics.track('shortcut_used', {
+          key: 'j',
+          action: 'next_queue_item'
+        });
+      }
     },
-    {
-      key: "k",
-      callback: () => {
-        if (queue.length > 0) {
-          setSelectedIndex(prev => Math.max(prev - 1, 0));
-          analytics.track('shortcut_used', { key: 'k', action: 'previous_queue_item' });
-        }
-      },
-      description: "Previous item in queue",
+    description: "Next item in queue"
+  }, {
+    key: "k",
+    callback: () => {
+      if (queue.length > 0) {
+        setSelectedIndex(prev => Math.max(prev - 1, 0));
+        analytics.track('shortcut_used', {
+          key: 'k',
+          action: 'previous_queue_item'
+        });
+      }
     },
-    {
-      key: "a",
-      callback: () => {
-        if (queue.length > 0 && queue[selectedIndex]) {
-          handleApprove(queue[selectedIndex].id);
-        }
-      },
-      description: "Approve selected item",
+    description: "Previous item in queue"
+  }, {
+    key: "a",
+    callback: () => {
+      if (queue.length > 0 && queue[selectedIndex]) {
+        handleApprove(queue[selectedIndex].id);
+      }
     },
-    {
-      key: "e",
-      callback: () => {
-        if (queue.length > 0 && queue[selectedIndex]) {
-          handleEdit(queue[selectedIndex].id);
-        }
-      },
-      description: "Edit selected item",
+    description: "Approve selected item"
+  }, {
+    key: "e",
+    callback: () => {
+      if (queue.length > 0 && queue[selectedIndex]) {
+        handleEdit(queue[selectedIndex].id);
+      }
     },
-    {
-      key: "A",
-      shift: true,
-      callback: handleApproveAllSafe,
-      description: "Approve all safe items",
-    },
-    {
-      key: "3",
-      callback: () => setMessagesOpen(true),
-      description: "Open messages",
-    },
-    {
-      key: "4",
-      callback: () => setCalendarOpen(true),
-      description: "Open calendar",
-    },
-    {
-      key: "5",
-      callback: () => setSettingsOpen(true),
-      description: "Open settings",
-    },
-    {
-      key: "?",
-      shift: true,
-      callback: () => setShortcutsOpen(true),
-      description: "Show keyboard shortcuts",
-    },
-  ]);
-
+    description: "Edit selected item"
+  }, {
+    key: "A",
+    shift: true,
+    callback: handleApproveAllSafe,
+    description: "Approve all safe items"
+  }, {
+    key: "3",
+    callback: () => setMessagesOpen(true),
+    description: "Open messages"
+  }, {
+    key: "4",
+    callback: () => setCalendarOpen(true),
+    description: "Open calendar"
+  }, {
+    key: "5",
+    callback: () => setSettingsOpen(true),
+    description: "Open settings"
+  }, {
+    key: "?",
+    shift: true,
+    callback: () => setShortcutsOpen(true),
+    description: "Show keyboard shortcuts"
+  }]);
   const safeItemsCount = queue.filter(item => item.confidence >= 0.8).length;
-
-  return (
-    <>
+  return <>
       <TrainerXPNotification />
       
       {/* Achievement Notifications */}
-      {newlyUnlockedAchievements.map((achievement) => (
-        <AchievementUnlockNotification
-          key={achievement.id}
-          achievement={{
-            id: achievement.id,
-            name: achievement.name,
-            description: achievement.description,
-            tier: achievement.tier,
-            icon: achievement.icon,
-          }}
-          show={true}
-        />
-      ))}
+      {newlyUnlockedAchievements.map(achievement => <AchievementUnlockNotification key={achievement.id} achievement={{
+      id: achievement.id,
+      name: achievement.name,
+      description: achievement.description,
+      tier: achievement.tier,
+      icon: achievement.icon
+    }} show={true} />)}
       
-      <main 
-        className="container mx-auto px-4 md:px-6 py-4 md:py-6 max-w-[1600px]"
-        role="main"
-        aria-label="Dashboard"
-      >
+      <main className="container mx-auto px-4 md:px-6 py-4 md:py-6 max-w-[1600px]" role="main" aria-label="Dashboard">
         {/* Header */}
         <header className="flex items-center justify-between mb-6 md:mb-8">
           <h1 className="text-2xl md:text-3xl font-bold">Today</h1>
           <div className="flex items-center gap-2">
-            {!isMobile && (
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={() => setShortcutsOpen(true)}
-                title="Keyboard shortcuts (?)"
-                aria-label="View keyboard shortcuts"
-              >
+            {!isMobile && <Button variant="ghost" size="icon" onClick={() => setShortcutsOpen(true)} title="Keyboard shortcuts (?)" aria-label="View keyboard shortcuts">
                 <Keyboard className="h-4 w-4" />
-              </Button>
-            )}
-            {safeItemsCount > 0 && (
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={handleApproveAllSafe}
-                aria-label={`Approve ${safeItemsCount} safe messages`}
-              >
+              </Button>}
+            {safeItemsCount > 0 && <Button variant="outline" size="sm" onClick={handleApproveAllSafe} aria-label={`Approve ${safeItemsCount} safe messages`}>
                 <Zap className="h-4 w-4 mr-2" aria-hidden="true" />
                 Approve {safeItemsCount} Safe
-              </Button>
-            )}
+              </Button>}
           </div>
         </header>
 
         {/* WIP Banner */}
-        <div className="mb-4 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-          <p className="text-sm text-yellow-700 dark:text-yellow-300">
-            🚧 Demo Mode: This is a preview of the trainer-first experience
-          </p>
-        </div>
+        
 
         {/* Recent Insights */}
-        {insights.length > 0 && (
-          <section className="mb-6 space-y-3" aria-label="Recent insights">
+        {insights.length > 0 && <section className="mb-6 space-y-3" aria-label="Recent insights">
             <h2 className="text-lg font-semibold">Recent Insights</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {insights.map((insight) => (
-                <InsightCard
-                  key={insight.id}
-                  insight={insight}
-                  onViewDraft={(draftId) => navigate(`/queue#${draftId}`)}
-                />
-              ))}
+              {insights.map(insight => <InsightCard key={insight.id} insight={insight} onViewDraft={draftId => navigate(`/queue#${draftId}`)} />)}
             </div>
-          </section>
-        )}
+          </section>}
 
         {/* Queue CTA */}
-        {queue.length > 0 && (
-          <Card className="mb-6 p-6 bg-primary/5 border-primary/20">
+        {queue.length > 0 && <Card className="mb-6 p-6 bg-primary/5 border-primary/20">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="font-semibold">Pending Approvals</h3>
@@ -546,19 +490,13 @@ export default function Today() {
                 Review in Queue →
               </Button>
             </div>
-          </Card>
-        )}
+          </Card>}
 
         {/* 2-Column Layout: Queue + Your Impact/Messages */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 lg:gap-8 mb-6 md:mb-8">
           {/* Queue Column */}
           <section className="space-y-4" aria-label="Message queue">
-            <button
-              onClick={() => window.location.href = '/queue'}
-              className="w-full text-left group"
-              data-tour="queue"
-              aria-label="View full message queue"
-            >
+            <button onClick={() => window.location.href = '/queue'} className="w-full text-left group" data-tour="queue" aria-label="View full message queue">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold group-hover:text-primary transition-colors">
                   Queue {queue.length > 0 && `(${queue.length})`}
@@ -569,39 +507,17 @@ export default function Today() {
               </div>
             </button>
             
-            {isLoading ? (
-              <QueueCardSkeletonList count={3} />
-            ) : queue.length === 0 ? (
-              <EmptyState
-                icon={CheckCircle}
-                title="All Caught Up!"
-                description="Great work! No pending items in your queue. Your agent will notify you when there's something new."
-              />
-            ) : (
-              <>
-                <QueueList 
-                  queue={queue}
-                  selectedIndex={selectedIndex}
-                  onApprove={handleApprove}
-                  onEdit={handleEdit}
-                  onSendNow={handleSendNow}
-                />
-                {queue.length > 3 && (
-                  <button
-                    onClick={() => window.location.href = '/queue'}
-                    className="w-full"
-                    aria-label={`View ${queue.length - 3} more items in queue`}
-                  >
+            {isLoading ? <QueueCardSkeletonList count={3} /> : queue.length === 0 ? <EmptyState icon={CheckCircle} title="All Caught Up!" description="Great work! No pending items in your queue. Your agent will notify you when there's something new." /> : <>
+                <QueueList queue={queue} selectedIndex={selectedIndex} onApprove={handleApprove} onEdit={handleEdit} onSendNow={handleSendNow} />
+                {queue.length > 3 && <button onClick={() => window.location.href = '/queue'} className="w-full" aria-label={`View ${queue.length - 3} more items in queue`}>
                     <Card className="p-4 border-dashed border-2 hover:border-primary/50 transition-colors cursor-pointer text-center">
                       <p className="text-sm text-muted-foreground">
                         +{queue.length - 3} more in queue
                       </p>
                     </Card>
-                  </button>
-                )}
+                  </button>}
                 <ProgramBuilderCard />
-              </>
-            )}
+              </>}
           </section>
 
           {/* Right Column: Overview */}
@@ -614,11 +530,7 @@ export default function Today() {
               </Badge>
             </div>
             <div data-tour="metrics">
-              {isLoading ? (
-                <ValueMetricsSkeleton />
-              ) : (
-                <ValueMetricsWidget queueCount={queue.length} feedCount={feed.length} />
-              )}
+              {isLoading ? <ValueMetricsSkeleton /> : <ValueMetricsWidget queueCount={queue.length} feedCount={feed.length} />}
             </div>
             <MessagesWidget onOpenMessages={() => setMessagesOpen(true)} />
           </section>
@@ -628,13 +540,7 @@ export default function Today() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Left Column: Activity Feed */}
           <section className="border border-border rounded-lg p-4 md:p-6 bg-card/50" data-tour="feed" aria-label="Activity feed">
-            {isLoading ? (
-              <ActivityFeedSkeleton />
-            ) : (
-              <ActivityFeed 
-                items={feed.slice(0, Math.max(8, queue.length))}
-              />
-            )}
+            {isLoading ? <ActivityFeedSkeleton /> : <ActivityFeed items={feed.slice(0, Math.max(8, queue.length))} />}
           </section>
           
           {/* Right Column: Calendar + AtRisk */}
@@ -646,26 +552,11 @@ export default function Today() {
       </main>
 
       {/* Message Editor */}
-      {editingItem && (
-        <MessageEditor
-          open={!!editingItem}
-          onOpenChange={(open) => !open && setEditingItem(null)}
-          queueItem={editingItem}
-          onSave={handleSaveEdit}
-        />
-      )}
+      {editingItem && <MessageEditor open={!!editingItem} onOpenChange={open => !open && setEditingItem(null)} queueItem={editingItem} onSave={handleSaveEdit} />}
 
       {/* Modals */}
-      <WelcomeModal 
-        open={welcomeOpen} 
-        onOpenChange={setWelcomeOpen}
-        onStartTour={handleStartTour}
-      />
-      <TourOverlay 
-        active={tourActive}
-        onComplete={handleCompleteTour}
-        onSkip={handleSkipTour}
-      />
+      <WelcomeModal open={welcomeOpen} onOpenChange={setWelcomeOpen} onStartTour={handleStartTour} />
+      <TourOverlay active={tourActive} onComplete={handleCompleteTour} onSkip={handleSkipTour} />
       <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
       <CalendarModal open={calendarOpen} onOpenChange={setCalendarOpen} />
       <MessagesModal open={messagesOpen} onOpenChange={setMessagesOpen} />
@@ -673,6 +564,5 @@ export default function Today() {
 
       {/* Confetti on level up */}
       <Confetti active={showConfetti} />
-    </>
-  );
+    </>;
 }
