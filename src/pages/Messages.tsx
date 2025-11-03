@@ -7,156 +7,149 @@ import { XPNotification, LevelUpNotification } from "@/components/ui/XPNotificat
 import { AchievementUnlockNotification } from "@/components/ui/AchievementUnlockNotification";
 import { useGamification } from "@/hooks/useGamification";
 import { toast } from "@/hooks/use-toast";
+import { listConversations, listMessagesForContact, sendMessage } from "@/lib/api/messages";
+import { supabase } from "@/integrations/supabase/client";
 
-const mockConversations = [
-  {
-    id: "c1",
-    name: "John Doe",
-    avatar: "https://i.pravatar.cc/150?img=10",
-    lastMessage: "Thanks for the great session today!",
-    timestamp: "2m ago",
-    unread: 2,
-    online: true,
-  },
-  {
-    id: "c2",
-    name: "Sarah Wilson",
-    avatar: "https://i.pravatar.cc/150?img=11",
-    lastMessage: "Can we reschedule tomorrow's session?",
-    timestamp: "1h ago",
-    unread: 1,
-    online: true,
-  },
-  {
-    id: "c3",
-    name: "Mike Johnson",
-    avatar: "https://i.pravatar.cc/150?img=12",
-    lastMessage: "Perfect, see you then!",
-    timestamp: "3h ago",
-    unread: 0,
-    online: false,
-  },
-  {
-    id: "c4",
-    name: "Emily Davis",
-    avatar: "https://i.pravatar.cc/150?img=13",
-    lastMessage: "I've been following the meal plan",
-    timestamp: "Yesterday",
-    unread: 0,
-    online: false,
-  },
-  {
-    id: "c5",
-    name: "Alex Chen",
-    avatar: "https://i.pravatar.cc/150?img=14",
-    lastMessage: "What time works best for you?",
-    timestamp: "2 days ago",
-    unread: 0,
-    online: true,
-  },
-];
+type DisplayMessage = {
+  id: string;
+  senderId: string;
+  content: string;
+  timestamp: string;
+  type: "text";
+};
 
-const mockMessages = {
-  c1: [
-    {
-      id: "m1",
-      senderId: "c1",
-      content: "Hey! Ready for tomorrow's session?",
-      timestamp: "10:30 AM",
-      type: "text" as const,
-    },
-    {
-      id: "m2",
-      senderId: "current",
-      content: "Absolutely! Looking forward to it.",
-      timestamp: "10:32 AM",
-      type: "text" as const,
-    },
-    {
-      id: "m3",
-      senderId: "c1",
-      content: "Great! We'll focus on form for squats tomorrow.",
-      timestamp: "10:35 AM",
-      type: "text" as const,
-    },
-    {
-      id: "m4",
-      senderId: "current",
-      content: "Sounds good. Should I warm up before arriving?",
-      timestamp: "10:36 AM",
-      type: "text" as const,
-    },
-    {
-      id: "m5",
-      senderId: "c1",
-      content: "Yes, 5-10 minutes of light cardio would be perfect. See you tomorrow!",
-      timestamp: "10:38 AM",
-      type: "text" as const,
-    },
-    {
-      id: "m6",
-      senderId: "current",
-      content: "Thanks for the great session today!",
-      timestamp: "2m ago",
-      type: "text" as const,
-    },
-  ],
-  c2: [
-    {
-      id: "m1",
-      senderId: "c2",
-      content: "Hi! I need to talk about tomorrow's session.",
-      timestamp: "1h ago",
-      type: "text" as const,
-    },
-    {
-      id: "m2",
-      senderId: "c2",
-      content: "Can we reschedule tomorrow's session?",
-      timestamp: "1h ago",
-      type: "text" as const,
-    },
-  ],
+type DisplayConversation = {
+  id: string;
+  name: string;
+  avatar: string;
+  lastMessage: string;
+  timestamp: string;
+  unread: number;
+  online: boolean;
 };
 
 export default function Messages() {
   const { grantXP, xpNotification, levelUpNotification, achievementUnlock, clearXPNotification, clearLevelUpNotification, clearAchievementUnlock } = useGamification();
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedConvId, setSelectedConvId] = useState(mockConversations[0].id);
-  const [messages, setMessages] = useState(mockMessages);
+  const [conversations, setConversations] = useState<DisplayConversation[]>([]);
+  const [selectedConvId, setSelectedConvId] = useState<string>("");
+  const [messages, setMessages] = useState<DisplayMessage[]>([]);
 
   useEffect(() => {
-    // Simulate loading conversations
-    const timer = setTimeout(() => setIsLoading(false), 800);
-    return () => clearTimeout(timer);
+    loadConversations();
   }, []);
 
-  const selectedConv = mockConversations.find((c) => c.id === selectedConvId)!;
-  const conversationMessages = messages[selectedConvId as keyof typeof messages] || [];
+  useEffect(() => {
+    if (selectedConvId) {
+      loadMessages(selectedConvId);
+    }
+  }, [selectedConvId]);
 
-  const handleSendMessage = (content: string, file?: File) => {
-    const newMessage = {
-      id: `m${Date.now()}`,
-      senderId: "current",
-      content,
-      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      type: file ? (file.type.startsWith("image/") ? "image" : "file") : "text",
-      fileUrl: file ? URL.createObjectURL(file) : undefined,
-      fileName: file?.name,
-    } as const;
+  // Setup realtime subscriptions
+  useEffect(() => {
+    const channel = supabase
+      .channel('messages-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'messages',
+        },
+        () => {
+          loadConversations();
+          if (selectedConvId) loadMessages(selectedConvId);
+        }
+      )
+      .subscribe();
 
-    setMessages((prev) => ({
-      ...prev,
-      [selectedConvId]: [...(prev[selectedConvId as keyof typeof prev] || []), newMessage],
-    }));
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [selectedConvId]);
 
-    // Award XP for messaging
-    grantXP(10, "Message Sent");
+  const loadConversations = async () => {
+    try {
+      const data = await listConversations();
+      const displayConvos: DisplayConversation[] = data.map(conv => ({
+        id: conv.contact_id,
+        name: conv.contact_name,
+        avatar: `https://i.pravatar.cc/150?u=${conv.contact_id}`,
+        lastMessage: conv.last_message,
+        timestamp: formatTimestamp(conv.last_message_time),
+        unread: conv.unread_count,
+        online: false,
+      }));
+      setConversations(displayConvos);
+      
+      if (displayConvos.length > 0 && !selectedConvId) {
+        setSelectedConvId(displayConvos[0].id);
+      }
+    } catch (error) {
+      console.error('Failed to load conversations:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    toast({
-      title: "Message sent",
-      description: file ? `Sent ${file.name}` : "Your message has been delivered",
-    });
+  const loadMessages = async (contactId: string) => {
+    try {
+      const data = await listMessagesForContact(contactId);
+      const displayMsgs: DisplayMessage[] = data.map(msg => ({
+        id: msg.id,
+        senderId: msg.status === 'draft' ? 'current' : 'contact',
+        content: msg.content,
+        timestamp: new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        type: 'text',
+      }));
+      setMessages(displayMsgs);
+    } catch (error) {
+      console.error('Failed to load messages:', error);
+    }
+  };
+
+  const formatTimestamp = (isoString: string): string => {
+    const date = new Date(isoString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    return date.toLocaleDateString();
+  };
+
+  const selectedConv = conversations.find((c) => c.id === selectedConvId);
+
+  const handleSendMessage = async (content: string) => {
+    if (!selectedConvId) return;
+
+    try {
+      await sendMessage(selectedConvId, content);
+      
+      // Award XP for messaging
+      grantXP(10, "Message Sent");
+
+      toast({
+        title: "Message sent",
+        description: "Your message has been delivered",
+      });
+
+      // Reload messages
+      await loadMessages(selectedConvId);
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      toast({
+        title: "Error",
+        description: "Failed to send message. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -164,7 +157,7 @@ export default function Messages() {
       <div>
         <h1 className="text-3xl font-bold">Messages</h1>
         <p className="text-muted-foreground mt-1">
-          Stay connected with your clients and trainers
+          Stay connected with your clients
         </p>
       </div>
 
@@ -174,7 +167,7 @@ export default function Messages() {
             <ConversationSkeletonList />
           ) : (
             <ConversationList
-              conversations={mockConversations}
+              conversations={conversations}
               selectedId={selectedConvId}
               onSelect={setSelectedConvId}
             />
@@ -182,10 +175,10 @@ export default function Messages() {
         </div>
 
         <div className="lg:col-span-2">
-          {!isLoading && (
+          {!isLoading && selectedConv && (
             <ChatWindow
               conversation={selectedConv}
-              messages={conversationMessages}
+              messages={messages}
               currentUserId="current"
               onSendMessage={handleSendMessage}
             />
