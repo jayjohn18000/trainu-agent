@@ -10,6 +10,7 @@ import { useTrainerGamification } from "@/hooks/useTrainerGamification";
 import { ArrowLeft, Zap, CheckCircle, Loader2 } from "lucide-react";
 import type { QueueItem } from "@/types/agent";
 import * as agentAPI from "@/lib/api/agent";
+import { isQuietHours } from "@/lib/utils/quietHours";
 
 export default function Queue() {
   const navigate = useNavigate();
@@ -49,9 +50,12 @@ export default function Queue() {
       
       await awardXP(25, "Approved message");
 
+      const inQuietHoursNow = isQuietHours();
       toast({
         title: "Message approved",
-        description: `Draft to ${item.clientName} will be sent. +25 XP`,
+        description: inQuietHoursNow
+          ? `Queued for delivery (quiet hours: 9 PM - 8 AM CT). +25 XP`
+          : `Draft to ${item.clientName} will be sent. +25 XP`,
       });
     } catch (error) {
       toast({

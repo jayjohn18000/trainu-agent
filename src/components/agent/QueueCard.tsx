@@ -11,6 +11,7 @@ import { ChevronDown, Check, Edit, Undo, Loader2 } from "lucide-react";
 import { useState, memo } from "react";
 import type { QueueItem } from "@/types/agent";
 import { useTouchGestures } from "@/hooks/useTouchGestures";
+import { isQuietHours, getQuietHoursMessage } from "@/lib/utils/quietHours";
 
 interface QueueCardProps {
   item: QueueItem;
@@ -82,6 +83,7 @@ const QueueCardComponent = ({
   };
 
   const badge = getConfidenceBadge(item.confidence);
+  const inQuietHours = isQuietHours();
 
   return (
     <Card 
@@ -121,6 +123,11 @@ const QueueCardComponent = ({
               REQUIRES APPROVAL
             </Badge>
           )}
+          {inQuietHours && (
+            <Badge variant="secondary" className="text-xs">
+              Will queue (quiet hours)
+            </Badge>
+          )}
           {/* Quiet hours badge if scheduled in future */}
           {Boolean((item as any).scheduledFor) && new Date((item as any).scheduledFor) > new Date() && (
             <Badge variant="outline" className="text-xs">
@@ -155,64 +162,73 @@ const QueueCardComponent = ({
         </Collapsible>
 
         {/* Actions */}
-        <div className="flex gap-2">
-          {showUndo && onUndo ? (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => onUndo(item.id)}
-              className="flex-1"
-              aria-label="Undo message"
-            >
-              <Undo className="h-4 w-4 mr-2" aria-hidden="true" />
-              Undo
-            </Button>
-          ) : (
-            <>
-              {onApprove && (
-                <Button
-                  size="sm"
-                  onClick={handleApprove}
-                  disabled={isApproving}
-                  className="flex-1 btn-press hover:shadow-glow transition-smooth"
-                  data-tour="approve-btn"
-                  aria-label="Approve and send message"
-                >
-                  {isApproving ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" aria-hidden="true" />
-                      Approving...
-                    </>
-                  ) : (
-                    <>
-                      <Check className="h-4 w-4 mr-2" aria-hidden="true" />
-                      Approve
-                    </>
-                  )}
-                </Button>
-              )}
-              {onSendNow && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => onSendNow(item.id)}
-                  aria-label="Send message now"
-                >
-                  Send Now
-                </Button>
-              )}
-              {onEdit && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => onEdit(item.id)}
-                  aria-label="Edit message"
-                >
-                  <Edit className="h-4 w-4 mr-2" aria-hidden="true" />
-                  Edit
-                </Button>
-              )}
-            </>
+        <div className="space-y-2">
+          <div className="flex gap-2">
+            {showUndo && onUndo ? (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => onUndo(item.id)}
+                className="flex-1"
+                aria-label="Undo message"
+              >
+                <Undo className="h-4 w-4 mr-2" aria-hidden="true" />
+                Undo
+              </Button>
+            ) : (
+              <>
+                {onApprove && (
+                  <Button
+                    size="sm"
+                    onClick={handleApprove}
+                    disabled={isApproving}
+                    className="flex-1 btn-press hover:shadow-glow transition-smooth"
+                    data-tour="approve-btn"
+                    aria-label="Approve and send message"
+                  >
+                    {isApproving ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" aria-hidden="true" />
+                        Approving...
+                      </>
+                    ) : (
+                      <>
+                        <Check className="h-4 w-4 mr-2" aria-hidden="true" />
+                        Approve
+                      </>
+                    )}
+                  </Button>
+                )}
+                {onSendNow && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => onSendNow(item.id)}
+                    disabled={inQuietHours}
+                    title={inQuietHours ? getQuietHoursMessage() : undefined}
+                    aria-label="Send message now"
+                  >
+                    Send Now
+                  </Button>
+                )}
+                {onEdit && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => onEdit(item.id)}
+                    aria-label="Edit message"
+                  >
+                    <Edit className="h-4 w-4 mr-2" aria-hidden="true" />
+                    Edit
+                  </Button>
+                )}
+              </>
+            )}
+          </div>
+          {inQuietHours && (
+            <p className="text-xs text-muted-foreground">
+              {getQuietHoursMessage()}
+            </p>
           )}
         </div>
       </CardContent>

@@ -25,9 +25,17 @@ import {
 } from "lucide-react";
 import { TagPicker } from "./TagPicker";
 import { Textarea } from "@/components/ui/textarea";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useDraftsStore } from "@/lib/store/useDraftsStore";
 import { useToast } from "@/hooks/use-toast";
+import { useAuthStore } from "@/lib/store/useAuthStore";
+import { TemplateEditor } from "./TemplateEditor";
+import { createDraftMessage, type Message } from "@/lib/api/messages";
+import { createEvent, createOrUpdateInsight } from "@/lib/api/events";
+import { createNote, listNotes, type Note } from "@/lib/api/notes";
+import { supabase } from "@/integrations/supabase/client";
+import { Plus, Loader2, ExternalLink } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 
 interface ClientInspectorProps {
   open: boolean;
@@ -51,8 +59,140 @@ export function ClientInspector({
   const [isEditingTags, setIsEditingTags] = useState(false);
   const [newNote, setNewNote] = useState("");
   const [savingNote, setSavingNote] = useState(false);
+  const [templateEditorOpen, setTemplateEditorOpen] = useState(false);
+  const [dbMessages, setDbMessages] = useState<Message[]>([]);
+  const [messagesLoading, setMessagesLoading] = useState(false);
+  const [syncingIds, setSyncingIds] = useState<Set<string>>(new Set());
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [notesLoading, setNotesLoading] = useState(false);
   const { addFromQuickAction } = useDraftsStore();
+  const { user } = useAuthStore();
   const { toast } = useToast();
+
+  const fetchMessages = useCallback(async (contactId: string) => {
+    setMessagesLoading(true);
+    try {
+      const { data } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('contact_id', contactId)
+        .order('created_at', { ascending: false });
+      setDbMessages(data || []);
+    } catch (error) {
+      console.error('Failed to fetch messages:', error);
+    } finally {
+      setMessagesLoading(false);
+    }
+  }, []);
+
+  // Fetch messages and notes from database
+  useEffect(() => {
+    if (client?.id) {
+      fetchMessages(client.id);
+      fetchNotes(client.id);
+    }
+  }, [client?.id, fetchMessages]);
+
+  const fetchNotes = useCallback(async (contactId: string) => {
+    setNotesLoading(true);
+    try {
+      const data = await listNotes(contactId);
+      setNotes(data);
+    } catch (error) {
+      console.error('Failed to fetch notes:', error);
+    } finally {
+      setNotesLoading(false);
+    }
+  }, []);
+
+  // Realtime subscription for messages
+  useEffect(() => {
+    if (!client?.id) return;
+
+    const channel = supabase
+      .channel(`messages:${client.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'messages',
+          filter: `contact_id=eq.${client.id}`,
+        },
+        () => {
+          fetchMessages(client.id);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [client?.id, fetchMessages]);
+
+  const handleSaveTemplate = async (content: string) => {
+    if (!client?.id) return;
+
+    // Create optimistic temporary message
+    const tempId = `temp-${Date.now()}`;
+    const optimisticMessage: Message = {
+      id: tempId,
+      trainer_id: '',
+      contact_id: client.id,
+      status: 'draft',
+      content,
+      channel: 'sms',
+      confidence: null,
+      why_reasons: null,
+      scheduled_for: null,
+      created_at: new Date().toISOString(),
+    };
+
+    // Add to messages list with syncing flag
+    setDbMessages((prev) => [optimisticMessage, ...prev]);
+    setSyncingIds((prev) => new Set(prev).add(tempId));
+
+    try {
+      // Save to database
+      const { id } = await createDraftMessage(client.id, content, 'sms');
+      
+      // Replace optimistic message with real data
+      setDbMessages((prev) => 
+        prev.map((msg) => 
+          msg.id === tempId 
+            ? { ...optimisticMessage, id } 
+            : msg
+        )
+      );
+
+      // Remove from syncing set
+      setSyncingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(tempId);
+        return next;
+      });
+
+      toast({
+        title: "Template saved",
+        description: "Draft created and added to queue.",
+      });
+    } catch (error) {
+      // Remove optimistic message on error
+      setDbMessages((prev) => prev.filter((msg) => msg.id !== tempId));
+      setSyncingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(tempId);
+        return next;
+      });
+
+      toast({
+        title: "Error",
+        description: "Failed to save template.",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
 
   if (!client) return null;
 
@@ -64,11 +204,22 @@ export function ClientInspector({
       : "text-red-600";
 
   const handleSaveNote = async () => {
-    if (!newNote.trim()) return;
+    if (!newNote.trim() || newNote.length > 500 || !client) return;
     setSavingNote(true);
     try {
-      await onAddNote(newNote);
+      const note = await createNote(client.id, newNote);
+      setNotes((prev) => [note, ...prev]);
       setNewNote("");
+      toast({
+        title: "Note saved",
+        description: "Note added successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to save note",
+        variant: "destructive",
+      });
     } finally {
       setSavingNote(false);
     }
@@ -121,15 +272,42 @@ export function ClientInspector({
             <Button
               variant="outline"
               onClick={async () => {
+                if (!user || !client) return;
                 try {
-                  await addFromQuickAction({
-                    client_id: client.id,
-                    channel: "sms",
-                    body: `Hey ${client.name.split(' ')[0]}, quick check-in — how did your last workout go?`
+                  const messageContent = `Hey ${client.name.split(' ')[0]}, quick check-in — how did your last workout go?`;
+                  
+                  // 1. Create event
+                  await createEvent({
+                    trainer_id: user.id,
+                    event_type: 'check_in',
+                    entity_type: 'contact',
+                    entity_id: client.id,
+                    metadata: { action: 'check_in' },
                   });
-                  toast({ title: "Draft created", description: "Check-in message added to Today." });
+
+                  // 2. Create/update insight
+                  await createOrUpdateInsight({
+                    trainer_id: user.id,
+                    contact_id: client.id,
+                    risk_score: Math.max(0, client.risk - 5), // Slight improvement
+                    last_activity_at: new Date().toISOString(),
+                  });
+
+                  // 3. Create draft
+                  const { id: draftId } = await createDraftMessage(client.id, messageContent, 'sms');
+
+                  toast({ 
+                    title: "Check-in created", 
+                    description: "Event, insight, and draft created. Open draft in Queue.",
+                    action: (
+                      <Button size="sm" variant="outline" onClick={() => window.location.href = '/queue'}>
+                        <ExternalLink className="h-3 w-3 mr-1" />
+                        Queue
+                      </Button>
+                    ),
+                  });
                 } catch (e) {
-                  toast({ title: "Error", description: "Failed to create draft.", variant: "destructive" });
+                  toast({ title: "Error", description: "Failed to create check-in.", variant: "destructive" });
                 }
               }}
             >
@@ -138,17 +316,44 @@ export function ClientInspector({
             <Button
               variant="outline"
               onClick={async () => {
+                if (!user || !client) return;
                 try {
                   const when = client.nextSession ? new Date(client.nextSession) : null;
                   const whenStr = when ? when.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'your next session';
-                  await addFromQuickAction({
-                    client_id: client.id,
-                    channel: "sms",
-                    body: `Hi ${client.name.split(' ')[0]}, can you confirm ${whenStr}? Reply YES to confirm or NO to reschedule.`
+                  const messageContent = `Hi ${client.name.split(' ')[0]}, can you confirm ${whenStr}? Reply YES to confirm or NO to reschedule.`;
+                  
+                  // 1. Create event
+                  await createEvent({
+                    trainer_id: user.id,
+                    event_type: 'confirm_session',
+                    entity_type: 'contact',
+                    entity_id: client.id,
+                    metadata: { action: 'confirm', session_time: when?.toISOString() },
                   });
-                  toast({ title: "Draft created", description: "Confirm session message added to Today." });
+
+                  // 2. Create/update insight
+                  await createOrUpdateInsight({
+                    trainer_id: user.id,
+                    contact_id: client.id,
+                    risk_score: Math.max(0, client.risk - 3),
+                    last_activity_at: new Date().toISOString(),
+                  });
+
+                  // 3. Create draft
+                  await createDraftMessage(client.id, messageContent, 'sms');
+
+                  toast({ 
+                    title: "Confirm message created", 
+                    description: "Event, insight, and draft created. Open draft in Queue.",
+                    action: (
+                      <Button size="sm" variant="outline" onClick={() => window.location.href = '/queue'}>
+                        <ExternalLink className="h-3 w-3 mr-1" />
+                        Queue
+                      </Button>
+                    ),
+                  });
                 } catch (e) {
-                  toast({ title: "Error", description: "Failed to create draft.", variant: "destructive" });
+                  toast({ title: "Error", description: "Failed to create confirm message.", variant: "destructive" });
                 }
               }}
             >
@@ -157,15 +362,42 @@ export function ClientInspector({
             <Button
               variant="outline"
               onClick={async () => {
+                if (!user || !client) return;
                 try {
-                  await addFromQuickAction({
-                    client_id: client.id,
-                    channel: "sms",
-                    body: `Hey ${client.name.split(' ')[0]}, missed you last time. Everything okay? I can help you get back on track — want to pick a new time?`
+                  const messageContent = `Hey ${client.name.split(' ')[0]}, missed you last time. Everything okay? I can help you get back on track — want to pick a new time?`;
+                  
+                  // 1. Create event
+                  await createEvent({
+                    trainer_id: user.id,
+                    event_type: 'recover_no_show',
+                    entity_type: 'contact',
+                    entity_id: client.id,
+                    metadata: { action: 'recover_no_show' },
                   });
-                  toast({ title: "Draft created", description: "Recover no-show message added to Today." });
+
+                  // 2. Create/update insight (increase risk for no-show)
+                  await createOrUpdateInsight({
+                    trainer_id: user.id,
+                    contact_id: client.id,
+                    risk_score: Math.min(100, client.risk + 10),
+                    last_activity_at: new Date().toISOString(),
+                  });
+
+                  // 3. Create draft
+                  await createDraftMessage(client.id, messageContent, 'sms');
+
+                  toast({ 
+                    title: "Recover no-show created", 
+                    description: "Event, insight, and draft created. Open draft in Queue.",
+                    action: (
+                      <Button size="sm" variant="outline" onClick={() => window.location.href = '/queue'}>
+                        <ExternalLink className="h-3 w-3 mr-1" />
+                        Queue
+                      </Button>
+                    ),
+                  });
                 } catch (e) {
-                  toast({ title: "Error", description: "Failed to create draft.", variant: "destructive" });
+                  toast({ title: "Error", description: "Failed to create recover message.", variant: "destructive" });
                 }
               }}
             >
@@ -324,23 +556,50 @@ export function ClientInspector({
             </TabsContent>
 
             <TabsContent value="messages" className="space-y-3 mt-4">
-              {client.messages.length > 0 ? (
-                client.messages.map((message) => (
+              <Button
+                variant="outline"
+                onClick={() => setTemplateEditorOpen(true)}
+                className="w-full"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                New Template
+              </Button>
+
+              {messagesLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : dbMessages.length > 0 ? (
+                dbMessages.map((message) => (
                   <Card key={message.id} className="p-4">
                     <div className="flex items-start gap-3">
-                      <div
-                        className={`h-8 w-8 rounded-full flex items-center justify-center ${
-                          message.direction === "in"
-                            ? "bg-blue-100 text-blue-600"
-                            : "bg-gray-100 text-gray-600"
-                        }`}
-                      >
+                      <div className="h-8 w-8 rounded-full flex items-center justify-center bg-primary/10 text-primary">
                         <MessageSquare className="h-4 w-4" />
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm">{message.preview}</p>
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge
+                            variant={
+                              message.status === 'draft'
+                                ? 'secondary'
+                                : message.status === 'queued'
+                                ? 'default'
+                                : message.status === 'sent'
+                                ? 'default'
+                                : 'outline'
+                            }
+                          >
+                            {message.status}
+                          </Badge>
+                          {syncingIds.has(message.id) && (
+                            <Badge variant="outline" className="animate-pulse">
+                              syncing...
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm">{message.content}</p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          {formatDistanceToNow(new Date(message.time), {
+                          {formatDistanceToNow(new Date(message.created_at), {
                             addSuffix: true,
                           })}
                         </p>
@@ -350,7 +609,7 @@ export function ClientInspector({
                 ))
               ) : (
                 <p className="text-center text-muted-foreground py-8">
-                  No messages yet
+                  No messages yet. Create a template to get started.
                 </p>
               )}
             </TabsContent>
@@ -361,31 +620,75 @@ export function ClientInspector({
                   <FileText className="h-4 w-4" />
                   Add Note
                 </h3>
-                <Textarea
-                  placeholder="Write a note about this client..."
-                  value={newNote}
-                  onChange={(e) => setNewNote(e.target.value)}
-                  rows={3}
-                />
-                <Button
-                  className="mt-3 w-full"
-                  onClick={handleSaveNote}
-                  disabled={!newNote.trim() || savingNote}
-                >
-                  {savingNote ? "Saving..." : "Save Note"}
-                </Button>
+                <div className="space-y-2">
+                  <Textarea
+                    placeholder="Write a note about this client..."
+                    value={newNote}
+                    onChange={(e) => setNewNote(e.target.value)}
+                    rows={4}
+                    className="resize-none"
+                  />
+                  <div className="flex items-center justify-between">
+                    <span
+                      className={`text-xs ${
+                        newNote.length > 500
+                          ? "text-red-600"
+                          : newNote.length >= 450
+                          ? "text-yellow-600"
+                          : "text-muted-foreground"
+                      }`}
+                    >
+                      {newNote.length}/500
+                    </span>
+                  </div>
+                  <Button
+                    className="w-full"
+                    onClick={handleSaveNote}
+                    disabled={!newNote.trim() || newNote.length > 500 || savingNote}
+                  >
+                    {savingNote ? "Saving..." : "Save Note"}
+                  </Button>
+                </div>
               </Card>
 
-              {client.notes && (
-                <Card className="p-4">
-                  <h3 className="font-semibold mb-2">Current Notes</h3>
-                  <p className="text-sm whitespace-pre-wrap">{client.notes}</p>
-                </Card>
+              {notesLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : notes.length > 0 ? (
+                <div className="space-y-3">
+                  <h3 className="font-semibold">Previous Notes</h3>
+                  {notes.map((note) => (
+                    <Card key={note.id} className="p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <span>Added by {user?.email?.split('@')[0] || 'Trainer'}</span>
+                          <span>•</span>
+                          <span>{formatDistanceToNow(new Date(note.created_at), { addSuffix: true })}</span>
+                        </div>
+                      </div>
+                      <p className="text-sm whitespace-pre-wrap">{note.content}</p>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-center text-muted-foreground py-8">
+                  No notes yet. Add your first note above.
+                </p>
               )}
             </TabsContent>
           </Tabs>
         </div>
       </SheetContent>
+
+      {/* Template Editor */}
+      <TemplateEditor
+        clientId={client.id}
+        clientName={client.name}
+        open={templateEditorOpen}
+        onOpenChange={setTemplateEditorOpen}
+        onSave={handleSaveTemplate}
+      />
     </Sheet>
   );
 }

@@ -60,14 +60,21 @@ export function TrainerSidebar({ collapsed, onToggle }: TrainerSidebarProps) {
             {!collapsed && (
               <h1 className="text-lg font-bold">TrainU Agent</h1>
             )}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onToggle}
-              className={cn("h-8 w-8", collapsed && "mx-auto")}
-            >
-              {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-            </Button>
+            <Tooltip delayDuration={0}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onToggle}
+                  className={cn("h-8 w-8", collapsed && "mx-auto")}
+                >
+                  {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                Collapse navigation
+              </TooltipContent>
+            </Tooltip>
           </div>
 
           {/* Agent Status */}

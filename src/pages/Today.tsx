@@ -1,10 +1,13 @@
 import { useState, useEffect, memo } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getFeed, editQueueItem, batchApproveQueueItems } from "@/lib/api/agent";
 import { listDraftsAndQueued, approveMessage, sendNow } from "@/lib/api/messages";
 import { QueueCard } from "@/components/agent/QueueCard";
 import { ActivityFeed } from "@/components/agent/ActivityFeed";
 import { MessageEditor } from "@/components/agent/MessageEditor";
+import { InsightCard } from "@/components/agent/InsightCard";
+import { getRecentInsightsWithDrafts } from "@/lib/api/events";
 import { ValueMetricsWidget } from "@/components/agent/ValueMetricsWidget";
 import { MessagesWidget } from "@/components/agent/MessagesWidget";
 import { CalendarWidget } from "@/components/agent/CalendarWidget";
@@ -29,14 +32,11 @@ import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useTrainerGamification } from "@/hooks/useTrainerGamification";
 import { useAchievementTracker } from "@/hooks/useAchievementTracker";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useTouchGestures } from "@/hooks/useTouchGestures";
 import { TrainerXPNotification } from "@/components/gamification/TrainerXPNotification";
 import { AchievementUnlockNotification } from "@/components/ui/AchievementUnlockNotification";
 import { Zap, CheckCircle, TrendingUp, Keyboard } from "lucide-react";
 import { analytics } from "@/lib/analytics";
-import { useDraftsStore } from "@/lib/store/useDraftsStore";
 import { resolveGhlLink } from "@/lib/ghl/links";
-import { getFlags } from "@/lib/flags";
 import type { QueueItem } from "@/types/agent";
 
 // Memoized QueueList component for performance
@@ -62,6 +62,7 @@ const QueueList = memo(({ queue, selectedIndex, onApprove, onEdit, onSendNow }: 
 QueueList.displayName = 'QueueList';
 
 export default function Today() {
+  const navigate = useNavigate();
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [feed, setFeed] = useState<any[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -75,17 +76,16 @@ export default function Today() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [previousLevel, setPreviousLevel] = useState<number | null>(null);
+  const [insights, setInsights] = useState<Awaited<ReturnType<typeof getRecentInsightsWithDrafts>>>([]);
   const { toast } = useToast();
   const { awardXP, progress } = useTrainerGamification();
   const { updateStats, newlyUnlockedAchievements } = useAchievementTracker();
   const isMobile = useIsMobile();
-  const { items: drafts, fetch: fetchDrafts, approveOne: approveDraft, approveMany, selectedIds, toggleSelected, clearSelected } = useDraftsStore();
 
   // Load initial data
   useEffect(() => {
     loadData();
-    fetchDrafts();
-  }, [fetchDrafts]);
+  }, []);
 
   // Check if first visit
   useEffect(() => {
@@ -136,9 +136,18 @@ export default function Today() {
     };
   }, []);
 
+  const loadInsights = async () => {
+    try {
+      const data = await getRecentInsightsWithDrafts(5);
+      setInsights(data);
+    } catch (error) {
+      console.error('Failed to load insights:', error);
+    }
+  };
+
   const loadData = async () => {
     setIsLoading(true);
-    await Promise.all([loadQueue(), loadFeed()]);
+    await Promise.all([loadQueue(), loadFeed(), loadInsights()]);
     setIsLoading(false);
   };
 
@@ -270,14 +279,6 @@ export default function Today() {
     }
   };
 
-  const handleApproveDraft = async (id: string) => {
-    try {
-      await approveDraft(id);
-      toast({ title: "Approved", description: "Draft scheduled or sent." });
-    } catch (e) {
-      toast({ title: "Error", description: "Failed to approve draft.", variant: "destructive" });
-    }
-  };
 
   const handleEdit = (id: string) => {
     const item = queue.find((q) => q.id === id);
@@ -497,97 +498,44 @@ export default function Today() {
           </div>
         </header>
 
-        {/* New Drafts (Mobile Agent v1) */}
-        {drafts.length > 0 && (
-          <section className="mb-6 space-y-2" aria-label="Pending drafts">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Drafts ({drafts.length})</h2>
-              {selectedIds && selectedIds.size > 0 && getFlags().BULK_APPROVE_ENABLED && (
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="text-xs">{selectedIds.size} selected</Badge>
-                  <Button variant="default" size="sm" onClick={async () => {
-                    try {
-                      await approveMany(Array.from(selectedIds));
-                      clearSelected();
-                      toast({ title: 'Approved', description: 'Selected drafts approved.' });
-                    } catch {
-                      toast({ title: 'Error', description: 'Bulk approve failed.', variant: 'destructive' });
-                    }
-                  }}>Approve Selected</Button>
-                  <Button variant="ghost" size="sm" onClick={clearSelected}>Clear</Button>
-                </div>
-              )}
-            </div>
-            <div className="space-y-2">
-              {drafts.slice(0, 6).map((d) => {
-                const { handlers, swipeDirection, swipeProgress } = useTouchGestures({
-                  onSwipeRight: () => handleApproveDraft(d.id),
-                  onSwipeLeft: async () => {
-                    try {
-                      const now = new Date();
-                      const in15 = new Date(now.getTime() + 15 * 60 * 1000).toISOString();
-                      await supabase.from('drafts').update({ status: 'scheduled', scheduled_at: in15 }).eq('id', d.id);
-                      await fetchDrafts();
-                      toast({ title: 'Snoozed', description: 'Draft deferred for 15 minutes.' });
-                    } catch {
-                      toast({ title: 'Error', description: 'Failed to snooze draft.', variant: 'destructive' });
-                    }
-                  },
-                  threshold: 40,
-                });
+        {/* WIP Banner */}
+        <div className="mb-4 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+          <p className="text-sm text-yellow-700 dark:text-yellow-300">
+            🚧 Demo Mode: This is a preview of the trainer-first experience
+          </p>
+        </div>
 
-                let pressTimer: any;
-                const startPress = () => { pressTimer = setTimeout(() => toggleSelected(d.id), 450); };
-                const endPress = () => { clearTimeout(pressTimer); };
-                const isSelected = selectedIds?.has(d.id);
-
-                return (
-                  <Card
-                    key={d.id}
-                    className={cn(
-                      "p-3 transition-transform",
-                      isSelected && "border-primary ring-1 ring-primary/30"
-                    )}
-                    style={{ transform: swipeProgress && swipeDirection ? `translateX(${swipeDirection === 'right' ? swipeProgress * 24 : -swipeProgress * 24}px)` : undefined }}
-                    {...handlers as any}
-                    onMouseDown={startPress}
-                    onMouseUp={endPress}
-                    onMouseLeave={endPress}
-                    onTouchStart={(e) => { startPress(); (handlers as any).onTouchStart?.(e); }}
-                    onTouchEnd={(e) => { endPress(); (handlers as any).onTouchEnd?.(e); }}
-                    onTouchMove={(e) => { (handlers as any).onTouchMove?.(e); }}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="text-sm text-foreground">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-[10px]">{d.status === 'scheduled' ? 'Scheduled' : 'Pending'}</Badge>
-                          {d.scheduled_at && (
-                            <span className="text-xs text-muted-foreground">{new Date(d.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                          )}
-                          {isSelected && <Badge className="text-[10px]" variant="secondary">Selected</Badge>}
-                        </div>
-                        <div className="mt-1">{d.body}</div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm" onClick={async () => {
-                          try {
-                            const now = new Date();
-                            const in15 = new Date(now.getTime() + 15 * 60 * 1000).toISOString();
-                            await supabase.from('drafts').update({ status: 'scheduled', scheduled_at: in15 }).eq('id', d.id);
-                            await fetchDrafts();
-                            toast({ title: 'Snoozed', description: 'Draft deferred for 15 minutes.' });
-                          } catch {
-                            toast({ title: 'Error', description: 'Failed to snooze draft.', variant: 'destructive' });
-                          }
-                        }}>Snooze</Button>
-                        <Button variant="default" size="sm" onClick={() => handleApproveDraft(d.id)}>Approve</Button>
-                      </div>
-                    </div>
-                  </Card>
-                );
-              })}
+        {/* Recent Insights */}
+        {insights.length > 0 && (
+          <section className="mb-6 space-y-3" aria-label="Recent insights">
+            <h2 className="text-lg font-semibold">Recent Insights</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {insights.map((insight) => (
+                <InsightCard
+                  key={insight.id}
+                  insight={insight}
+                  onViewDraft={(draftId) => navigate(`/queue#${draftId}`)}
+                />
+              ))}
             </div>
           </section>
+        )}
+
+        {/* Queue CTA */}
+        {queue.length > 0 && (
+          <Card className="mb-6 p-6 bg-primary/5 border-primary/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold">Pending Approvals</h3>
+                <p className="text-sm text-muted-foreground">
+                  {queue.length} message{queue.length > 1 ? 's' : ''} waiting for review
+                </p>
+              </div>
+              <Button onClick={() => navigate('/queue')}>
+                Review in Queue →
+              </Button>
+            </div>
+          </Card>
         )}
 
         {/* 2-Column Layout: Queue + Your Impact/Messages */}

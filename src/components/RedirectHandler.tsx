@@ -20,6 +20,9 @@ const redirectRules: RedirectRule[] = [
   { from: "/dashboard/progress", type: "410" },
   { from: "/dashboard/programs", type: "410" },
   { from: "/book", type: "410" },
+  { from: "/store", type: "410" },
+  { from: "/community/groups", type: "410" },
+  { from: "/events", type: "410" },
 ];
 
 export function RedirectHandler() {

@@ -1,9 +1,11 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Calendar as CalendarIcon, Clock, Plus } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Plus, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
+import { Loader2 } from "lucide-react";
 
 interface CalendarModalProps {
   open: boolean;
@@ -39,7 +41,42 @@ const mockSessions = [
 ];
 
 export function CalendarModal({ open, onOpenChange }: CalendarModalProps) {
-  const [sessions] = useState(mockSessions);
+  const [ghlUrl, setGhlUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (open) {
+      fetchGhlConfig();
+    }
+  }, [open]);
+
+  const fetchGhlConfig = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { data, error: fetchError } = await supabase
+        .from('ghl_config')
+        .select('booking_widget_id, booking_widget_url')
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      if (data?.booking_widget_url) {
+        setGhlUrl(data.booking_widget_url);
+      } else if (data?.booking_widget_id) {
+        // Construct URL from widget ID if needed
+        setGhlUrl(`https://calendar.appoint.ly/${data.booking_widget_id}`);
+      } else {
+        setError('No GHL calendar configured');
+      }
+    } catch (err) {
+      console.error('Failed to load GHL config:', err);
+      setError('Failed to load calendar configuration');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleBookSession = () => {
     onOpenChange(false);
@@ -60,63 +97,37 @@ export function CalendarModal({ open, onOpenChange }: CalendarModalProps) {
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="text-sm text-muted-foreground">
-            Next 7 days
-          </div>
-
-          {sessions.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <CalendarIcon className="h-12 w-12 mx-auto mb-3 opacity-50" />
-              <p>No upcoming sessions</p>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : error || !ghlUrl ? (
+            <div className="text-center py-12 space-y-4">
+              <CalendarIcon className="h-12 w-12 mx-auto opacity-50 text-muted-foreground" />
+              <div>
+                <p className="text-muted-foreground mb-4">
+                  Can't load GHL calendar
+                </p>
+                {ghlUrl && (
+                  <Button 
+                    variant="outline" 
+                    onClick={() => window.open(ghlUrl, '_blank')}
+                    className="gap-2"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    Open in new tab
+                  </Button>
+                )}
+              </div>
             </div>
           ) : (
-            <div className="space-y-3">
-              {sessions.map((session) => (
-                <div
-                  key={session.id}
-                  className="p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="font-semibold">{session.clientName}</p>
-                        <Badge variant="outline" className="text-xs">
-                          {session.type}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          <span>{session.duration}m</span>
-                        </div>
-                        <span>
-                          {formatDistanceToNow(session.time, { addSuffix: true })}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium">
-                        {session.time.toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {session.time.toLocaleDateString([], {
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <iframe
+              src={ghlUrl}
+              className="w-full h-[600px] border-0 rounded-lg"
+              title="GHL Calendar"
+              sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+            />
           )}
-
-          <Button variant="outline" className="w-full" onClick={() => onOpenChange(false)}>
-            View Full Calendar
-          </Button>
         </div>
       </DialogContent>
     </Dialog>

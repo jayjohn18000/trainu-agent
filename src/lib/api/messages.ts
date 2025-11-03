@@ -16,10 +16,10 @@ export interface Message {
 export async function listDraftsAndQueued(limit = 20): Promise<Message[]> {
   const { data, error } = await supabase
     .from("messages")
-    .select("id, trainer_id, contact_id, status, content, channel, confidence, why_reasons, scheduled_for, created_at")
+    .select("id, trainer_id, contact_id, status, content, channel, confidence, why_reasons, scheduled_for, created_at, updated_at")
     .in("status", ["draft", "queued"])
+    .order("updated_at", { ascending: false })
     .order("confidence", { ascending: false })
-    .order("created_at", { ascending: true })
     .limit(limit);
   if (error) throw error;
   return data ?? [];
@@ -39,6 +39,30 @@ export async function sendNow(messageId: string) {
   });
   if (error) throw error;
   return data as { sent?: boolean; deferred?: boolean; scheduled_for?: string };
+}
+
+export async function createDraftMessage(
+  contactId: string,
+  content: string,
+  channel: 'sms' | 'email' | 'both' = 'sms'
+): Promise<{ id: string }> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  const { data, error } = await supabase
+    .from('messages')
+    .insert({
+      trainer_id: user.id,
+      contact_id: contactId,
+      content,
+      channel,
+      status: 'draft',
+    })
+    .select('id')
+    .single();
+
+  if (error) throw error;
+  return data;
 }
 
 

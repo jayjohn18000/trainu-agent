@@ -4,6 +4,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { UnifiedLayout } from "@/components/layouts/UnifiedLayout";
 import { ErrorBoundary } from "@/components/system/ErrorBoundary";
 import { RedirectHandler } from "@/components/RedirectHandler";
+import { ModalRouteHandler } from "@/components/navigation/ModalRouteHandler";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Loader2 } from "lucide-react";
 import { useAuthStore } from "@/lib/store/useAuthStore";
@@ -84,7 +85,12 @@ export default function App() {
               <Route path="/today" element={<Today />} />
               <Route path="/queue" element={<Queue />} />
               <Route path="/clients" element={<Clients />} />
+              <Route path="/programs" element={<Programs />} />
               <Route path="/growth" element={<Growth />} />
+              {/* Modal route handler for legacy routes */}
+              <Route path="/messages" element={<ModalRouteHandler />} />
+              <Route path="/calendar" element={<ModalRouteHandler />} />
+              <Route path="/settings" element={<ModalRouteHandler />} />
             </Route>
 
             {/* Protected client routes - tab-based layout */}
@@ -93,14 +99,14 @@ export default function App() {
               <Route path="/workout" element={<WorkoutLogger />} />
               <Route path="/progress" element={<Progress />} />
               <Route path="/challenges" element={<Challenges />} />
-              <Route path="/programs" element={<Programs />} />
-              <Route path="/community" element={<Community />} />
-              <Route path="/events" element={<Events />} />
-              <Route path="/community/events" element={<CommunityEvents />} />
-              <Route path="/events/:id" element={<EventDetail />} />
-              <Route path="/community/people" element={<CommunityPeople />} />
-              <Route path="/community/groups" element={<CommunityGroups />} />
-              <Route path="/store" element={<Store />} />
+              {/* Legacy routes hidden for demo */}
+              {/* <Route path="/community" element={<Community />} /> */}
+              {/* <Route path="/events" element={<Events />} /> */}
+              {/* <Route path="/community/events" element={<CommunityEvents />} /> */}
+              {/* <Route path="/events/:id" element={<EventDetail />} /> */}
+              {/* <Route path="/community/people" element={<CommunityPeople />} /> */}
+              {/* <Route path="/community/groups" element={<CommunityGroups />} /> */}
+              {/* <Route path="/store" element={<Store />} /> */}
             </Route>
 
             {/* Admin & Discovery routes - tab-based layout */}
@@ -118,9 +124,7 @@ export default function App() {
             <Route path="/dashboard/client" element={<Navigate to="/me" replace />} />
             <Route path="/dashboard/clients" element={<Navigate to="/clients" replace />} />
             <Route path="/inbox" element={<Navigate to="/today" replace />} />
-            <Route path="/calendar" element={<Navigate to="/today" replace />} />
-            <Route path="/messages" element={<Navigate to="/today" replace />} />
-            <Route path="/settings" element={<Navigate to="/today" replace />} />
+            {/* /calendar, /messages, /settings now handled by ModalRouteHandler */}
 
             {/* Error routes */}
             <Route path="/410" element={<Gone410 />} />

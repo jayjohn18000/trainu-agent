@@ -28,7 +28,8 @@ const getMainTabs = (userRole?: string) => {
   const tabs: { value: MainTab; label: string; icon: typeof Home; roles?: string[] }[] = [
     { value: "home", label: "Home", icon: Home },
     { value: "inbox", label: "Nudges", icon: Sparkles, roles: ["trainer", "gym_admin"] },
-    { value: "community", label: "Community", icon: Users },
+    // Community tab hidden for demo
+    // { value: "community", label: "Community", icon: Users },
     { value: "settings", label: "Settings", icon: SettingsIcon },
   ];
   
