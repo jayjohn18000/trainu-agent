@@ -1,4 +1,17 @@
 project_id = "sakksoxuanyimicevljq"
+
+[functions.ab-testing-framework]
+verify_jwt = true
+
+[functions.advanced-analytics-dashboard]
+verify_jwt = true
+
+[functions.integration-enhancements]
+verify_jwt = false
+
+[functions.performance-optimization-system]
+verify_jwt = false
+
 [functions.gamification]
 verify_jwt = true
 [functions.queue-management]

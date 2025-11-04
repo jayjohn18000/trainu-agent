@@ -14,6 +14,256 @@ export type Database = {
   }
   public: {
     Tables: {
+      ab_test_assignments: {
+        Row: {
+          assigned_at: string | null
+          client_id: string
+          id: string
+          test_id: string
+          variant_id: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          client_id: string
+          id?: string
+          test_id: string
+          variant_id: string
+        }
+        Update: {
+          assigned_at?: string | null
+          client_id?: string
+          id?: string
+          test_id?: string
+          variant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ab_test_assignments_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ab_test_assignments_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "ab_tests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ab_test_assignments_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "ab_test_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ab_test_events: {
+        Row: {
+          event_type: string
+          event_value: Json | null
+          id: string
+          occurred_at: string | null
+          performance_id: string
+        }
+        Insert: {
+          event_type: string
+          event_value?: Json | null
+          id?: string
+          occurred_at?: string | null
+          performance_id: string
+        }
+        Update: {
+          event_type?: string
+          event_value?: Json | null
+          id?: string
+          occurred_at?: string | null
+          performance_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ab_test_events_performance_id_fkey"
+            columns: ["performance_id"]
+            isOneToOne: false
+            referencedRelation: "ab_test_performance"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ab_test_performance: {
+        Row: {
+          assignment_id: string
+          click_event: boolean | null
+          client_id: string
+          conversion_event: boolean | null
+          engagement_score: number | null
+          id: string
+          recorded_at: string | null
+          response_time_minutes: number | null
+          test_id: string
+          variant_id: string
+        }
+        Insert: {
+          assignment_id: string
+          click_event?: boolean | null
+          client_id: string
+          conversion_event?: boolean | null
+          engagement_score?: number | null
+          id?: string
+          recorded_at?: string | null
+          response_time_minutes?: number | null
+          test_id: string
+          variant_id: string
+        }
+        Update: {
+          assignment_id?: string
+          click_event?: boolean | null
+          client_id?: string
+          conversion_event?: boolean | null
+          engagement_score?: number | null
+          id?: string
+          recorded_at?: string | null
+          response_time_minutes?: number | null
+          test_id?: string
+          variant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ab_test_performance_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "ab_test_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ab_test_performance_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ab_test_performance_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "ab_tests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ab_test_performance_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "ab_test_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ab_test_variants: {
+        Row: {
+          content_modifications: Json | null
+          created_at: string | null
+          id: string
+          is_control: boolean | null
+          strategy_config: Json | null
+          template_id: string | null
+          test_id: string
+          traffic_split: number
+          variant_index: number
+          variant_name: string
+        }
+        Insert: {
+          content_modifications?: Json | null
+          created_at?: string | null
+          id?: string
+          is_control?: boolean | null
+          strategy_config?: Json | null
+          template_id?: string | null
+          test_id: string
+          traffic_split: number
+          variant_index: number
+          variant_name: string
+        }
+        Update: {
+          content_modifications?: Json | null
+          created_at?: string | null
+          id?: string
+          is_control?: boolean | null
+          strategy_config?: Json | null
+          template_id?: string | null
+          test_id?: string
+          traffic_split?: number
+          variant_index?: number
+          variant_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ab_test_variants_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "ab_tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ab_tests: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          effect_size: number | null
+          hypothesis: string
+          id: string
+          sample_size_target: number | null
+          significance_level: number | null
+          status: string
+          target_audience: Json | null
+          target_metrics: Json | null
+          test_duration_days: number
+          test_name: string
+          test_type: string
+          trainer_id: string
+          updated_at: string | null
+          winner_variant_id: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          effect_size?: number | null
+          hypothesis: string
+          id?: string
+          sample_size_target?: number | null
+          significance_level?: number | null
+          status?: string
+          target_audience?: Json | null
+          target_metrics?: Json | null
+          test_duration_days: number
+          test_name: string
+          test_type: string
+          trainer_id: string
+          updated_at?: string | null
+          winner_variant_id?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          effect_size?: number | null
+          hypothesis?: string
+          id?: string
+          sample_size_target?: number | null
+          significance_level?: number | null
+          status?: string
+          target_audience?: Json | null
+          target_metrics?: Json | null
+          test_duration_days?: number
+          test_name?: string
+          test_type?: string
+          trainer_id?: string
+          updated_at?: string | null
+          winner_variant_id?: string | null
+        }
+        Relationships: []
+      }
       activity_feed: {
         Row: {
           action: string
@@ -98,6 +348,81 @@ export type Database = {
           state?: string | null
           trainer_id?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      analytics_events: {
+        Row: {
+          client_id: string | null
+          event_name: string
+          id: string
+          ip_address: unknown
+          properties: Json | null
+          session_id: string | null
+          source: string | null
+          timestamp: string | null
+          trainer_id: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          event_name: string
+          id?: string
+          ip_address?: unknown
+          properties?: Json | null
+          session_id?: string | null
+          source?: string | null
+          timestamp?: string | null
+          trainer_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          event_name?: string
+          id?: string
+          ip_address?: unknown
+          properties?: Json | null
+          session_id?: string | null
+          source?: string | null
+          timestamp?: string | null
+          trainer_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      api_endpoint_status: {
+        Row: {
+          consecutive_failures: number | null
+          details: Json | null
+          endpoint: string
+          id: string
+          last_check: string | null
+          last_successful: string | null
+          response_time_ms: number | null
+          status: number | null
+        }
+        Insert: {
+          consecutive_failures?: number | null
+          details?: Json | null
+          endpoint: string
+          id?: string
+          last_check?: string | null
+          last_successful?: string | null
+          response_time_ms?: number | null
+          status?: number | null
+        }
+        Update: {
+          consecutive_failures?: number | null
+          details?: Json | null
+          endpoint?: string
+          id?: string
+          last_check?: string | null
+          last_successful?: string | null
+          response_time_ms?: number | null
+          status?: number | null
         }
         Relationships: []
       }
@@ -319,6 +644,195 @@ export type Database = {
         }
         Relationships: []
       }
+      cost_tracking_metrics: {
+        Row: {
+          billing_period: string | null
+          cost_per_unit: number | null
+          cost_usd: number
+          id: string
+          metadata: Json | null
+          recorded_at: string | null
+          service_name: string
+          usage_units: number | null
+        }
+        Insert: {
+          billing_period?: string | null
+          cost_per_unit?: number | null
+          cost_usd: number
+          id?: string
+          metadata?: Json | null
+          recorded_at?: string | null
+          service_name: string
+          usage_units?: number | null
+        }
+        Update: {
+          billing_period?: string | null
+          cost_per_unit?: number | null
+          cost_usd?: number
+          id?: string
+          metadata?: Json | null
+          recorded_at?: string | null
+          service_name?: string
+          usage_units?: number | null
+        }
+        Relationships: []
+      }
+      database_performance_metrics: {
+        Row: {
+          active_connections: number | null
+          connection_time_ms: number | null
+          database_size_gb: number | null
+          id: string
+          query_cache_hit_rate: number | null
+          recorded_at: string | null
+          slow_query_count: number | null
+          total_query_count: number | null
+        }
+        Insert: {
+          active_connections?: number | null
+          connection_time_ms?: number | null
+          database_size_gb?: number | null
+          id?: string
+          query_cache_hit_rate?: number | null
+          recorded_at?: string | null
+          slow_query_count?: number | null
+          total_query_count?: number | null
+        }
+        Update: {
+          active_connections?: number | null
+          connection_time_ms?: number | null
+          database_size_gb?: number | null
+          id?: string
+          query_cache_hit_rate?: number | null
+          recorded_at?: string | null
+          slow_query_count?: number | null
+          total_query_count?: number | null
+        }
+        Relationships: []
+      }
+      edge_function_metrics: {
+        Row: {
+          cpu_usage_percentage: number | null
+          error_count: number | null
+          executed_at: string | null
+          execution_time_ms: number | null
+          function_name: string
+          id: string
+          memory_usage_mb: number | null
+          trainer_id: string | null
+        }
+        Insert: {
+          cpu_usage_percentage?: number | null
+          error_count?: number | null
+          executed_at?: string | null
+          execution_time_ms?: number | null
+          function_name: string
+          id?: string
+          memory_usage_mb?: number | null
+          trainer_id?: string | null
+        }
+        Update: {
+          cpu_usage_percentage?: number | null
+          error_count?: number | null
+          executed_at?: string | null
+          execution_time_ms?: number | null
+          function_name?: string
+          id?: string
+          memory_usage_mb?: number | null
+          trainer_id?: string | null
+        }
+        Relationships: []
+      }
+      engagement_trends: {
+        Row: {
+          breakdown: Json | null
+          date: string
+          engagement_rate: number | null
+          id: string
+          meeting_count: number | null
+          message_count: number | null
+          nudge_count: number | null
+          response_rate: number | null
+          total_events: number | null
+          trainer_id: string
+        }
+        Insert: {
+          breakdown?: Json | null
+          date: string
+          engagement_rate?: number | null
+          id?: string
+          meeting_count?: number | null
+          message_count?: number | null
+          nudge_count?: number | null
+          response_rate?: number | null
+          total_events?: number | null
+          trainer_id: string
+        }
+        Update: {
+          breakdown?: Json | null
+          date?: string
+          engagement_rate?: number | null
+          id?: string
+          meeting_count?: number | null
+          message_count?: number | null
+          nudge_count?: number | null
+          response_rate?: number | null
+          total_events?: number | null
+          trainer_id?: string
+        }
+        Relationships: []
+      }
+      error_events: {
+        Row: {
+          client_id: string | null
+          error_message: string
+          error_type: string
+          id: string
+          request_context: Json | null
+          resolution_notes: string | null
+          resolved: boolean | null
+          resolved_at: string | null
+          service_name: string
+          severity: string
+          stack_trace: string | null
+          timestamp: string | null
+          trainer_id: string | null
+          user_context: Json | null
+        }
+        Insert: {
+          client_id?: string | null
+          error_message: string
+          error_type: string
+          id?: string
+          request_context?: Json | null
+          resolution_notes?: string | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          service_name: string
+          severity?: string
+          stack_trace?: string | null
+          timestamp?: string | null
+          trainer_id?: string | null
+          user_context?: Json | null
+        }
+        Update: {
+          client_id?: string | null
+          error_message?: string
+          error_type?: string
+          id?: string
+          request_context?: Json | null
+          resolution_notes?: string | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          service_name?: string
+          severity?: string
+          stack_trace?: string | null
+          timestamp?: string | null
+          trainer_id?: string | null
+          user_context?: Json | null
+        }
+        Relationships: []
+      }
       events: {
         Row: {
           created_at: string | null
@@ -370,6 +884,42 @@ export type Database = {
           id?: string
           trainer_id?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      frontend_performance_logs: {
+        Row: {
+          first_contentful_paint: number | null
+          id: string
+          largest_contentful_paint: number | null
+          load_time_ms: number
+          logged_at: string | null
+          page_url: string
+          session_id: string | null
+          time_to_interactive: number | null
+          user_agent: string | null
+        }
+        Insert: {
+          first_contentful_paint?: number | null
+          id?: string
+          largest_contentful_paint?: number | null
+          load_time_ms: number
+          logged_at?: string | null
+          page_url: string
+          session_id?: string | null
+          time_to_interactive?: number | null
+          user_agent?: string | null
+        }
+        Update: {
+          first_contentful_paint?: number | null
+          id?: string
+          largest_contentful_paint?: number | null
+          load_time_ms?: number
+          logged_at?: string | null
+          page_url?: string
+          session_id?: string | null
+          time_to_interactive?: number | null
+          user_agent?: string | null
         }
         Relationships: []
       }
@@ -474,6 +1024,62 @@ export type Database = {
           {
             foreignKeyName: "insights_contact_id_fkey"
             columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lifecycle_analytics: {
+        Row: {
+          client_id: string
+          current_stage: string
+          days_in_stage: number | null
+          engagement_score: number | null
+          id: string
+          key_indicators: Json | null
+          lifecycle_metrics: Json | null
+          next_action_recommended: string | null
+          predicted_churn_date: string | null
+          risk_score: number | null
+          stage_confidence: number | null
+          trainer_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          client_id: string
+          current_stage: string
+          days_in_stage?: number | null
+          engagement_score?: number | null
+          id?: string
+          key_indicators?: Json | null
+          lifecycle_metrics?: Json | null
+          next_action_recommended?: string | null
+          predicted_churn_date?: string | null
+          risk_score?: number | null
+          stage_confidence?: number | null
+          trainer_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          client_id?: string
+          current_stage?: string
+          days_in_stage?: number | null
+          engagement_score?: number | null
+          id?: string
+          key_indicators?: Json | null
+          lifecycle_metrics?: Json | null
+          next_action_recommended?: string | null
+          predicted_churn_date?: string | null
+          risk_score?: number | null
+          stage_confidence?: number | null
+          trainer_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lifecycle_analytics_client_id_fkey"
+            columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "contacts"
             referencedColumns: ["id"]
@@ -790,6 +1396,173 @@ export type Database = {
         }
         Relationships: []
       }
+      performance_alerts: {
+        Row: {
+          actual_value: number
+          alert_type: string
+          created_at: string | null
+          id: string
+          metric_name: string
+          resolution_notes: string | null
+          resolved: boolean | null
+          resolved_at: string | null
+          service_name: string | null
+          severity: string
+          threshold_value: number
+        }
+        Insert: {
+          actual_value: number
+          alert_type: string
+          created_at?: string | null
+          id?: string
+          metric_name: string
+          resolution_notes?: string | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          service_name?: string | null
+          severity: string
+          threshold_value: number
+        }
+        Update: {
+          actual_value?: number
+          alert_type?: string
+          created_at?: string | null
+          id?: string
+          metric_name?: string
+          resolution_notes?: string | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          service_name?: string | null
+          severity?: string
+          threshold_value?: number
+        }
+        Relationships: []
+      }
+      performance_metrics: {
+        Row: {
+          client_id: string | null
+          id: string
+          metadata: Json | null
+          metric_name: string
+          metric_type: string
+          metric_value: number
+          recorded_at: string | null
+          service_name: string | null
+          trainer_id: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          id?: string
+          metadata?: Json | null
+          metric_name: string
+          metric_type: string
+          metric_value: number
+          recorded_at?: string | null
+          service_name?: string | null
+          trainer_id?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          id?: string
+          metadata?: Json | null
+          metric_name?: string
+          metric_type?: string
+          metric_value?: number
+          recorded_at?: string | null
+          service_name?: string | null
+          trainer_id?: string | null
+        }
+        Relationships: []
+      }
+      predictive_insights: {
+        Row: {
+          actual_outcome: boolean | null
+          client_id: string
+          confidence_level: number
+          created_at: string | null
+          id: string
+          model_version: string | null
+          outcome_date: string | null
+          prediction_factors: Json | null
+          prediction_type: string
+          prediction_value: number
+          recommended_actions: Json | null
+          timeframe_days: number
+          trainer_id: string
+        }
+        Insert: {
+          actual_outcome?: boolean | null
+          client_id: string
+          confidence_level: number
+          created_at?: string | null
+          id?: string
+          model_version?: string | null
+          outcome_date?: string | null
+          prediction_factors?: Json | null
+          prediction_type: string
+          prediction_value: number
+          recommended_actions?: Json | null
+          timeframe_days: number
+          trainer_id: string
+        }
+        Update: {
+          actual_outcome?: boolean | null
+          client_id?: string
+          confidence_level?: number
+          created_at?: string | null
+          id?: string
+          model_version?: string | null
+          outcome_date?: string | null
+          prediction_factors?: Json | null
+          prediction_type?: string
+          prediction_value?: number
+          recommended_actions?: Json | null
+          timeframe_days?: number
+          trainer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "predictive_insights_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      query_performance_logs: {
+        Row: {
+          affected_rows: number | null
+          executed_at: string | null
+          execution_time_ms: number
+          id: string
+          query_text: string
+          query_type: string | null
+          table_name: string | null
+          trainer_id: string | null
+        }
+        Insert: {
+          affected_rows?: number | null
+          executed_at?: string | null
+          execution_time_ms: number
+          id?: string
+          query_text: string
+          query_type?: string | null
+          table_name?: string | null
+          trainer_id?: string | null
+        }
+        Update: {
+          affected_rows?: number | null
+          executed_at?: string | null
+          execution_time_ms?: number
+          id?: string
+          query_text?: string
+          query_type?: string | null
+          table_name?: string | null
+          trainer_id?: string | null
+        }
+        Relationships: []
+      }
       queue_items: {
         Row: {
           client_id: string
@@ -829,6 +1602,66 @@ export type Database = {
           trainer_id?: string | null
           updated_at?: string | null
           why?: string[] | null
+        }
+        Relationships: []
+      }
+      resource_utilization: {
+        Row: {
+          capacity_gb: number | null
+          id: string
+          recorded_at: string | null
+          resource_type: string
+          service_name: string | null
+          used_gb: number | null
+          utilization_percentage: number
+        }
+        Insert: {
+          capacity_gb?: number | null
+          id?: string
+          recorded_at?: string | null
+          resource_type: string
+          service_name?: string | null
+          used_gb?: number | null
+          utilization_percentage: number
+        }
+        Update: {
+          capacity_gb?: number | null
+          id?: string
+          recorded_at?: string | null
+          resource_type?: string
+          service_name?: string | null
+          used_gb?: number | null
+          utilization_percentage?: number
+        }
+        Relationships: []
+      }
+      system_health_metrics: {
+        Row: {
+          details: Json | null
+          health_score: number | null
+          id: string
+          recorded_at: string | null
+          response_time_ms: number | null
+          service_name: string
+          status: string
+        }
+        Insert: {
+          details?: Json | null
+          health_score?: number | null
+          id?: string
+          recorded_at?: string | null
+          response_time_ms?: number | null
+          service_name: string
+          status: string
+        }
+        Update: {
+          details?: Json | null
+          health_score?: number | null
+          id?: string
+          recorded_at?: string | null
+          response_time_ms?: number | null
+          service_name?: string
+          status?: string
         }
         Relationships: []
       }
@@ -944,6 +1777,54 @@ export type Database = {
           },
         ]
       }
+      trainer_performance_metrics: {
+        Row: {
+          automation_efficiency: number | null
+          client_satisfaction_score: number | null
+          engagement_improvement: number | null
+          id: string
+          performance_period: string
+          period_end: string
+          period_start: string
+          recorded_at: string | null
+          response_time_avg: number | null
+          retention_rate: number | null
+          revenue_per_client: number | null
+          trainer_id: string
+          trend_direction: string | null
+        }
+        Insert: {
+          automation_efficiency?: number | null
+          client_satisfaction_score?: number | null
+          engagement_improvement?: number | null
+          id?: string
+          performance_period: string
+          period_end: string
+          period_start: string
+          recorded_at?: string | null
+          response_time_avg?: number | null
+          retention_rate?: number | null
+          revenue_per_client?: number | null
+          trainer_id: string
+          trend_direction?: string | null
+        }
+        Update: {
+          automation_efficiency?: number | null
+          client_satisfaction_score?: number | null
+          engagement_improvement?: number | null
+          id?: string
+          performance_period?: string
+          period_end?: string
+          period_start?: string
+          recorded_at?: string | null
+          response_time_avg?: number | null
+          retention_rate?: number | null
+          revenue_per_client?: number | null
+          trainer_id?: string
+          trend_direction?: string | null
+        }
+        Relationships: []
+      }
       trainer_profiles: {
         Row: {
           created_at: string | null
@@ -983,6 +1864,42 @@ export type Database = {
           total_messages_edited?: number | null
           updated_at?: string | null
           xp?: number | null
+        }
+        Relationships: []
+      }
+      user_experience_metrics: {
+        Row: {
+          bounce_rate: number | null
+          id: string
+          load_time_ms: number
+          page_name: string
+          recorded_at: string | null
+          session_id: string | null
+          time_to_interactive: number | null
+          trainer_id: string | null
+          user_satisfaction: number | null
+        }
+        Insert: {
+          bounce_rate?: number | null
+          id?: string
+          load_time_ms: number
+          page_name: string
+          recorded_at?: string | null
+          session_id?: string | null
+          time_to_interactive?: number | null
+          trainer_id?: string | null
+          user_satisfaction?: number | null
+        }
+        Update: {
+          bounce_rate?: number | null
+          id?: string
+          load_time_ms?: number
+          page_name?: string
+          recorded_at?: string | null
+          session_id?: string | null
+          time_to_interactive?: number | null
+          trainer_id?: string | null
+          user_satisfaction?: number | null
         }
         Relationships: []
       }
