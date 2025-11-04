@@ -9,6 +9,9 @@ import { toast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { fixtures } from "@/lib/fixtures";
 import { GHLSettingsModal } from "./GHLSettingsModal";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { LogOut } from "lucide-react";
 
 interface SettingsModalProps {
   open: boolean;
@@ -19,6 +22,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
   const [saving, setSaving] = useState(false);
   const [ghlModalOpen, setGhlModalOpen] = useState(false);
   const settings = fixtures.settings;
+  const navigate = useNavigate();
 
   const handleSaveAgent = async () => {
     setSaving(true);
@@ -39,6 +43,28 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
     await new Promise(resolve => setTimeout(resolve, 800));
     toast({ title: "Preferences saved!", description: "Your notification settings have been updated." });
     setSaving(false);
+  };
+
+  const handleSignOut = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      toast({ 
+        title: "Signed out successfully", 
+        description: "You have been logged out of your account." 
+      });
+      
+      onOpenChange(false);
+      navigate("/login");
+    } catch (error) {
+      console.error("Error signing out:", error);
+      toast({ 
+        title: "Error signing out", 
+        description: "There was a problem signing you out. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
@@ -151,6 +177,17 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
               <Button onClick={handleSaveProfile} disabled={saving} className="w-full">
                 {saving ? "Saving..." : "Save Profile"}
               </Button>
+              
+              <div className="border-t pt-4 mt-6">
+                <Button 
+                  onClick={handleSignOut} 
+                  variant="destructive" 
+                  className="w-full"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Sign Out
+                </Button>
+              </div>
             </div>
           </TabsContent>
 
