@@ -34,7 +34,8 @@ import { createDraftMessage, type Message } from "@/lib/api/messages";
 import { createEvent, createOrUpdateInsight } from "@/lib/api/events";
 import { createNote, listNotes, type Note } from "@/lib/api/notes";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Loader2, ExternalLink } from "lucide-react";
+import { Plus, Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface ClientInspectorProps {
   open: boolean;
@@ -67,6 +68,7 @@ export function ClientInspector({
   const { addFromQuickAction } = useDraftsStore();
   const { user } = useAuthStore();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const fetchMessages = useCallback(async (contactId: string) => {
     setMessagesLoading(true);
@@ -297,14 +299,11 @@ export function ClientInspector({
 
                   toast({ 
                     title: "Check-in created", 
-                    description: "Event, insight, and draft created. Open draft in Queue.",
-                    action: (
-                      <Button size="sm" variant="outline" onClick={() => window.location.href = '/queue'}>
-                        <ExternalLink className="h-3 w-3 mr-1" />
-                        Queue
-                      </Button>
-                    ),
+                    description: "Redirecting to queue...",
                   });
+                  
+                  // Redirect to queue
+                  navigate('/queue');
                 } catch (e) {
                   toast({ title: "Error", description: "Failed to create check-in.", variant: "destructive" });
                 }
@@ -343,14 +342,11 @@ export function ClientInspector({
 
                   toast({ 
                     title: "Confirm message created", 
-                    description: "Event, insight, and draft created. Open draft in Queue.",
-                    action: (
-                      <Button size="sm" variant="outline" onClick={() => window.location.href = '/queue'}>
-                        <ExternalLink className="h-3 w-3 mr-1" />
-                        Queue
-                      </Button>
-                    ),
+                    description: "Redirecting to queue...",
                   });
+                  
+                  // Redirect to queue
+                  navigate('/queue');
                 } catch (e) {
                   toast({ title: "Error", description: "Failed to create confirm message.", variant: "destructive" });
                 }
@@ -387,14 +383,11 @@ export function ClientInspector({
 
                   toast({ 
                     title: "Recover no-show created", 
-                    description: "Event, insight, and draft created. Open draft in Queue.",
-                    action: (
-                      <Button size="sm" variant="outline" onClick={() => window.location.href = '/queue'}>
-                        <ExternalLink className="h-3 w-3 mr-1" />
-                        Queue
-                      </Button>
-                    ),
+                    description: "Redirecting to queue...",
                   });
+                  
+                  // Redirect to queue
+                  navigate('/queue');
                 } catch (e) {
                   toast({ title: "Error", description: "Failed to create recover message.", variant: "destructive" });
                 }

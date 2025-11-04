@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { useClientFilters } from "@/hooks/useClientFilters";
 import { Button } from "@/components/ui/button";
 import { ClientTable } from "@/components/clients/ClientTable";
@@ -20,6 +20,7 @@ import { analytics } from "@/lib/analytics";
 
 export default function Clients() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [clients, setClients] = useState<Client[]>([]);
   const [selectedClient, setSelectedClient] = useState<ClientDetail | null>(null);
   const [nudgeClient, setNudgeClient] = useState<Client | null>(null);
@@ -205,6 +206,7 @@ export default function Clients() {
         onOpenChange={(open) => !open && setNudgeClient(null)}
         client={nudgeClient}
         onSend={handleNudge}
+        onSuccess={() => navigate('/queue')}
       />
     </div>
   );

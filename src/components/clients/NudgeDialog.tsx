@@ -24,6 +24,7 @@ interface NudgeDialogProps {
   onOpenChange: (open: boolean) => void;
   client: Client | null;
   onSend: (templateId: string, preview: string) => Promise<void>;
+  onSuccess?: () => void;
 }
 
 const templates = [
@@ -54,7 +55,7 @@ const templates = [
   },
 ];
 
-export function NudgeDialog({ open, onOpenChange, client, onSend }: NudgeDialogProps) {
+export function NudgeDialog({ open, onOpenChange, client, onSend, onSuccess }: NudgeDialogProps) {
   const [selectedTemplate, setSelectedTemplate] = useState("checkin");
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
@@ -71,6 +72,7 @@ export function NudgeDialog({ open, onOpenChange, client, onSend }: NudgeDialogP
     setSending(true);
     try {
       await onSend(selectedTemplate, previewMessage);
+      onSuccess?.();
       onOpenChange(false);
       setSelectedTemplate("checkin");
       setMessage("");

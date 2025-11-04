@@ -318,6 +318,45 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_settings: {
+        Row: {
+          autonomy: string
+          created_at: string | null
+          emoji: string
+          id: string
+          length: string
+          quiet_end: string
+          quiet_start: string
+          tone: string
+          trainer_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          autonomy?: string
+          created_at?: string | null
+          emoji?: string
+          id?: string
+          length?: string
+          quiet_end?: string
+          quiet_start?: string
+          tone?: string
+          trainer_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          autonomy?: string
+          created_at?: string | null
+          emoji?: string
+          id?: string
+          length?: string
+          quiet_end?: string
+          quiet_start?: string
+          tone?: string
+          trainer_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       agent_status: {
         Row: {
           avg_response_time: string | null
@@ -3023,12 +3062,21 @@ export type Database = {
       }
       trainer_profiles: {
         Row: {
+          bio: string | null
           created_at: string | null
           current_streak: number | null
+          email: string | null
+          first_name: string | null
           id: string
           last_active_date: string | null
+          last_name: string | null
           level: number | null
+          location: string | null
           longest_streak: number | null
+          notification_email: boolean | null
+          notification_marketing: boolean | null
+          notification_progress_updates: boolean | null
+          notification_session_reminders: boolean | null
           total_clients_nudged: number | null
           total_messages_approved: number | null
           total_messages_edited: number | null
@@ -3036,12 +3084,21 @@ export type Database = {
           xp: number | null
         }
         Insert: {
+          bio?: string | null
           created_at?: string | null
           current_streak?: number | null
+          email?: string | null
+          first_name?: string | null
           id: string
           last_active_date?: string | null
+          last_name?: string | null
           level?: number | null
+          location?: string | null
           longest_streak?: number | null
+          notification_email?: boolean | null
+          notification_marketing?: boolean | null
+          notification_progress_updates?: boolean | null
+          notification_session_reminders?: boolean | null
           total_clients_nudged?: number | null
           total_messages_approved?: number | null
           total_messages_edited?: number | null
@@ -3049,12 +3106,21 @@ export type Database = {
           xp?: number | null
         }
         Update: {
+          bio?: string | null
           created_at?: string | null
           current_streak?: number | null
+          email?: string | null
+          first_name?: string | null
           id?: string
           last_active_date?: string | null
+          last_name?: string | null
           level?: number | null
+          location?: string | null
           longest_streak?: number | null
+          notification_email?: boolean | null
+          notification_marketing?: boolean | null
+          notification_progress_updates?: boolean | null
+          notification_session_reminders?: boolean | null
           total_clients_nudged?: number | null
           total_messages_approved?: number | null
           total_messages_edited?: number | null

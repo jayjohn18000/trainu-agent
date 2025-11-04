@@ -26,6 +26,24 @@ export default function SettingsAgent() {
     quietStart: "21:00",
     quietEnd: "09:00"
   });
+  
+  // Profile fields
+  const [profile, setProfile] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    location: "",
+    bio: ""
+  });
+  
+  // Notification preferences
+  const [notifications, setNotifications] = useState({
+    email: true,
+    sessionReminders: true,
+    progressUpdates: true,
+    marketing: false
+  });
+  
   const [saving, setSaving] = useState(false);
   const [ghlModalOpen, setGhlModalOpen] = useState(false);
   const [flags, setFlags] = useState<{ 
@@ -43,12 +61,57 @@ export default function SettingsAgent() {
   const [trainerId, setTrainerId] = useState<string>("");
   const navigate = useNavigate();
 
+  // Load trainer data on mount
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (data.user?.id) {
-        setTrainerId(data.user.id);
+    const loadData = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.id) return;
+      
+      setTrainerId(user.id);
+      
+      // Load profile data
+      const { data: profileData } = await supabase
+        .from('trainer_profiles')
+        .select('first_name, last_name, email, location, bio, notification_email, notification_session_reminders, notification_progress_updates, notification_marketing')
+        .eq('id', user.id)
+        .single();
+      
+      if (profileData) {
+        setProfile({
+          firstName: profileData.first_name || "",
+          lastName: profileData.last_name || "",
+          email: profileData.email || "",
+          location: profileData.location || "",
+          bio: profileData.bio || ""
+        });
+        setNotifications({
+          email: profileData.notification_email ?? true,
+          sessionReminders: profileData.notification_session_reminders ?? true,
+          progressUpdates: profileData.notification_progress_updates ?? true,
+          marketing: profileData.notification_marketing ?? false
+        });
       }
-    });
+      
+      // Load agent settings
+      const { data: agentData } = await supabase
+        .from('agent_settings')
+        .select('*')
+        .eq('trainer_id', user.id)
+        .single();
+      
+      if (agentData) {
+        setSettings({
+          autonomy: agentData.autonomy as any,
+          tone: agentData.tone as any,
+          length: agentData.length as any,
+          emoji: agentData.emoji as any,
+          quietStart: agentData.quiet_start || "21:00",
+          quietEnd: agentData.quiet_end || "09:00"
+        });
+      }
+    };
+    
+    loadData();
   }, []);
 
   useEffect(() => {
@@ -70,25 +133,104 @@ export default function SettingsAgent() {
     await setDbFlag(key, next);
   };
 
-  const handleSave = () => {
-    toast({
-      title: "Settings saved",
-      description: "Your agent preferences have been updated.",
-    });
+  const handleSave = async () => {
+    if (!trainerId) return;
+    setSaving(true);
+    
+    try {
+      // Upsert agent settings
+      const { error } = await supabase
+        .from('agent_settings')
+        .upsert({
+          trainer_id: trainerId,
+          autonomy: settings.autonomy,
+          tone: settings.tone,
+          length: settings.length,
+          emoji: settings.emoji,
+          quiet_start: settings.quietStart,
+          quiet_end: settings.quietEnd
+        }, { onConflict: 'trainer_id' });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Settings saved",
+        description: "Your agent preferences have been updated.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save settings",
+        variant: "destructive"
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleSaveProfile = async () => {
+    if (!trainerId) return;
     setSaving(true);
-    await new Promise(resolve => setTimeout(resolve, 800));
-    toast({ title: "Profile updated!", description: "Your changes have been saved successfully." });
-    setSaving(false);
+    
+    try {
+      const { error } = await supabase
+        .from('trainer_profiles')
+        .update({
+          first_name: profile.firstName,
+          last_name: profile.lastName,
+          email: profile.email,
+          location: profile.location,
+          bio: profile.bio
+        })
+        .eq('id', trainerId);
+      
+      if (error) throw error;
+      
+      toast({ 
+        title: "Profile updated!", 
+        description: "Your changes have been saved successfully." 
+      });
+    } catch (error) {
+      toast({ 
+        title: "Error", 
+        description: "Failed to update profile",
+        variant: "destructive"
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleSaveNotifications = async () => {
+    if (!trainerId) return;
     setSaving(true);
-    await new Promise(resolve => setTimeout(resolve, 800));
-    toast({ title: "Preferences saved!", description: "Your notification settings have been updated." });
-    setSaving(false);
+    
+    try {
+      const { error } = await supabase
+        .from('trainer_profiles')
+        .update({
+          notification_email: notifications.email,
+          notification_session_reminders: notifications.sessionReminders,
+          notification_progress_updates: notifications.progressUpdates,
+          notification_marketing: notifications.marketing
+        })
+        .eq('id', trainerId);
+      
+      if (error) throw error;
+      
+      toast({ 
+        title: "Preferences saved!", 
+        description: "Your notification settings have been updated." 
+      });
+    } catch (error) {
+      toast({ 
+        title: "Error", 
+        description: "Failed to save notification preferences",
+        variant: "destructive"
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleSignOut = async () => {
@@ -264,30 +406,56 @@ export default function SettingsAgent() {
           <LearningInsights />
 
           <div className="flex justify-end">
-            <Button onClick={handleSave}>Save Changes</Button>
+            <Button onClick={handleSave} disabled={saving}>
+              {saving ? "Saving..." : "Save Changes"}
+            </Button>
           </div>
         </TabsContent>
 
         <TabsContent value="profile" className="mt-6">
           <div className="metric-card max-w-2xl space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input id="name" defaultValue="Sarah Chen" />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">First Name</Label>
+                <Input 
+                  id="firstName" 
+                  value={profile.firstName}
+                  onChange={(e) => setProfile({ ...profile, firstName: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastName">Last Name</Label>
+                <Input 
+                  id="lastName" 
+                  value={profile.lastName}
+                  onChange={(e) => setProfile({ ...profile, lastName: e.target.value })}
+                />
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" defaultValue="sarah@trainu.com" />
+              <Input 
+                id="email" 
+                type="email" 
+                value={profile.email}
+                onChange={(e) => setProfile({ ...profile, email: e.target.value })}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="location">Location</Label>
-              <Input id="location" defaultValue="San Francisco, CA" />
+              <Input 
+                id="location" 
+                value={profile.location}
+                onChange={(e) => setProfile({ ...profile, location: e.target.value })}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="bio">Bio</Label>
               <textarea
                 id="bio"
                 className="w-full min-h-[100px] rounded-md border border-input bg-background px-3 py-2 text-sm"
-                defaultValue="10+ years coaching elite athletes and everyday fitness enthusiasts."
+                value={profile.bio}
+                onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
               />
             </div>
             <Button onClick={handleSaveProfile} disabled={saving} className="w-full">
@@ -316,7 +484,10 @@ export default function SettingsAgent() {
                   Receive email updates about your activity
                 </p>
               </div>
-              <Switch defaultChecked />
+              <Switch 
+                checked={notifications.email}
+                onCheckedChange={(checked) => setNotifications({ ...notifications, email: checked })}
+              />
             </div>
             <div className="flex items-center justify-between">
               <div>
@@ -325,7 +496,10 @@ export default function SettingsAgent() {
                   Get reminded about upcoming sessions
                 </p>
               </div>
-              <Switch defaultChecked />
+              <Switch 
+                checked={notifications.sessionReminders}
+                onCheckedChange={(checked) => setNotifications({ ...notifications, sessionReminders: checked })}
+              />
             </div>
             <div className="flex items-center justify-between">
               <div>
@@ -334,7 +508,10 @@ export default function SettingsAgent() {
                   Notifications about client progress
                 </p>
               </div>
-              <Switch defaultChecked />
+              <Switch 
+                checked={notifications.progressUpdates}
+                onCheckedChange={(checked) => setNotifications({ ...notifications, progressUpdates: checked })}
+              />
             </div>
             <div className="flex items-center justify-between">
               <div>
@@ -343,7 +520,10 @@ export default function SettingsAgent() {
                   Receive tips and promotional content
                 </p>
               </div>
-              <Switch />
+              <Switch 
+                checked={notifications.marketing}
+                onCheckedChange={(checked) => setNotifications({ ...notifications, marketing: checked })}
+              />
             </div>
             <Button onClick={handleSaveNotifications} disabled={saving}>
               {saving ? "Saving..." : "Save Preferences"}
