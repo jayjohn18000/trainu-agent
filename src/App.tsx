@@ -18,6 +18,7 @@ import Today from "@/pages/Today";
 import { lazyWithRetry } from "@/lib/lazy";
 
 // Landing pages
+const SmartLanding = lazyWithRetry(() => import("@/pages/SmartLanding"));
 const LandingHome = lazyWithRetry(() => import("@/pages/landing/Home"));
 const Product = lazyWithRetry(() => import("@/pages/landing/Product"));
 const Pricing = lazyWithRetry(() => import("@/pages/landing/Pricing"));
@@ -86,7 +87,7 @@ export default function App() {
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
             {/* Public landing pages */}
-            <Route path="/" element={<LandingHome />} />
+            <Route path="/" element={<SmartLanding />} />
             <Route path="/product" element={<Product />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
