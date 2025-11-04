@@ -112,15 +112,24 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({ sent: true, result: ghlResult }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   } catch (e) {
-    console.error('send-message error', e);
-    try {
-      const supabase = createClient(
-        Deno.env.get('SUPABASE_URL') ?? '',
-        Deno.env.get('SUPABASE_ANON_KEY') ?? ''
-      );
-      const { data: { user } } = await supabase.auth.getUser();
-      console.log(JSON.stringify({ function: 'send-message', action: 'message_failed', error: String(e), trainerId: user?.id, timestamp: new Date().toISOString() }));
-    } catch {}
-    return new Response('Internal Error', { status: 500 });
+    const errorId = `ERR-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    console.error(JSON.stringify({ 
+      function: 'send-message', 
+      errorId,
+      action: 'message_failed', 
+      error: e instanceof Error ? e.message : String(e),
+      timestamp: new Date().toISOString() 
+    }));
+    
+    return new Response(
+      JSON.stringify({ 
+        error: 'Unable to send message. Please try again later.',
+        errorId 
+      }), 
+      { 
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
   }
 });

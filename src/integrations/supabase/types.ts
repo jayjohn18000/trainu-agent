@@ -574,6 +574,45 @@ export type Database = {
           },
         ]
       }
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          ip_address: string | null
+          metadata: Json | null
+          pii_fields: string[] | null
+          record_id: string | null
+          table_name: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          pii_fields?: string[] | null
+          record_id?: string | null
+          table_name: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          pii_fields?: string[] | null
+          record_id?: string | null
+          table_name?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       auto_approval_settings: {
         Row: {
           created_at: string
@@ -3276,6 +3315,16 @@ export type Database = {
       increment_trainer_stat: {
         Args: { stat_name: string; trainer_id: string }
         Returns: undefined
+      }
+      log_pii_access: {
+        Args: {
+          p_action: string
+          p_metadata?: Json
+          p_pii_fields: string[]
+          p_record_id: string
+          p_table_name: string
+        }
+        Returns: string
       }
     }
     Enums: {

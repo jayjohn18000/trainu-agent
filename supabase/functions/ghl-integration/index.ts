@@ -443,9 +443,19 @@ serve(async (req) => {
     throw new Error('Invalid action');
 
   } catch (error: any) {
-    console.error('GHL Integration error:', error);
+    const errorId = `ERR-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    console.error(JSON.stringify({
+      function: 'ghl-integration',
+      errorId,
+      error: error instanceof Error ? error.message : String(error),
+      timestamp: new Date().toISOString()
+    }));
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: 'An internal error occurred. Please contact support if the issue persists.',
+        errorId 
+      }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

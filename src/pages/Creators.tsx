@@ -33,6 +33,11 @@ export default function Creators() {
     dueBy: ""
   });
 
+  // SECURITY NOTE: UI-level role check only
+  // When backend briefs/creators tables are created, MUST add server-side validation:
+  // - RLS policies restricting brief creation to gym_admin role
+  // - Edge function validation using has_role() before mutations
+  // - Creator management operations verified server-side
   const isAdmin = user?.role === 'gym_admin';
 
   useEffect(() => {

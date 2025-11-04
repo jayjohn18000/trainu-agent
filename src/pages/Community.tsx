@@ -63,6 +63,11 @@ export default function Community() {
   const handleCreatePost = async () => {
     if (!user || !newPostContent.trim()) return;
     
+    // SECURITY NOTE: UI-level role check only
+    // When backend posts table is created, MUST add server-side RLS policies:
+    // - Trainers/gym_admins can post (validated via has_role() function)
+    // - Members-only posting enforced at database level
+    // - Announcements restricted to gym_admin role via RLS WITH CHECK
     const isPrivileged = user.role === 'trainer' || user.role === 'gym_admin';
     if (!user.isMember && !isPrivileged) {
       toast({

@@ -330,10 +330,23 @@ serve(async (req) => {
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
-    console.error("Error in integration-enhancements:", error);
+    const errorId = `ERR-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    console.error(JSON.stringify({
+      function: 'integration-enhancements',
+      errorId,
+      error: error instanceof Error ? error.message : String(error),
+      timestamp: new Date().toISOString()
+    }));
+    
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ 
+        error: 'An internal error occurred. Please contact support if the issue persists.',
+        errorId 
+      }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
     );
   }
 });
