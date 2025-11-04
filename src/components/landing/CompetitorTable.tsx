@@ -84,14 +84,16 @@ function FeatureRow({ feature, index }: { feature: typeof features[0], index: nu
           )}
           style={{ animationDelay: `${index * 50}ms` }}
         >
-          <td className="p-4 text-foreground font-medium flex items-center gap-2">
-            <ChevronDown 
-              className={cn(
-                "h-4 w-4 text-muted-foreground transition-transform duration-300",
-                isOpen && "rotate-180"
-              )} 
-            />
-            {feature.name}
+          <td className="p-4 text-foreground font-medium">
+            <div className="flex items-center gap-2">
+              <ChevronDown 
+                className={cn(
+                  "h-4 w-4 text-muted-foreground transition-transform duration-300 flex-shrink-0",
+                  isOpen && "rotate-180"
+                )} 
+              />
+              <span>{feature.name}</span>
+            </div>
           </td>
           <td className="p-4 text-center">
             {typeof feature.trainu === 'boolean' ? (
