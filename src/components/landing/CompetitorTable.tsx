@@ -155,20 +155,12 @@ export function CompetitorTable() {
               <th className="text-left p-4 font-bold text-foreground">Feature</th>
               <th className="p-4 font-bold text-primary">
                 <div className="flex flex-col items-center gap-1">
-                  <span>TrainU Features</span>
+                  <span>TrainU</span>
                   <span className="text-xs font-normal text-muted-foreground">(You)</span>
                 </div>
               </th>
-              <th className="p-4 font-semibold text-muted-foreground">
-                <div className="flex flex-col items-center gap-1">
-                  <span>Exercise.com Features</span>
-                </div>
-              </th>
-              <th className="p-4 font-semibold text-muted-foreground">
-                <div className="flex flex-col items-center gap-1">
-                  <span>Trainerize Features</span>
-                </div>
-              </th>
+              <th className="p-4 font-semibold text-muted-foreground">Exercise.com</th>
+              <th className="p-4 font-semibold text-muted-foreground">Trainerize</th>
             </tr>
           </thead>
           <tbody>
