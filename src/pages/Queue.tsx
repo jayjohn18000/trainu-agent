@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { QueueCard } from "@/components/agent/QueueCard";
-import { ProgramBuilderCard } from "@/components/agent/ProgramBuilderCard";
 import { MessageEditor } from "@/components/agent/MessageEditor";
 import { AutoApprovalCountdown } from "@/components/agent/AutoApprovalCountdown";
 import { Button } from "@/components/ui/button";
@@ -340,7 +339,6 @@ export default function Queue() {
               </div>
             );
           })}
-          <ProgramBuilderCard />
         </div>
       )}
 

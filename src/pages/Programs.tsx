@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 import { ProgramCardSkeletonList } from "@/components/skeletons/ProgramCardSkeleton";
+import { ProgramBuilderCard } from "@/components/agent/ProgramBuilderCard";
 import { Folder, Plus, User, Calendar, CheckCircle2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { getFlags } from "@/lib/flags";
@@ -169,6 +170,7 @@ export default function Programs() {
               </div>
             ) : (
               <div className="grid md:grid-cols-2 gap-4">
+                <ProgramBuilderCard />
                 {trainerTemplates.map((template) => (
                 <Card key={template.id} className="p-6">
                   <div className="flex items-start justify-between mb-3">

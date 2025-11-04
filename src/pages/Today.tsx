@@ -12,7 +12,6 @@ import { ValueMetricsWidget } from "@/components/agent/ValueMetricsWidget";
 import { MessagesWidget } from "@/components/agent/MessagesWidget";
 import { CalendarWidget } from "@/components/agent/CalendarWidget";
 import { AtRiskWidget } from "@/components/agent/AtRiskWidget";
-import { ProgramBuilderCard } from "@/components/agent/ProgramBuilderCard";
 import { DraftCard } from "@/components/agent/DraftCard";
 import { WelcomeModal } from "@/components/onboarding/WelcomeModal";
 import { TourOverlay } from "@/components/onboarding/TourOverlay";
@@ -516,7 +515,6 @@ export default function Today() {
                       </p>
                     </Card>
                   </button>}
-                <ProgramBuilderCard />
               </>}
           </section>
 
