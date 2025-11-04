@@ -7,10 +7,10 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.integration-enhancements]
-verify_jwt = false
+verify_jwt = true
 
 [functions.performance-optimization-system]
-verify_jwt = false
+verify_jwt = true
 
 [functions.multi-tenant-enterprise]
 verify_jwt = true
@@ -57,13 +57,13 @@ verify_jwt = true
 verify_jwt = false
 
 [functions.draft-dispatcher]
-verify_jwt = false
+verify_jwt = true
 
 [functions.segment-refresh]
-verify_jwt = false
+verify_jwt = true
 
 [functions.ghl-backfill]
-verify_jwt = false
+verify_jwt = true
 
 [functions.daily-draft-generator]
 verify_jwt = true
@@ -75,7 +75,7 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.automated-nudge-scheduler]
-verify_jwt = false
+verify_jwt = true
 
 [functions.enhanced-client-risk-analytics]
 verify_jwt = true

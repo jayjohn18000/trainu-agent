@@ -1,10 +1,42 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.1";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+// Input validation schemas
+const eventDataSchema = z.object({
+  event_name: z.string().min(1).max(100),
+  properties: z.record(z.any()).optional(),
+  trainer_id: z.string().uuid().optional(),
+  client_id: z.string().uuid().optional(),
+  source: z.string().max(50).optional(),
+  session_id: z.string().max(100).optional(),
+  ip_address: z.string().max(45).optional(),
+  user_agent: z.string().max(500).optional(),
+});
+
+const errorDataSchema = z.object({
+  service_name: z.string().min(1).max(100),
+  error_type: z.string().min(1).max(100),
+  error_message: z.string().min(1).max(1000),
+  stack_trace: z.string().max(5000).optional(),
+  user_context: z.record(z.any()).optional(),
+  request_context: z.record(z.any()).optional(),
+  severity: z.enum(['low', 'medium', 'high', 'critical']).optional(),
+  trainer_id: z.string().uuid().optional(),
+  client_id: z.string().uuid().optional(),
+});
+
+const integrationSchema = z.object({
+  action: z.enum(['track_event', 'log_error', 'check_health', 'check_endpoints', 'get_errors', 'get_alerts']),
+  eventData: eventDataSchema.optional(),
+  errorData: errorDataSchema.optional(),
+  healthData: z.record(z.any()).optional(),
+});
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -25,10 +57,31 @@ serve(async (req) => {
       userId = user?.id;
     }
 
-    const { action, eventData, errorData, healthData } = await req.json().catch(() => ({}));
+    const body = await req.json().catch(() => ({}));
+    
+    // Validate input
+    const validation = integrationSchema.safeParse(body);
+    if (!validation.success) {
+      return new Response(
+        JSON.stringify({ error: "Invalid input", details: validation.error.format() }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    const { action, eventData, errorData, healthData } = validation.data;
 
     // Track analytics event
     if (action === 'track_event') {
+      if (!eventData) {
+        return new Response(
+          JSON.stringify({ error: "eventData is required for track_event action" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
       const { data: event } = await supabase
         .from('analytics_events')
         .insert({
@@ -53,6 +106,13 @@ serve(async (req) => {
 
     // Log error event
     if (action === 'log_error') {
+      if (!errorData) {
+        return new Response(
+          JSON.stringify({ error: "errorData is required for log_error action" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
       const { data: error } = await supabase
         .from('error_events')
         .insert({

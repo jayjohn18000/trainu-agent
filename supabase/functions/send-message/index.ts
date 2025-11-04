@@ -2,6 +2,12 @@
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 import { checkQuietHours } from "../_shared/timeguard.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+
+// Input validation schema
+const sendMessageSchema = z.object({
+  messageId: z.string().uuid({ message: "messageId must be a valid UUID" }),
+});
 
 serve(async (req) => {
   try {
@@ -16,8 +22,18 @@ serve(async (req) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return new Response('Unauthorized', { status: 401 });
 
-    const { messageId } = await req.json();
-    if (!messageId) return new Response('Invalid payload', { status: 400 });
+    const body = await req.json();
+    
+    // Validate input
+    const validation = sendMessageSchema.safeParse(body);
+    if (!validation.success) {
+      return new Response(
+        JSON.stringify({ error: "Invalid input", details: validation.error.format() }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    const { messageId } = validation.data;
 
     const { data: message, error: mErr } = await supabase
       .from('messages')

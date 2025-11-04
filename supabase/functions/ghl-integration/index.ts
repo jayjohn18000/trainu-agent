@@ -1,10 +1,40 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Input validation schemas
+const contactDataSchema = z.object({
+  firstName: z.string().max(100).optional(),
+  lastName: z.string().max(100).optional(),
+  email: z.string().email().max(255).optional(),
+  phone: z.string().max(20).optional(),
+}).refine(data => data.email || data.phone, {
+  message: "Either email or phone must be provided",
+});
+
+const messageDataSchema = z.object({
+  content: z.string().min(1).max(1600),
+  subject: z.string().max(200).optional(),
+});
+
+const ghlIntegrationSchema = z.object({
+  action: z.enum(['send_message', 'create_contact', 'update_contact', 'getContactIds', 'ensureTags', 'applyTags', 'webhook']),
+  contactData: contactDataSchema.optional(),
+  messageData: messageDataSchema.optional(),
+  queueItemId: z.string().uuid().optional(),
+}).refine(data => {
+  if (data.action === 'send_message') {
+    return data.contactData && data.messageData;
+  }
+  return true;
+}, {
+  message: "send_message action requires both contactData and messageData",
+});
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -30,7 +60,21 @@ serve(async (req) => {
       });
     }
 
-    const { action, contactData, messageData, queueItemId } = await req.json();
+    const body = await req.json();
+    
+    // Validate input
+    const validation = ghlIntegrationSchema.safeParse(body);
+    if (!validation.success) {
+      return new Response(
+        JSON.stringify({ error: "Invalid input", details: validation.error.format() }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    const { action, contactData, messageData, queueItemId } = validation.data;
 
     const GHL_API_BASE = Deno.env.get('GHL_API_BASE');
     const GHL_ACCESS_TOKEN = Deno.env.get('GHL_ACCESS_TOKEN');
@@ -70,6 +114,17 @@ serve(async (req) => {
     }
 
     if (action === 'send_message') {
+      // Type guards to ensure required data exists
+      if (!contactData || !messageData) {
+        return new Response(
+          JSON.stringify({ error: "contactData and messageData are required for send_message" }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          }
+        );
+      }
+      
       if (!ghlConfig) {
         throw new Error('GHL not configured for this trainer');
       }

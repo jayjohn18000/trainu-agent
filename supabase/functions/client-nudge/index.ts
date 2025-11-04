@@ -1,10 +1,18 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.1";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+// Input validation schema
+const nudgeSchema = z.object({
+  clientId: z.string().uuid({ message: "clientId must be a valid UUID" }),
+  templateId: z.string().min(1, { message: "templateId is required" }).max(100),
+  preview: z.string().min(1, { message: "preview is required" }).max(1000),
+});
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -12,7 +20,21 @@ serve(async (req) => {
   }
 
   try {
-    const { clientId, templateId, preview } = await req.json();
+    const body = await req.json();
+    
+    // Validate input
+    const validation = nudgeSchema.safeParse(body);
+    if (!validation.success) {
+      return new Response(
+        JSON.stringify({ error: "Invalid input", details: validation.error.format() }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+    
+    const { clientId, templateId, preview } = validation.data;
     
     // Get authorization header
     const authHeader = req.headers.get("authorization");
