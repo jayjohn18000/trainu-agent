@@ -10,7 +10,6 @@ import { Loader2 } from "lucide-react";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 
 // Critical routes - loaded immediately for best UX
-import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
 import Today from "@/pages/Today";
 
@@ -95,9 +94,6 @@ export default function App() {
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/challenge" element={<Challenge />} />
-            
-            {/* Legacy landing */}
-            <Route path="/landing" element={<Landing />} />
             
             {/* Public app routes */}
             <Route path="/login" element={<Login />} />
