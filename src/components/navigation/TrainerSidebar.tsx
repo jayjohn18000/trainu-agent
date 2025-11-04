@@ -25,7 +25,7 @@ const navItems = [
   { label: 'Calendar', icon: Calendar, shortcut: '5', isModal: true },
 ];
 
-const settingsItem = { label: 'Settings', icon: Settings, shortcut: '6', isModal: true };
+const settingsItem = { label: 'Settings', path: '/settings-agent', icon: Settings, shortcut: '6', isModal: false };
 
 export function TrainerSidebar({ collapsed, onToggle }: TrainerSidebarProps) {
   const location = useLocation();
@@ -38,7 +38,6 @@ export function TrainerSidebar({ collapsed, onToggle }: TrainerSidebarProps) {
     if (item.isModal) {
       if (item.label === 'Messages') setMessagesOpen(true);
       if (item.label === 'Calendar') setCalendarOpen(true);
-      if (item.label === 'Settings') setSettingsOpen(true);
     }
   };
 
@@ -193,31 +192,39 @@ export function TrainerSidebar({ collapsed, onToggle }: TrainerSidebarProps) {
             {collapsed ? (
               <Tooltip delayDuration={0}>
                 <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="w-10 h-10 mx-auto"
-                    onClick={() => handleNavClick(settingsItem)}
-                  >
-                    <Settings className="h-5 w-5" />
-                  </Button>
+                  <Link to={settingsItem.path!}>
+                    <Button
+                      variant={location.pathname === settingsItem.path ? "secondary" : "ghost"}
+                      size="icon"
+                      className={cn(
+                        "w-10 h-10 mx-auto",
+                        location.pathname === settingsItem.path && "border-l-2 border-primary rounded-l-none"
+                      )}
+                    >
+                      <Settings className="h-5 w-5" />
+                    </Button>
+                  </Link>
                 </TooltipTrigger>
                 <TooltipContent side="right">
                   <p>{settingsItem.label} ({settingsItem.shortcut})</p>
                 </TooltipContent>
               </Tooltip>
             ) : (
-              <Button
-                variant="ghost"
-                className="w-full justify-start"
-                onClick={() => handleNavClick(settingsItem)}
-              >
-                <Settings className="h-5 w-5 mr-3" />
-                <span>{settingsItem.label}</span>
-                <Badge variant="outline" className="ml-auto text-xs">
-                  {settingsItem.shortcut}
-                </Badge>
-              </Button>
+              <Link to={settingsItem.path!}>
+                <Button
+                  variant={location.pathname === settingsItem.path ? "secondary" : "ghost"}
+                  className={cn(
+                    "w-full justify-start",
+                    location.pathname === settingsItem.path && "border-l-2 border-primary rounded-l-none"
+                  )}
+                >
+                  <Settings className="h-5 w-5 mr-3" />
+                  <span>{settingsItem.label}</span>
+                  <Badge variant="outline" className="ml-auto text-xs">
+                    {settingsItem.shortcut}
+                  </Badge>
+                </Button>
+              </Link>
             )}
 
             {/* Trainer Level */}

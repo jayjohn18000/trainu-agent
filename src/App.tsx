@@ -32,6 +32,7 @@ const TrainerProfile = lazyWithRetry(() => import("@/pages/TrainerProfile"));
 const Queue = lazyWithRetry(() => import("@/pages/Queue"));
 const Clients = lazyWithRetry(() => import("@/pages/Clients"));
 const Growth = lazyWithRetry(() => import("@/pages/Growth"));
+const SettingsAgent = lazyWithRetry(() => import("@/pages/SettingsAgent"));
 const ClientDashboard = lazyWithRetry(() => import("@/pages/ClientDashboard"));
 const ClientDashboardNew = lazyWithRetry(() => import("@/pages/ClientDashboardNew"));
 const WorkoutLogger = lazyWithRetry(() => import("@/pages/WorkoutLogger"));
@@ -109,6 +110,7 @@ export default function App() {
               <Route path="/clients" element={<Clients />} />
               <Route path="/programs" element={<Programs />} />
               <Route path="/growth" element={<Growth />} />
+              <Route path="/settings-agent" element={<SettingsAgent />} />
               {/* Modal route handler for legacy routes */}
               <Route path="/messages" element={<ModalRouteHandler />} />
               <Route path="/calendar" element={<ModalRouteHandler />} />
