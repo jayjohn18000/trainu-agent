@@ -12,6 +12,21 @@ verify_jwt = false
 [functions.performance-optimization-system]
 verify_jwt = false
 
+[functions.multi-tenant-enterprise]
+verify_jwt = true
+
+[functions.advanced-ai-nlp]
+verify_jwt = true
+
+[functions.advanced-integration-ecosystem]
+verify_jwt = true
+
+[functions.business-intelligence-reporting]
+verify_jwt = true
+
+[functions.production-polish-qa]
+verify_jwt = true
+
 [functions.gamification]
 verify_jwt = true
 [functions.queue-management]
