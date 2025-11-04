@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import type { AgentSettings } from "@/types/agent";
+import { AutoApprovalSettings } from "@/components/agent/AutoApprovalSettings";
+import { LearningInsights } from "@/components/agent/LearningInsights";
 
 export default function SettingsAgent() {
   const [settings, setSettings] = useState<AgentSettings | null>(
@@ -164,6 +166,10 @@ export default function SettingsAgent() {
             </div>
           </CardContent>
         </Card>
+
+        <AutoApprovalSettings />
+
+        <LearningInsights />
 
         <div className="flex justify-end">
           <Button onClick={handleSave}>Save Changes</Button>
