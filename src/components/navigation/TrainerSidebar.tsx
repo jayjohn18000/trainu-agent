@@ -105,7 +105,7 @@ export function TrainerSidebar({ collapsed, onToggle }: TrainerSidebarProps) {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 p-2 space-y-1">
+          <nav className="flex-1 p-2 space-y-3">
             {navItems.map((item) => {
               const isActive = item.path && location.pathname === item.path;
               const Icon = item.icon;
@@ -146,15 +146,11 @@ export function TrainerSidebar({ collapsed, onToggle }: TrainerSidebarProps) {
               }
 
               if (item.isModal) {
-                const hasGlow = item.label === 'Messages' || item.label === 'Calendar';
                 return (
                   <Button
                     key={item.label}
                     variant="ghost"
-                    className={cn(
-                      "w-full justify-start",
-                      hasGlow && "ring-1 ring-blue-500/30 shadow-[0_0_10px_rgba(59,130,246,0.3)]"
-                    )}
+                    className="w-full justify-start"
                     onClick={() => handleNavClick(item)}
                   >
                     <Icon className="h-5 w-5 mr-3" />
@@ -187,7 +183,7 @@ export function TrainerSidebar({ collapsed, onToggle }: TrainerSidebarProps) {
           </nav>
 
           {/* Footer - Settings & Trainer Level */}
-          <div className="p-2 border-t border-border space-y-1">
+          <div className="p-2 border-t border-border space-y-3">
             {/* Settings Button */}
             {collapsed ? (
               <Tooltip delayDuration={0}>
