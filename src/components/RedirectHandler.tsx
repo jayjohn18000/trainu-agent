@@ -12,7 +12,8 @@ const redirectRules: RedirectRule[] = [
   { from: "/dashboard/trainer", to: "/today", type: "301" },
   { from: "/inbox", to: "/today#queue", type: "301" },
   { from: "/dashboard/clients", to: "/clients", type: "301" },
-  { from: "/dashboard/settings", to: "/settings", type: "301" },
+  { from: "/dashboard/settings", to: "/settings-agent", type: "301" },
+  { from: "/settings", to: "/settings-agent", type: "301" },
   
   // 410 Gone
   { from: "/dashboard/calendar", type: "410" },
