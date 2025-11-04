@@ -95,6 +95,28 @@ export default function Queue() {
     }
   };
 
+  const handleReject = async (id: string) => {
+    try {
+      await supabase
+        .from("messages")
+        .delete()
+        .eq("id", id);
+      
+      setMessages((prev) => prev.filter((item) => item.id !== id));
+      toast({
+        title: "Rejected",
+        description: "Message has been rejected",
+      });
+    } catch (error) {
+      console.error("Failed to reject:", error);
+      toast({
+        title: "Rejection failed",
+        description: error instanceof Error ? error.message : "Please try again",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleEdit = (id: string) => {
     const item = messages.find((i) => i.id === id);
     if (item) setEditingItem(item);
@@ -333,6 +355,7 @@ export default function Queue() {
                     createdAt: msg.created_at,
                   }}
                   onApprove={() => handleApprove(msg.id)}
+                  onReject={() => handleReject(msg.id)}
                   onEdit={() => handleEdit(msg.id)}
                   onSendNow={() => handleSendNow(msg.id)}
                 />

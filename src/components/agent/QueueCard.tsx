@@ -16,6 +16,7 @@ import { isQuietHours, getQuietHoursMessage } from "@/lib/utils/quietHours";
 interface QueueCardProps {
   item: QueueItem;
   onApprove?: (id: string) => void;
+  onReject?: (id: string) => void;
   onEdit?: (id: string) => void;
   onUndo?: (id: string) => void;
   onSendNow?: (id: string) => void;
@@ -26,6 +27,7 @@ interface QueueCardProps {
 const QueueCardComponent = ({
   item,
   onApprove,
+  onReject,
   onEdit,
   onUndo,
   onSendNow,
@@ -206,6 +208,16 @@ const QueueCardComponent = ({
                         Approve
                       </>
                     )}
+                  </Button>
+                )}
+                {onReject && (
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => onReject(item.id)}
+                    aria-label="Reject message"
+                  >
+                    Reject
                   </Button>
                 )}
                 {onSendNow && (

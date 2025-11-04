@@ -197,10 +197,6 @@ export function ClientTable({
                       <Eye className="h-4 w-4 mr-2" />
                       View Details
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onNudge(client)}>
-                      <MessageSquare className="h-4 w-4 mr-2" />
-                      Send Nudge
-                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleCopyLink(client.id)}>
                       <Copy className="h-4 w-4 mr-2" />
                       Copy Link
@@ -255,10 +251,6 @@ export function ClientTable({
                   <DropdownMenuItem onClick={() => onSelect(client)}>
                     <Eye className="h-4 w-4 mr-2" />
                     View Details
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onNudge(client)}>
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    Send Nudge
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => handleCopyLink(client.id)}>
                     <Copy className="h-4 w-4 mr-2" />

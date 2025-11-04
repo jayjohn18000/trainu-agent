@@ -42,7 +42,6 @@ interface ClientInspectorProps {
   onOpenChange: (open: boolean) => void;
   client: ClientDetail | null;
   loading?: boolean;
-  onNudge: () => void;
   onUpdateTags: (tags: string[]) => Promise<void>;
   onAddNote: (note: string) => Promise<void>;
 }
@@ -52,7 +51,6 @@ export function ClientInspector({
   onOpenChange,
   client,
   loading,
-  onNudge,
   onUpdateTags,
   onAddNote,
 }: ClientInspectorProps) {
@@ -265,11 +263,7 @@ export function ClientInspector({
 
         <div className="mt-6 space-y-6">
           {/* Quick Actions */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            <Button onClick={onNudge} variant="outline">
-              <MessageSquare className="h-4 w-4 mr-2" />
-              Nudge
-            </Button>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <Button
               variant="outline"
               onClick={async () => {
@@ -316,6 +310,47 @@ export function ClientInspector({
               onClick={async () => {
                 if (!user || !client) return;
                 try {
+                  const messageContent = `Hey ${client.name.split(' ')[0]}, missed you last time. Everything okay? I can help you get back on track — want to pick a new time?`;
+                  
+                  // 1. Create event
+                  await createEvent({
+                    trainer_id: user.id,
+                    event_type: 'recover_no_show',
+                    entity_type: 'contact',
+                    entity_id: client.id,
+                    metadata: { action: 'recover_no_show' },
+                  });
+
+                  // 2. Create/update insight (increase risk for no-show)
+                  await createOrUpdateInsight({
+                    trainer_id: user.id,
+                    contact_id: client.id,
+                    risk_score: Math.min(100, client.risk + 10),
+                    last_activity_at: new Date().toISOString(),
+                  });
+
+                  // 3. Create draft
+                  await createDraftMessage(client.id, messageContent, 'sms');
+
+                  toast({ 
+                    title: "Recover no-show created", 
+                    description: "Redirecting to queue...",
+                  });
+                  
+                  // Redirect to queue
+                  navigate('/queue');
+                } catch (e) {
+                  toast({ title: "Error", description: "Failed to create recover message.", variant: "destructive" });
+                }
+              }}
+            >
+              Recover no-show
+            </Button>
+            <Button
+              variant="outline"
+              onClick={async () => {
+                if (!user || !client) return;
+                try {
                   const when = client.nextSession ? new Date(client.nextSession) : null;
                   const whenStr = when ? when.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'your next session';
                   const messageContent = `Hi ${client.name.split(' ')[0]}, can you confirm ${whenStr}? Reply YES to confirm or NO to reschedule.`;
@@ -356,44 +391,9 @@ export function ClientInspector({
             </Button>
             <Button
               variant="outline"
-              onClick={async () => {
-                if (!user || !client) return;
-                try {
-                  const messageContent = `Hey ${client.name.split(' ')[0]}, missed you last time. Everything okay? I can help you get back on track — want to pick a new time?`;
-                  
-                  // 1. Create event
-                  await createEvent({
-                    trainer_id: user.id,
-                    event_type: 'recover_no_show',
-                    entity_type: 'contact',
-                    entity_id: client.id,
-                    metadata: { action: 'recover_no_show' },
-                  });
-
-                  // 2. Create/update insight (increase risk for no-show)
-                  await createOrUpdateInsight({
-                    trainer_id: user.id,
-                    contact_id: client.id,
-                    risk_score: Math.min(100, client.risk + 10),
-                    last_activity_at: new Date().toISOString(),
-                  });
-
-                  // 3. Create draft
-                  await createDraftMessage(client.id, messageContent, 'sms');
-
-                  toast({ 
-                    title: "Recover no-show created", 
-                    description: "Redirecting to queue...",
-                  });
-                  
-                  // Redirect to queue
-                  navigate('/queue');
-                } catch (e) {
-                  toast({ title: "Error", description: "Failed to create recover message.", variant: "destructive" });
-                }
-              }}
+              className="shadow-[0_0_15px_rgba(59,130,246,0.5)] hover:shadow-[0_0_20px_rgba(59,130,246,0.6)] transition-all"
             >
-              Recover no-show
+              Custom Recommendation
             </Button>
           </div>
 

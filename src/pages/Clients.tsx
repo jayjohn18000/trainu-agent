@@ -196,7 +196,6 @@ export default function Clients() {
         onOpenChange={(open) => !open && handleCloseInspector()}
         client={selectedClient}
         loading={inspectorLoading}
-        onNudge={() => selectedClient && setNudgeClient(selectedClient)}
         onUpdateTags={handleUpdateTags}
         onAddNote={handleAddNote}
       />
