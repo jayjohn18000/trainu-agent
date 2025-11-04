@@ -181,6 +181,66 @@ export type Database = {
           },
         ]
       }
+      client_nudge_history: {
+        Row: {
+          booking_generated: boolean | null
+          campaign_id: string
+          contact_id: string
+          created_at: string
+          effectiveness_score: number | null
+          id: string
+          response_received: boolean | null
+          response_time_hours: number | null
+          revenue_attributed: number | null
+          sent_at: string | null
+          template_id: string
+          trainer_id: string
+        }
+        Insert: {
+          booking_generated?: boolean | null
+          campaign_id: string
+          contact_id: string
+          created_at?: string
+          effectiveness_score?: number | null
+          id?: string
+          response_received?: boolean | null
+          response_time_hours?: number | null
+          revenue_attributed?: number | null
+          sent_at?: string | null
+          template_id: string
+          trainer_id: string
+        }
+        Update: {
+          booking_generated?: boolean | null
+          campaign_id?: string
+          contact_id?: string
+          created_at?: string
+          effectiveness_score?: number | null
+          id?: string
+          response_received?: boolean | null
+          response_time_hours?: number | null
+          revenue_attributed?: number | null
+          sent_at?: string | null
+          template_id?: string
+          trainer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_nudge_history_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "nudge_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_nudge_history_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contacts: {
         Row: {
           consent_status: Database["public"]["Enums"]["consent_status"] | null
@@ -529,6 +589,206 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      nudge_analytics: {
+        Row: {
+          average_response_time_hours: number | null
+          clients_re_engaged: number | null
+          created_at: string
+          date: string
+          id: string
+          most_effective_template: string | null
+          revenue_attributed: number | null
+          total_campaigns_created: number | null
+          total_campaigns_sent: number | null
+          total_responses_received: number | null
+          trainer_id: string
+        }
+        Insert: {
+          average_response_time_hours?: number | null
+          clients_re_engaged?: number | null
+          created_at?: string
+          date: string
+          id?: string
+          most_effective_template?: string | null
+          revenue_attributed?: number | null
+          total_campaigns_created?: number | null
+          total_campaigns_sent?: number | null
+          total_responses_received?: number | null
+          trainer_id: string
+        }
+        Update: {
+          average_response_time_hours?: number | null
+          clients_re_engaged?: number | null
+          created_at?: string
+          date?: string
+          id?: string
+          most_effective_template?: string | null
+          revenue_attributed?: number | null
+          total_campaigns_created?: number | null
+          total_campaigns_sent?: number | null
+          total_responses_received?: number | null
+          trainer_id?: string
+        }
+        Relationships: []
+      }
+      nudge_campaigns: {
+        Row: {
+          campaign_type: string
+          contact_id: string
+          content: string
+          created_at: string
+          delivered_at: string | null
+          error_message: string | null
+          id: string
+          priority_score: number
+          response_received_at: string | null
+          scheduled_for: string
+          sent_at: string | null
+          status: string | null
+          template_id: string
+          trainer_id: string
+          urgency_level: number | null
+        }
+        Insert: {
+          campaign_type: string
+          contact_id: string
+          content: string
+          created_at?: string
+          delivered_at?: string | null
+          error_message?: string | null
+          id?: string
+          priority_score: number
+          response_received_at?: string | null
+          scheduled_for: string
+          sent_at?: string | null
+          status?: string | null
+          template_id: string
+          trainer_id: string
+          urgency_level?: number | null
+        }
+        Update: {
+          campaign_type?: string
+          contact_id?: string
+          content?: string
+          created_at?: string
+          delivered_at?: string | null
+          error_message?: string | null
+          id?: string
+          priority_score?: number
+          response_received_at?: string | null
+          scheduled_for?: string
+          sent_at?: string | null
+          status?: string | null
+          template_id?: string
+          trainer_id?: string
+          urgency_level?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nudge_campaigns_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nudge_settings: {
+        Row: {
+          auto_send_enabled: boolean | null
+          created_at: string
+          daily_limit: number | null
+          enabled: boolean | null
+          id: string
+          min_hours_between_nudges: number | null
+          min_risk_threshold: number | null
+          preferred_channels: string[] | null
+          quiet_hours_end: number | null
+          quiet_hours_start: number | null
+          trainer_id: string
+          updated_at: string
+        }
+        Insert: {
+          auto_send_enabled?: boolean | null
+          created_at?: string
+          daily_limit?: number | null
+          enabled?: boolean | null
+          id?: string
+          min_hours_between_nudges?: number | null
+          min_risk_threshold?: number | null
+          preferred_channels?: string[] | null
+          quiet_hours_end?: number | null
+          quiet_hours_start?: number | null
+          trainer_id: string
+          updated_at?: string
+        }
+        Update: {
+          auto_send_enabled?: boolean | null
+          created_at?: string
+          daily_limit?: number | null
+          enabled?: boolean | null
+          id?: string
+          min_hours_between_nudges?: number | null
+          min_risk_threshold?: number | null
+          preferred_channels?: string[] | null
+          quiet_hours_end?: number | null
+          quiet_hours_start?: number | null
+          trainer_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      nudge_templates: {
+        Row: {
+          active: boolean | null
+          content_template: string
+          created_at: string
+          id: string
+          max_frequency_per_week: number | null
+          name: string
+          optimal_days: number[] | null
+          optimal_hours: number[] | null
+          personalization_fields: string[] | null
+          template_id: string
+          template_type: string
+          trainer_id: string
+          triggers: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean | null
+          content_template: string
+          created_at?: string
+          id?: string
+          max_frequency_per_week?: number | null
+          name: string
+          optimal_days?: number[] | null
+          optimal_hours?: number[] | null
+          personalization_fields?: string[] | null
+          template_id: string
+          template_type: string
+          trainer_id: string
+          triggers?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean | null
+          content_template?: string
+          created_at?: string
+          id?: string
+          max_frequency_per_week?: number | null
+          name?: string
+          optimal_days?: number[] | null
+          optimal_hours?: number[] | null
+          personalization_fields?: string[] | null
+          template_id?: string
+          template_type?: string
+          trainer_id?: string
+          triggers?: string[] | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       queue_items: {
         Row: {

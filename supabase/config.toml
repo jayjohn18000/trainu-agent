@@ -42,3 +42,12 @@ verify_jwt = true
 
 [functions.calculate-insights]
 verify_jwt = true
+
+[functions.smart-nudge-detection]
+verify_jwt = true
+
+[functions.automated-nudge-scheduler]
+verify_jwt = false
+
+[functions.enhanced-client-risk-analytics]
+verify_jwt = true
