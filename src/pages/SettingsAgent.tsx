@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { fixtures } from "@/lib/fixtures";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -9,12 +10,22 @@ import { useToast } from "@/hooks/use-toast";
 import type { AgentSettings } from "@/types/agent";
 import { AutoApprovalSettings } from "@/components/agent/AutoApprovalSettings";
 import { LearningInsights } from "@/components/agent/LearningInsights";
+import { AutoApprovalAnalytics } from "@/components/agent/AutoApprovalAnalytics";
 
 export default function SettingsAgent() {
   const [settings, setSettings] = useState<AgentSettings | null>(
     fixtures.settings
   );
   const { toast } = useToast();
+  const [trainerId, setTrainerId] = useState<string>("");
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user?.id) {
+        setTrainerId(data.user.id);
+      }
+    });
+  }, []);
 
   const handleSave = () => {
     toast({
@@ -168,6 +179,8 @@ export default function SettingsAgent() {
         </Card>
 
         <AutoApprovalSettings />
+
+        {trainerId && <AutoApprovalAnalytics trainerId={trainerId} />}
 
         <LearningInsights />
 

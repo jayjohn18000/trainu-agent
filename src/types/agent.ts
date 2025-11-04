@@ -7,6 +7,7 @@ export interface QueueItem {
   status: "review" | "autosend" | "sent" | "undone";
   why: string[];
   createdAt: string;
+  edit_count?: number;
 }
 
 export interface FeedItem {

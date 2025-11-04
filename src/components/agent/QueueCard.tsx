@@ -124,6 +124,11 @@ const QueueCardComponent = ({
               REQUIRES APPROVAL
             </Badge>
           )}
+          {(item as any).edit_count > 0 && (
+            <Badge variant="secondary" className="text-xs">
+              ✏️ {(item as any).edit_count} edit{(item as any).edit_count > 1 ? 's' : ''}
+            </Badge>
+          )}
           {Boolean((item as any).scheduledFor) && new Date((item as any).scheduledFor) > new Date() ? (
             <Badge variant="outline" className="text-xs">
               ⏰ Queued for {new Date((item as any).scheduledFor).toLocaleString([], { 
