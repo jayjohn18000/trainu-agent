@@ -13,9 +13,14 @@ import { LearningInsights } from "@/components/agent/LearningInsights";
 import { AutoApprovalAnalytics } from "@/components/agent/AutoApprovalAnalytics";
 
 export default function SettingsAgent() {
-  const [settings, setSettings] = useState<AgentSettings | null>(
-    fixtures.settings
-  );
+  const [settings, setSettings] = useState<AgentSettings>({
+    autonomy: "review",
+    tone: "casual",
+    length: "concise",
+    emoji: "rarely",
+    quietStart: "21:00",
+    quietEnd: "09:00"
+  });
   const { toast } = useToast();
   const [trainerId, setTrainerId] = useState<string>("");
 
@@ -33,19 +38,6 @@ export default function SettingsAgent() {
       description: "Your preferences have been updated.",
     });
   };
-
-  if (!settings) {
-    return (
-      <div className="container py-6">
-        <h1 className="text-3xl font-bold mb-6">Settings</h1>
-        <Card>
-          <CardContent className="py-12 text-center text-muted-foreground">
-            Settings not available
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="container max-w-2xl py-6">
