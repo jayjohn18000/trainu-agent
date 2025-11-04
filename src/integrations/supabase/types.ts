@@ -3165,6 +3165,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       webhook_events: {
         Row: {
           error_message: string | null
@@ -3241,6 +3262,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       increment_message_counters: {
         Args: { contact_id: string }
         Returns: undefined
@@ -3251,6 +3279,7 @@ export type Database = {
       }
     }
     Enums: {
+      app_role: "client" | "trainer" | "gym_admin"
       booking_status:
         | "scheduled"
         | "confirmed"
@@ -3393,6 +3422,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["client", "trainer", "gym_admin"],
       booking_status: [
         "scheduled",
         "confirmed",

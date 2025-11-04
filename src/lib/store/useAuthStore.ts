@@ -16,7 +16,6 @@ interface AuthState {
   user: User | null;
   loading: boolean;
   setUser: (user: User) => void;
-  setRole: (role: UserRole) => void;
   logout: () => Promise<void>;
   initialize: () => Promise<void>;
 }
@@ -27,10 +26,6 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       loading: true,
       setUser: (user) => set({ user, loading: false }),
-      setRole: (role) =>
-        set((state) => ({
-          user: state.user ? { ...state.user, role } : null,
-        })),
       logout: async () => {
         await supabase.auth.signOut();
         set({ user: null });
@@ -38,12 +33,14 @@ export const useAuthStore = create<AuthState>()(
       initialize: async () => {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
+          // Fetch user role from server
+          const role = await fetchUserRole(session.user.id);
           set({
             user: {
               id: session.user.id,
               name: session.user.email?.split('@')[0] || 'User',
               email: session.user.email || '',
-              role: 'trainer',
+              role,
               avatarUrl: session.user.user_metadata?.avatar_url,
             },
             loading: false,
@@ -53,14 +50,16 @@ export const useAuthStore = create<AuthState>()(
         }
 
         // Listen for auth changes
-        supabase.auth.onAuthStateChange((_event, session) => {
+        supabase.auth.onAuthStateChange(async (_event, session) => {
           if (session?.user) {
+            // Fetch user role from server
+            const role = await fetchUserRole(session.user.id);
             set({
               user: {
                 id: session.user.id,
                 name: session.user.email?.split('@')[0] || 'User',
                 email: session.user.email || '',
-                role: 'trainer',
+                role,
                 avatarUrl: session.user.user_metadata?.avatar_url,
               },
               loading: false,
@@ -76,3 +75,21 @@ export const useAuthStore = create<AuthState>()(
     }
   )
 );
+
+// Fetch user role from server-side user_roles table
+async function fetchUserRole(userId: string): Promise<UserRole> {
+  const { data, error } = await supabase
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
+
+  if (error || !data) {
+    // Default to trainer if no role assigned yet
+    return 'trainer';
+  }
+
+  return data.role as UserRole;
+}
