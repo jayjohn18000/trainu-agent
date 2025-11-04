@@ -61,13 +61,43 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Cancel Auto-Approval
+    if (action === 'cancelAutoApproval' && req.method === 'POST') {
+      const { messageId } = body;
+
+      const { error: updateError } = await supabase
+        .from('messages')
+        .update({ auto_approval_at: null })
+        .eq('id', messageId)
+        .eq('trainer_id', user.id);
+
+      if (updateError) {
+        return new Response(JSON.stringify({ error: updateError.message }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      console.log(JSON.stringify({
+        function: 'queue-management',
+        action: 'cancelAutoApproval',
+        messageId,
+        trainerId: user.id,
+        timestamp: new Date().toISOString(),
+      }));
+
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // Approve Message (messages table, compliance-aware)
     if (action === 'approve' && req.method === 'POST') {
       const { messageId } = body;
 
       const { data: message, error: msgErr } = await supabase
         .from('messages')
-        .select('id, trainer_id, contact_id, status, content, scheduled_for')
+        .select('id, trainer_id, contact_id, status, content, scheduled_for, auto_approval_at')
         .eq('id', messageId)
         .eq('trainer_id', user.id)
         .single();
@@ -77,6 +107,9 @@ Deno.serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
+
+      // Clear auto-approval if it was set
+      const updateData: any = { status: 'queued', auto_approval_at: null };
 
       const [{ data: contact }, { data: config }] = await Promise.all([
         supabase.from('contacts').select('id, messages_sent_today, messages_sent_this_week').eq('id', message.contact_id).eq('trainer_id', user.id).single(),
@@ -107,10 +140,11 @@ Deno.serve(async (req) => {
       }
 
       const finalWhen = quietCheck.allowed ? scheduledFor : quietCheck.nextAvailable!;
+      updateData.scheduled_for = finalWhen.toISOString();
 
       const { error: updErr } = await supabase
         .from('messages')
-        .update({ status: 'queued', scheduled_for: finalWhen.toISOString() })
+        .update(updateData)
         .eq('id', message.id)
         .eq('trainer_id', user.id);
       if (updErr) {
@@ -127,6 +161,7 @@ Deno.serve(async (req) => {
         trainerId: user.id,
         scheduled_for: finalWhen.toISOString(),
         deferred_by_quiet_hours: !quietCheck.allowed,
+        manual_approval: true,
         timestamp: new Date().toISOString(),
       }));
 
@@ -135,8 +170,70 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Edit Queue Item
+    // Edit Message (track in trainer_edits)
     if (action === 'edit' && req.method === 'POST') {
+      const { messageId, content } = body;
+
+      // Get original message
+      const { data: originalMessage, error: fetchError } = await supabase
+        .from('messages')
+        .select('content, confidence, edit_count')
+        .eq('id', messageId)
+        .eq('trainer_id', user.id)
+        .single();
+
+      if (fetchError || !originalMessage) {
+        return new Response(JSON.stringify({ error: 'Message not found' }), {
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Track the edit
+      await supabase
+        .from('trainer_edits')
+        .insert({
+          trainer_id: user.id,
+          message_id: messageId,
+          original_content: originalMessage.content,
+          edited_content: content,
+          original_confidence: originalMessage.confidence,
+          edit_type: 'content_change',
+        });
+
+      // Update the message and increment edit count
+      await supabase
+        .from('messages')
+        .update({ 
+          content,
+          edit_count: (originalMessage.edit_count || 0) + 1,
+          auto_approval_at: null, // Cancel auto-approval if set
+        })
+        .eq('id', messageId)
+        .eq('trainer_id', user.id);
+
+      // Update trainer stats
+      await supabase.rpc('increment_trainer_stat', {
+        trainer_id: user.id,
+        stat_name: 'total_messages_edited',
+      });
+
+      console.log(JSON.stringify({
+        function: 'queue-management',
+        action: 'edit',
+        messageId,
+        trainerId: user.id,
+        editCount: (originalMessage.edit_count || 0) + 1,
+        timestamp: new Date().toISOString(),
+      }));
+
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Edit Queue Item
+    if (action === 'editQueue' && req.method === 'POST') {
       const { id, message, tone } = body;
 
       await supabase
@@ -159,9 +256,18 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Batch Approve
+    // Batch Approve (uses custom threshold from settings)
     if (action === 'batchApprove' && req.method === 'POST') {
       const { minConfidence } = body;
+
+      // Get trainer's auto-approval settings for threshold
+      const { data: settings } = await supabase
+        .from('auto_approval_settings')
+        .select('high_confidence_threshold')
+        .eq('trainer_id', user.id)
+        .single();
+
+      const threshold = minConfidence || settings?.high_confidence_threshold || 0.8;
 
       // Get items to approve
       const { data: items } = await supabase
@@ -169,7 +275,7 @@ Deno.serve(async (req) => {
         .select('*')
         .eq('trainer_id', user.id)
         .eq('status', 'review')
-        .gte('confidence', minConfidence || 0.8);
+        .gte('confidence', threshold);
 
       if (!items || items.length === 0) {
         return new Response(JSON.stringify({ approved: 0 }), {
@@ -251,11 +357,11 @@ Deno.serve(async (req) => {
       const { draftId } = body;
       
       const { data: draft, error: draftError } = await supabase
-        .from('drafts')
+        .from('messages')
         .select('*')
         .eq('id', draftId)
         .eq('trainer_id', user.id)
-        .eq('status', 'pending')
+        .eq('status', 'draft')
         .single();
 
       if (draftError || !draft) {
@@ -265,21 +371,15 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Fetch client settings (timezone, opt_out)
-      let clientTz: string | null = null;
-      let clientOptOut = false;
-      if (draft.client_id) {
-        const { data: client } = await supabase
-          .from('clients')
-          .select('timezone, opt_out')
-          .eq('id', draft.client_id)
-          .eq('trainer_id', user.id)
-          .single();
-        clientTz = (client as any)?.timezone ?? null;
-        clientOptOut = !!(client as any)?.opt_out;
-      }
+      // Fetch contact settings
+      const { data: contact } = await supabase
+        .from('contacts')
+        .select('consent_status')
+        .eq('id', draft.contact_id)
+        .eq('trainer_id', user.id)
+        .single();
 
-      if (clientOptOut) {
+      if (contact?.consent_status === 'opted_out') {
         return new Response(JSON.stringify({ error: 'opt_out' }), {
           status: 403,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -289,10 +389,10 @@ Deno.serve(async (req) => {
       // Rate limit: max 50 approvals in last hour per trainer
       const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
       const { count: approvalsLastHour } = await supabase
-        .from('drafts')
+        .from('messages')
         .select('id', { count: 'exact', head: true })
         .eq('trainer_id', user.id)
-        .in('status', ['approved','scheduled','sent'])
+        .in('status', ['queued','sent'])
         .gte('updated_at', oneHourAgo);
       if ((approvalsLastHour ?? 0) >= 50) {
         return new Response(JSON.stringify({ error: 'rate_limited', limit: 50 }), {
@@ -301,35 +401,26 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Quiet hours: 22:00–04:00 in client-local timezone (fallback UTC)
+      // Get config for quiet hours
+      const { data: config } = await supabase
+        .from('ghl_config')
+        .select('quiet_hours_start, quiet_hours_end')
+        .eq('trainer_id', user.id)
+        .single();
+
       const now = new Date();
-      let localHour = now.getUTCHours();
-      if (clientTz) {
-        try {
-          const fmt = new Intl.DateTimeFormat('en-US', { hour: 'numeric', hour12: false, timeZone: clientTz });
-          localHour = Number(fmt.format(now));
-        } catch (_e) {
-          // fallback to UTC
-        }
-      }
-      const isQuietHours = localHour >= 22 || localHour < 4;
+      const scheduledFor = draft.scheduled_for ? new Date(draft.scheduled_for) : now;
       
-      let updateData: any = { status: 'approved' };
+      const quietCheck = checkQuietHours(scheduledFor, {
+        quiet_hours_start: config?.quiet_hours_start ?? null,
+        quiet_hours_end: config?.quiet_hours_end ?? null,
+      });
       
-      if (isQuietHours) {
-        // Schedule for 04:05 client-local next day
-        const future = new Date(now);
-        // Compute next day 04:05 in client timezone, convert to UTC ISO
-        // Approximation: set to next day 04:05 in localHour baseline
-        const target = new Date(now);
-        target.setUTCDate(target.getUTCDate() + (localHour >= 22 ? 1 : 0));
-        target.setUTCHours(4, 5, 0, 0);
-        updateData.scheduled_at = target.toISOString();
-        updateData.status = 'scheduled';
-      }
+      let updateData: any = { status: 'queued', auto_approval_at: null };
+      updateData.scheduled_for = (quietCheck.allowed ? scheduledFor : quietCheck.nextAvailable!).toISOString();
 
       const { error: updateError } = await supabase
-        .from('drafts')
+        .from('messages')
         .update(updateData)
         .eq('id', draftId);
 
@@ -340,7 +431,7 @@ Deno.serve(async (req) => {
         });
       }
 
-      return new Response(JSON.stringify({ success: true, scheduled: isQuietHours }), {
+      return new Response(JSON.stringify({ success: true, scheduled: !quietCheck.allowed }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -357,11 +448,11 @@ Deno.serve(async (req) => {
       }
 
       const { data: drafts, error: fetchError } = await supabase
-        .from('drafts')
+        .from('messages')
         .select('*')
         .in('id', draftIds)
         .eq('trainer_id', user.id)
-        .eq('status', 'pending');
+        .eq('status', 'draft');
 
       if (fetchError) {
         return new Response(JSON.stringify({ error: fetchError.message }), {
@@ -374,55 +465,48 @@ Deno.serve(async (req) => {
       
       const results = await Promise.all(
         drafts.map(async (draft) => {
-          // Fetch client
-          let clientTz: string | null = null;
-          let clientOptOut = false;
-          if (draft.client_id) {
-            const { data: client } = await supabase
-              .from('clients')
-              .select('timezone, opt_out')
-              .eq('id', draft.client_id)
-              .eq('trainer_id', user.id)
-              .single();
-            clientTz = (client as any)?.timezone ?? null;
-            clientOptOut = !!(client as any)?.opt_out;
-          }
-          if (clientOptOut) {
+          // Fetch contact
+          const { data: contact } = await supabase
+            .from('contacts')
+            .select('consent_status')
+            .eq('id', draft.contact_id)
+            .eq('trainer_id', user.id)
+            .single();
+            
+          if (contact?.consent_status === 'opted_out') {
             return { id: draft.id, success: false, error: 'opt_out' };
           }
 
           // Rate limit check per item (simple shared cap)
           const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
           const { count: approvalsLastHour } = await supabase
-            .from('drafts')
+            .from('messages')
             .select('id', { count: 'exact', head: true })
             .eq('trainer_id', user.id)
-            .in('status', ['approved','scheduled','sent'])
+            .in('status', ['queued','sent'])
             .gte('updated_at', oneHourAgo);
           if ((approvalsLastHour ?? 0) >= 50) {
             return { id: draft.id, success: false, error: 'rate_limited' };
           }
 
-          let localHour = now.getUTCHours();
-          if (clientTz) {
-            try {
-              const fmt = new Intl.DateTimeFormat('en-US', { hour: 'numeric', hour12: false, timeZone: clientTz });
-              localHour = Number(fmt.format(now));
-            } catch {}
-          }
-          const isQuietHours = localHour >= 22 || localHour < 4;
-          let updateData: any = { status: 'approved' };
+          // Get config for quiet hours
+          const { data: config } = await supabase
+            .from('ghl_config')
+            .select('quiet_hours_start, quiet_hours_end')
+            .eq('trainer_id', user.id)
+            .single();
+
+          const scheduledFor = draft.scheduled_for ? new Date(draft.scheduled_for) : now;
+          const quietCheck = checkQuietHours(scheduledFor, {
+            quiet_hours_start: config?.quiet_hours_start ?? null,
+            quiet_hours_end: config?.quiet_hours_end ?? null,
+          });
           
-          if (isQuietHours) {
-            const target = new Date(now);
-            target.setUTCDate(target.getUTCDate() + (localHour >= 22 ? 1 : 0));
-            target.setUTCHours(4, 5, 0, 0);
-            updateData.scheduled_at = target.toISOString();
-            updateData.status = 'scheduled';
-          }
+          let updateData: any = { status: 'queued', auto_approval_at: null };
+          updateData.scheduled_for = (quietCheck.allowed ? scheduledFor : quietCheck.nextAvailable!).toISOString();
 
           const { error } = await supabase
-            .from('drafts')
+            .from('messages')
             .update(updateData)
             .eq('id', draft.id);
 
@@ -430,7 +514,7 @@ Deno.serve(async (req) => {
             id: draft.id,
             success: !error,
             error: error?.message,
-            scheduled: isQuietHours,
+            scheduled: !quietCheck.allowed,
           };
         })
       );

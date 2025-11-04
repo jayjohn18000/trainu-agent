@@ -11,6 +11,8 @@ export interface Message {
   why_reasons: string[] | null;
   scheduled_for: string | null;
   created_at: string;
+  auto_approval_at?: string | null;
+  edit_count?: number;
 }
 
 export interface Conversation {
@@ -104,7 +106,7 @@ export async function sendMessage(contactId: string, content: string): Promise<{
 export async function listDraftsAndQueued(limit = 20): Promise<Message[]> {
   const { data, error } = await supabase
     .from("messages")
-    .select("id, trainer_id, contact_id, status, content, channel, confidence, why_reasons, scheduled_for, created_at, updated_at")
+    .select("id, trainer_id, contact_id, status, content, channel, confidence, why_reasons, scheduled_for, created_at, updated_at, auto_approval_at, edit_count")
     .eq("status", "draft")
     .order("updated_at", { ascending: false })
     .order("confidence", { ascending: false })

@@ -101,6 +101,39 @@ export type Database = {
         }
         Relationships: []
       }
+      auto_approval_settings: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          high_confidence_threshold: number
+          id: string
+          max_daily_auto_approvals: number
+          preview_window_minutes: number
+          trainer_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          high_confidence_threshold?: number
+          id?: string
+          max_daily_auto_approvals?: number
+          preview_window_minutes?: number
+          trainer_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          high_confidence_threshold?: number
+          id?: string
+          max_daily_auto_approvals?: number
+          preview_window_minutes?: number
+          trainer_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       bookings: {
         Row: {
           contact_id: string
@@ -425,11 +458,13 @@ export type Database = {
       }
       messages: {
         Row: {
+          auto_approval_at: string | null
           channel: Database["public"]["Enums"]["message_channel"] | null
           confidence: number | null
           contact_id: string
           content: string
           created_at: string | null
+          edit_count: number
           expires_at: string | null
           generated_by: string | null
           ghl_delivered_at: string | null
@@ -444,11 +479,13 @@ export type Database = {
           why_reasons: string[] | null
         }
         Insert: {
+          auto_approval_at?: string | null
           channel?: Database["public"]["Enums"]["message_channel"] | null
           confidence?: number | null
           contact_id: string
           content: string
           created_at?: string | null
+          edit_count?: number
           expires_at?: string | null
           generated_by?: string | null
           ghl_delivered_at?: string | null
@@ -463,11 +500,13 @@ export type Database = {
           why_reasons?: string[] | null
         }
         Update: {
+          auto_approval_at?: string | null
           channel?: Database["public"]["Enums"]["message_channel"] | null
           confidence?: number | null
           contact_id?: string
           content?: string
           created_at?: string | null
+          edit_count?: number
           expires_at?: string | null
           generated_by?: string | null
           ghl_delivered_at?: string | null
@@ -603,6 +642,47 @@ export type Database = {
           unlocked_at?: string | null
         }
         Relationships: []
+      }
+      trainer_edits: {
+        Row: {
+          created_at: string
+          edit_type: string
+          edited_content: string
+          id: string
+          message_id: string
+          original_confidence: number | null
+          original_content: string
+          trainer_id: string
+        }
+        Insert: {
+          created_at?: string
+          edit_type?: string
+          edited_content: string
+          id?: string
+          message_id: string
+          original_confidence?: number | null
+          original_content: string
+          trainer_id: string
+        }
+        Update: {
+          created_at?: string
+          edit_type?: string
+          edited_content?: string
+          id?: string
+          message_id?: string
+          original_confidence?: number | null
+          original_content?: string
+          trainer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trainer_edits_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       trainer_profiles: {
         Row: {

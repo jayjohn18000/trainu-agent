@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { QueueCard } from "@/components/agent/QueueCard";
 import { ProgramBuilderCard } from "@/components/agent/ProgramBuilderCard";
 import { MessageEditor } from "@/components/agent/MessageEditor";
+import { AutoApprovalCountdown } from "@/components/agent/AutoApprovalCountdown";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -313,22 +314,30 @@ export default function Queue() {
               : "Unknown Client";
             
             return (
-              <QueueCard
-                key={msg.id}
-                item={{
-                  id: msg.id,
-                  clientId: msg.contact_id,
-                  clientName,
-                  preview: msg.content,
-                  confidence: msg.confidence || 0.8,
-                  status: msg.status as any,
-                  why: msg.why_reasons || [],
-                  createdAt: msg.created_at,
-                }}
-                onApprove={() => handleApprove(msg.id)}
-                onEdit={() => handleEdit(msg.id)}
-                onSendNow={() => handleSendNow(msg.id)}
-              />
+              <div key={msg.id} className="space-y-2">
+                {msg.auto_approval_at && (
+                  <AutoApprovalCountdown
+                    messageId={msg.id}
+                    autoApprovalAt={msg.auto_approval_at}
+                    onCancel={loadQueue}
+                  />
+                )}
+                <QueueCard
+                  item={{
+                    id: msg.id,
+                    clientId: msg.contact_id,
+                    clientName,
+                    preview: msg.content,
+                    confidence: msg.confidence || 0.8,
+                    status: msg.status as any,
+                    why: msg.why_reasons || [],
+                    createdAt: msg.created_at,
+                  }}
+                  onApprove={() => handleApprove(msg.id)}
+                  onEdit={() => handleEdit(msg.id)}
+                  onSendNow={() => handleSendNow(msg.id)}
+                />
+              </div>
             );
           })}
           <ProgramBuilderCard />
