@@ -55,7 +55,7 @@ export default function Home() {
                   AI retention automation that catches at-risk clients before they churn.
                 </p>
 
-                <div className="flex flex-col sm:flex-row gap-4 mb-12">
+                <div className="flex flex-col sm:flex-row gap-4 mb-8">
                   <Link to="/login">
                     <Button size="lg" className="shadow-glow hover:shadow-glow-intense w-full sm:w-auto text-lg px-8 py-6 transition-all duration-300 hover:scale-105">
                       Start Free Trial
@@ -66,6 +66,24 @@ export default function Home() {
                       See How It Works
                     </Button>
                   </Link>
+                </div>
+
+                {/* Challenge CTA */}
+                <div className="mb-12 p-6 rounded-2xl bg-gradient-to-r from-primary/10 via-primary-hover/10 to-primary/10 border border-primary/30 backdrop-blur-sm">
+                  <div className="flex items-start gap-4">
+                    <div className="text-4xl">🏆</div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold mb-2 text-foreground">Rate Your Trainer Challenge 2025</h3>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Win from a $10k prize pool! Submit your trainer rating and compete for rewards. Challenge ends March 31.
+                      </p>
+                      <Link to="/challenge">
+                        <Button size="sm" variant="secondary" className="shadow-md hover:scale-105 transition-transform">
+                          View Challenge Details
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Social Proof Stats */}
