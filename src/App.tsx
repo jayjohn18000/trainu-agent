@@ -12,6 +12,8 @@ import { useAuthStore } from "@/lib/store/useAuthStore";
 // Critical routes - loaded immediately for best UX
 import Login from "@/pages/Login";
 import Today from "@/pages/Today";
+import ForgotPassword from "@/pages/ForgotPassword";
+import ResetPassword from "@/pages/ResetPassword";
 
 // Lazy load secondary routes for better performance with retry logic
 import { lazyWithRetry } from "@/lib/lazy";
@@ -97,6 +99,8 @@ export default function App() {
             
             {/* Public app routes */}
             <Route path="/login" element={<Login />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/directory" element={<Directory />} />
             <Route path="/trainers/:slug" element={<TrainerProfile />} />
 
