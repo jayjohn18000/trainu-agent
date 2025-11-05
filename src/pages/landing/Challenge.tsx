@@ -7,25 +7,59 @@ import { ScrollReveal } from "@/components/landing/ScrollReveal";
 import { AnimatedCounter } from "@/components/landing/AnimatedCounter";
 import trainerGroupImage from "@/assets/group-training-class.jpg";
 import gradientBg from "@/assets/gradient-mesh-bg.svg";
-
-const topTrainers = [
-  { rank: 1, name: "Sarah Mitchell", city: "Chicago, IL", rating: 4.9, reviews: 247, badge: "🥇" },
-  { rank: 2, name: "Marcus Rodriguez", city: "Austin, TX", rating: 4.9, reviews: 203, badge: "🥈" },
-  { rank: 3, name: "Jessica Chen", city: "Seattle, WA", rating: 4.8, reviews: 189, badge: "🥉" },
-  { rank: 4, name: "Alex Thompson", city: "Denver, CO", rating: 4.8, reviews: 176 },
-  { rank: 5, name: "Maria Garcia", city: "Miami, FL", rating: 4.7, reviews: 164 },
-];
-
-const prizes = [
-  { place: "1st Place", prize: "$5,000 Cash + Feature in Fitness Monthly", icon: Trophy },
-  { place: "2nd Place", prize: "$2,500 Cash + TrainU Pro (1 Year Free)", icon: Trophy },
-  { place: "3rd Place", prize: "$1,000 Cash + Premium Gym Equipment", icon: Trophy },
-  { place: "Top 10", prize: "TrainU Growth Plan (6 Months Free)", icon: Star },
-];
-
+const topTrainers = [{
+  rank: 1,
+  name: "Sarah Mitchell",
+  city: "Chicago, IL",
+  rating: 4.9,
+  reviews: 247,
+  badge: "🥇"
+}, {
+  rank: 2,
+  name: "Marcus Rodriguez",
+  city: "Austin, TX",
+  rating: 4.9,
+  reviews: 203,
+  badge: "🥈"
+}, {
+  rank: 3,
+  name: "Jessica Chen",
+  city: "Seattle, WA",
+  rating: 4.8,
+  reviews: 189,
+  badge: "🥉"
+}, {
+  rank: 4,
+  name: "Alex Thompson",
+  city: "Denver, CO",
+  rating: 4.8,
+  reviews: 176
+}, {
+  rank: 5,
+  name: "Maria Garcia",
+  city: "Miami, FL",
+  rating: 4.7,
+  reviews: 164
+}];
+const prizes = [{
+  place: "1st Place",
+  prize: "$5,000 Cash + Feature in Fitness Monthly",
+  icon: Trophy
+}, {
+  place: "2nd Place",
+  prize: "$2,500 Cash + TrainU Pro (1 Year Free)",
+  icon: Trophy
+}, {
+  place: "3rd Place",
+  prize: "$1,000 Cash + Premium Gym Equipment",
+  icon: Trophy
+}, {
+  place: "Top 10",
+  prize: "TrainU Growth Plan (6 Months Free)",
+  icon: Star
+}];
 export default function Challenge() {
-  return (
-    <LandingLayout>
+  return <LandingLayout>
       {/* Hero */}
       <section className="relative overflow-hidden bg-gradient-to-br from-primary/20 via-background to-background">
         <div className="absolute inset-0 opacity-20">
@@ -41,8 +75,7 @@ export default function Challenge() {
             <h1 className="text-5xl md:text-6xl font-bold mb-6">
               Rate Your Trainer{" "}
               <span className="bg-gradient-to-r from-primary to-primary-hover bg-clip-text text-transparent">
-                Challenge 2025
-              </span>
+Challenge 2025</span>
             </h1>
             
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
@@ -176,15 +209,12 @@ export default function Challenge() {
             </ScrollReveal>
 
             <div className="space-y-4">
-              {topTrainers.map((trainer, index) => (
-                <ScrollReveal key={trainer.rank} delay={index * 100}>
+              {topTrainers.map((trainer, index) => <ScrollReveal key={trainer.rank} delay={index * 100}>
                 <Card className={`p-6 hover:border-primary/30 transition-all hover:scale-[1.01] ${trainer.rank <= 3 ? 'border-primary/20' : ''}`}>
                   <div className="flex items-center gap-6">
                     <div className="flex-shrink-0 text-center">
                       <div className="text-4xl mb-1">{trainer.badge || `#${trainer.rank}`}</div>
-                      {trainer.rank <= 3 && (
-                        <Badge className="text-xs">Top 3</Badge>
-                      )}
+                      {trainer.rank <= 3 && <Badge className="text-xs">Top 3</Badge>}
                     </div>
 
                     <div className="flex-1">
@@ -206,8 +236,7 @@ export default function Challenge() {
                     </div>
                   </div>
                 </Card>
-                </ScrollReveal>
-              ))}
+                </ScrollReveal>)}
             </div>
 
             <div className="text-center mt-8">
@@ -229,15 +258,13 @@ export default function Challenge() {
             </p>
 
             <div className="grid md:grid-cols-2 gap-6">
-              {prizes.map((prize, index) => (
-                <Card key={index} className="p-6 text-center hover:border-primary/30 transition-all">
+              {prizes.map((prize, index) => <Card key={index} className="p-6 text-center hover:border-primary/30 transition-all">
                   <div className="h-16 w-16 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
                     <prize.icon className="h-8 w-8 text-primary" />
                   </div>
                   <h3 className="font-semibold text-lg mb-2">{prize.place}</h3>
                   <p className="text-sm text-muted-foreground">{prize.prize}</p>
-                </Card>
-              ))}
+                </Card>)}
             </div>
 
             <Card className="mt-8 p-6 bg-gradient-to-br from-success/10 to-success/5 border-success/20">
@@ -270,9 +297,7 @@ export default function Challenge() {
                   <div>
                     <p className="font-semibold">Jamie L.</p>
                     <div className="flex items-center gap-1">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} className="h-3 w-3 fill-warning text-warning" />
-                      ))}
+                      {[...Array(5)].map((_, i) => <Star key={i} className="h-3 w-3 fill-warning text-warning" />)}
                     </div>
                   </div>
                 </div>
@@ -290,9 +315,7 @@ export default function Challenge() {
                   <div>
                     <p className="font-semibold">Michael R.</p>
                     <div className="flex items-center gap-1">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} className="h-3 w-3 fill-warning text-warning" />
-                      ))}
+                      {[...Array(5)].map((_, i) => <Star key={i} className="h-3 w-3 fill-warning text-warning" />)}
                     </div>
                   </div>
                 </div>
@@ -365,6 +388,5 @@ export default function Challenge() {
           </ScrollReveal>
         </div>
       </section>
-    </LandingLayout>
-  );
+    </LandingLayout>;
 }
