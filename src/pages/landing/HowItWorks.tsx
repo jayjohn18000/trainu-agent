@@ -8,68 +8,54 @@ import { ScrollReveal } from "@/components/landing/ScrollReveal";
 import { AnimatedCounter } from "@/components/landing/AnimatedCounter";
 import trainerGroupImage from "@/assets/group-training-class.jpg";
 import gradientBg from "@/assets/gradient-mesh-bg.svg";
-
-const onboardingSteps = [
-  {
-    number: 1,
-    title: "Connect Your GHL Account",
-    description: "OAuth setup in under 2 minutes. We sync your existing contacts and message history automatically.",
-    duration: "2 min",
-    icon: Zap,
-  },
-  {
-    number: 2,
-    title: "Customize AI Tone & Rules",
-    description: "Tell our AI how you communicate. Set quiet hours, preferred channels, and approval thresholds.",
-    duration: "5 min",
-    icon: Settings,
-  },
-  {
-    number: 3,
-    title: "AI Learns Your Clients",
-    description: "TrainU analyzes existing engagement patterns, session history, and communication to build client profiles.",
-    duration: "Auto",
-    icon: Brain,
-  },
-  {
-    number: 4,
-    title: "Go Live",
-    description: "Start receiving AI-drafted messages in your queue. Review, approve, and send with one tap.",
-    duration: "Instant",
-    icon: Play,
-  },
-];
-
-const dailyWorkflow = [
-  {
-    time: "8:00 AM",
-    event: "Check Today View",
-    description: "See at-risk clients, AI drafts ready for review, and today's session reminders.",
-    action: "Review 3 AI drafts",
-  },
-  {
-    time: "8:05 AM",
-    event: "Approve Messages",
-    description: "Edit tone if needed, schedule send times, approve with one tap.",
-    action: "2 min total",
-  },
-  {
-    time: "Throughout Day",
-    event: "AI Monitors Engagement",
-    description: "TrainU tracks client responses, session check-ins, and app activity in real-time.",
-    action: "No action needed",
-  },
-  {
-    time: "6:00 PM",
-    event: "End-of-Day Insights",
-    description: "See who responded, who's trending at-risk, and tomorrow's priority clients.",
-    action: "1 min review",
-  },
-];
-
+const onboardingSteps = [{
+  number: 1,
+  title: "Connect Your GHL Account",
+  description: "OAuth setup in under 2 minutes. We sync your existing contacts and message history automatically.",
+  duration: "2 min",
+  icon: Zap
+}, {
+  number: 2,
+  title: "Customize AI Tone & Rules",
+  description: "Tell our AI how you communicate. Set quiet hours, preferred channels, and approval thresholds.",
+  duration: "5 min",
+  icon: Settings
+}, {
+  number: 3,
+  title: "AI Learns Your Clients",
+  description: "TrainU analyzes existing engagement patterns, session history, and communication to build client profiles.",
+  duration: "Auto",
+  icon: Brain
+}, {
+  number: 4,
+  title: "Go Live",
+  description: "Start receiving AI-drafted messages in your queue. Review, approve, and send with one tap.",
+  duration: "Instant",
+  icon: Play
+}];
+const dailyWorkflow = [{
+  time: "8:00 AM",
+  event: "Check Today View",
+  description: "See at-risk clients, AI drafts ready for review, and today's session reminders.",
+  action: "Review 3 AI drafts"
+}, {
+  time: "8:05 AM",
+  event: "Approve Messages",
+  description: "Edit tone if needed, schedule send times, approve with one tap.",
+  action: "2 min total"
+}, {
+  time: "Throughout Day",
+  event: "AI Monitors Engagement",
+  description: "TrainU tracks client responses, session check-ins, and app activity in real-time.",
+  action: "No action needed"
+}, {
+  time: "6:00 PM",
+  event: "End-of-Day Insights",
+  description: "See who responded, who's trending at-risk, and tomorrow's priority clients.",
+  action: "1 min review"
+}];
 export default function HowItWorks() {
-  return (
-    <LandingLayout>
+  return <LandingLayout>
       {/* Hero */}
       <section className="relative overflow-hidden py-20">
         <div className="absolute inset-0 opacity-30">
@@ -80,8 +66,7 @@ export default function HowItWorks() {
             <h1 className="text-5xl font-bold mb-6">
             From Setup to{" "}
             <span className="bg-gradient-to-r from-primary to-primary-hover bg-clip-text text-transparent">
-              Results in 30 Minutes
-            </span>
+Results in 30 Minutes</span>
           </h1>
           <p className="text-xl text-muted-foreground mb-8">
             No data migration. No complex config. Just connect, customize, and start retaining clients.
@@ -111,8 +96,7 @@ export default function HowItWorks() {
           </ScrollReveal>
 
           <div className="max-w-4xl mx-auto space-y-6">
-            {onboardingSteps.map((step, index) => (
-              <ScrollReveal key={index} delay={index * 150}>
+            {onboardingSteps.map((step, index) => <ScrollReveal key={index} delay={index * 150}>
               <Card className="p-6 hover:border-primary/30 transition-all hover:scale-[1.02]">
                 <div className="flex items-start gap-6">
                   <div className="flex-shrink-0">
@@ -138,12 +122,9 @@ export default function HowItWorks() {
                   </div>
                 </div>
 
-                {index < onboardingSteps.length - 1 && (
-                  <div className="ml-6 mt-4 mb-0 h-8 w-0.5 bg-gradient-to-b from-primary/50 to-transparent"></div>
-                )}
+                {index < onboardingSteps.length - 1 && <div className="ml-6 mt-4 mb-0 h-8 w-0.5 bg-gradient-to-b from-primary/50 to-transparent"></div>}
               </Card>
-              </ScrollReveal>
-            ))}
+              </ScrollReveal>)}
           </div>
         </div>
       </section>
@@ -160,16 +141,14 @@ export default function HowItWorks() {
             </p>
 
             <div className="grid md:grid-cols-2 gap-6">
-              {dailyWorkflow.map((item, index) => (
-                <Card key={index} className="p-6">
+              {dailyWorkflow.map((item, index) => <Card key={index} className="p-6">
                   <div className="flex items-start justify-between mb-3">
                     <div className="text-sm font-mono text-primary">{item.time}</div>
                     <Badge variant="outline" className="text-xs">{item.action}</Badge>
                   </div>
                   <h3 className="text-lg font-semibold mb-2">{item.event}</h3>
                   <p className="text-sm text-muted-foreground">{item.description}</p>
-                </Card>
-              ))}
+                </Card>)}
             </div>
 
             <ScrollReveal delay={200}>
@@ -393,6 +372,5 @@ export default function HowItWorks() {
           </ScrollReveal>
         </div>
       </section>
-    </LandingLayout>
-  );
+    </LandingLayout>;
 }
