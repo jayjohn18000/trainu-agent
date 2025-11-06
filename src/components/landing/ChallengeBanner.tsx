@@ -5,12 +5,12 @@ import { cn } from "@/lib/utils";
 
 export function ChallengeBanner() {
   const [isDismissed, setIsDismissed] = useState(() => {
-    return localStorage.getItem("challenge-banner-dismissed") === "true";
+    return sessionStorage.getItem("challenge-banner-dismissed") === "true";
   });
 
   const handleDismiss = () => {
     setIsDismissed(true);
-    localStorage.setItem("challenge-banner-dismissed", "true");
+    sessionStorage.setItem("challenge-banner-dismissed", "true");
   };
 
   if (isDismissed) return null;
