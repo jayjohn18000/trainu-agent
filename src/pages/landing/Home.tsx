@@ -150,7 +150,7 @@ export default function Home() {
                 </div>
                 
                 {/* Floating notification with image */}
-                <div className="absolute -bottom-8 -left-8 p-5 rounded-2xl bg-card backdrop-blur-xl border border-primary/40 shadow-2xl shadow-primary/30 max-w-xs animate-float">
+                <div className="absolute -bottom-10 -left-8 p-5 rounded-2xl bg-card backdrop-blur-xl border border-primary/40 shadow-2xl shadow-primary/30 max-w-xs animate-float">
                   <div className="flex items-center gap-4">
                     <div className="relative h-14 w-14 rounded-full overflow-hidden border-2 border-primary/50 flex-shrink-0">
                       <img 
