@@ -56,7 +56,7 @@ export function WelcomeModal({ open, onOpenChange, onStartTour }: WelcomeModalPr
   const handleSkip = async () => {
     onOpenChange(false);
     
-    // Mark onboarding as completed in database when skipped
+    // Mark onboarding as skipped - parent will handle the rest
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
@@ -73,6 +73,7 @@ export function WelcomeModal({ open, onOpenChange, onStartTour }: WelcomeModalPr
     }
     
     localStorage.setItem("welcomeShown", "true");
+    localStorage.setItem("tourCompleted", "true");
   };
 
   return (

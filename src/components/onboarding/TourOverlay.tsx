@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { X, ArrowRight } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 
 interface TourStep {
   target: string; // CSS selector
@@ -79,52 +78,16 @@ export function TourOverlay({ active, onComplete, onSkip }: TourOverlayProps) {
   const step = tourSteps[currentStep];
   const isLastStep = currentStep === tourSteps.length - 1;
 
-  const handleNext = async () => {
+  const handleNext = () => {
     if (isLastStep) {
       onComplete();
-      
-      // Mark onboarding as completed in database
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          await supabase
-            .from('user_profiles')
-            .update({ 
-              onboarding_completed: true,
-              onboarding_completed_at: new Date().toISOString()
-            })
-            .eq('id', user.id);
-        }
-      } catch (error) {
-        console.error('Error updating onboarding status:', error);
-      }
-      
-      localStorage.setItem("tourCompleted", "true");
     } else {
       setCurrentStep(prev => prev + 1);
     }
   };
 
-  const handleSkip = async () => {
+  const handleSkip = () => {
     onSkip();
-    
-    // Mark onboarding as completed in database even if skipped
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await supabase
-          .from('user_profiles')
-          .update({ 
-            onboarding_completed: true,
-            onboarding_completed_at: new Date().toISOString()
-          })
-          .eq('id', user.id);
-      }
-    } catch (error) {
-      console.error('Error updating onboarding status:', error);
-    }
-    
-    localStorage.setItem("tourCompleted", "true");
   };
 
   // Calculate tooltip position
