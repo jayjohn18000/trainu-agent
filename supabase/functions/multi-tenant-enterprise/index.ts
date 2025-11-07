@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.1";
+import { handleError, handleUnauthorizedError } from "../_shared/error-handler.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -14,7 +15,7 @@ serve(async (req) => {
   try {
     const authHeader = req.headers.get("authorization");
     if (!authHeader) {
-      throw new Error("No authorization header");
+      return handleUnauthorizedError("No authorization header");
     }
 
     const supabase = createClient(
@@ -25,7 +26,7 @@ serve(async (req) => {
 
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     if (userError || !user) {
-      throw new Error("Not authenticated");
+      return handleUnauthorizedError("Authentication required");
     }
 
     const { action, ...params } = await req.json();
@@ -47,7 +48,13 @@ serve(async (req) => {
         .select()
         .single();
 
-      if (orgError) throw orgError;
+      if (orgError) {
+        console.error("Failed to create organization:", orgError);
+        return new Response(
+          JSON.stringify({ error: "Failed to create organization" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
 
       // Create default admin role
       const { data: adminRole, error: roleError } = await supabase
@@ -62,7 +69,13 @@ serve(async (req) => {
         .select()
         .single();
 
-      if (roleError) throw roleError;
+      if (roleError) {
+        console.error("Failed to create admin role:", roleError);
+        return new Response(
+          JSON.stringify({ error: "Failed to create admin role" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
 
       // Add creator as admin
       await supabase
@@ -93,7 +106,13 @@ serve(async (req) => {
         .eq("id", organization_id)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Failed to get organization:", error);
+        return new Response(
+          JSON.stringify({ error: "Failed to get organization" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
 
       return new Response(
         JSON.stringify({ success: true, organization: org }),
@@ -111,7 +130,13 @@ serve(async (req) => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Failed to update organization:", error);
+        return new Response(
+          JSON.stringify({ error: "Failed to update organization" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
 
       return new Response(
         JSON.stringify({ success: true, organization: data }),
@@ -141,7 +166,13 @@ serve(async (req) => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Failed to create invitation:", error);
+        return new Response(
+          JSON.stringify({ error: "Failed to create invitation" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
 
       // TODO: Send invitation email
 
@@ -162,7 +193,13 @@ serve(async (req) => {
         `)
         .eq("organization_id", organization_id);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Failed to list team members:", error);
+        return new Response(
+          JSON.stringify({ error: "Failed to list team members" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
 
       return new Response(
         JSON.stringify({ success: true, members: data }),
@@ -179,7 +216,13 @@ serve(async (req) => {
         .eq("organization_id", organization_id)
         .eq("user_id", target_user_id);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Failed to remove user:", error);
+        return new Response(
+          JSON.stringify({ error: "Failed to remove user" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
 
       return new Response(
         JSON.stringify({ success: true }),
@@ -203,7 +246,13 @@ serve(async (req) => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Failed to create role:", error);
+        return new Response(
+          JSON.stringify({ error: "Failed to create role" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
 
       return new Response(
         JSON.stringify({ success: true, role: data }),
@@ -219,7 +268,13 @@ serve(async (req) => {
         .select("*")
         .eq("organization_id", organization_id);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Failed to list roles:", error);
+        return new Response(
+          JSON.stringify({ error: "Failed to list roles" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
 
       return new Response(
         JSON.stringify({ success: true, roles: data }),
@@ -261,7 +316,13 @@ serve(async (req) => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Failed to create API key:", error);
+        return new Response(
+          JSON.stringify({ error: "Failed to create API key" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
 
       return new Response(
         JSON.stringify({ 
@@ -282,7 +343,13 @@ serve(async (req) => {
         .eq("organization_id", organization_id)
         .is("revoked_at", null);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Failed to list API keys:", error);
+        return new Response(
+          JSON.stringify({ error: "Failed to list API keys" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
 
       return new Response(
         JSON.stringify({ success: true, api_keys: data }),
@@ -298,7 +365,13 @@ serve(async (req) => {
         .update({ revoked_at: new Date().toISOString() })
         .eq("id", key_id);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Failed to revoke API key:", error);
+        return new Response(
+          JSON.stringify({ error: "Failed to revoke API key" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
 
       return new Response(
         JSON.stringify({ success: true }),
@@ -320,7 +393,13 @@ serve(async (req) => {
 
       const { data, error } = await query.order("period_start", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Failed to get usage:", error);
+        return new Response(
+          JSON.stringify({ error: "Failed to get usage data" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
 
       return new Response(
         JSON.stringify({ success: true, usage: data }),
@@ -352,7 +431,13 @@ serve(async (req) => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Failed to record usage:", error);
+        return new Response(
+          JSON.stringify({ error: "Failed to record usage" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
 
       return new Response(
         JSON.stringify({ success: true, usage: data }),
@@ -366,13 +451,6 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error("Error in multi-tenant-enterprise:", error);
-    return new Response(
-      JSON.stringify({ 
-        error: error instanceof Error ? error.message : "Unknown error",
-        function: "multi-tenant-enterprise"
-      }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return handleError("multi-tenant-enterprise", error);
   }
 });

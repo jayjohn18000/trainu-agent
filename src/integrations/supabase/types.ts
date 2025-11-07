@@ -3326,6 +3326,10 @@ export type Database = {
         }
         Returns: string
       }
+      user_in_organization: {
+        Args: { _organization_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "client" | "trainer" | "gym_admin"
