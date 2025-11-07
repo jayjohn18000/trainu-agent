@@ -90,12 +90,41 @@ export default function Today() {
     loadData();
   }, []);
 
-  // Check if first visit
+  // Check if first visit (check database for onboarding status)
   useEffect(() => {
-    const welcomeShown = localStorage.getItem("welcomeShown");
-    if (!welcomeShown) {
-      setWelcomeOpen(true);
-    }
+    const checkOnboardingStatus = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        // Check database for onboarding completion
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('onboarding_completed')
+          .eq('id', user.id)
+          .single();
+
+        // If profile doesn't exist yet, create it
+        if (!profile) {
+          await supabase
+            .from('user_profiles')
+            .insert({ id: user.id, onboarding_completed: false });
+          setWelcomeOpen(true);
+        } else if (!profile.onboarding_completed) {
+          // Show welcome modal for users who haven't completed onboarding
+          setWelcomeOpen(true);
+        }
+      } catch (error) {
+        console.error('Error checking onboarding status:', error);
+        // Fallback to localStorage if database check fails
+        const welcomeShown = localStorage.getItem("welcomeShown");
+        if (!welcomeShown) {
+          setWelcomeOpen(true);
+        }
+      }
+    };
+
+    checkOnboardingStatus();
 
     // Track page view
     analytics.track('page_viewed', {
@@ -200,11 +229,50 @@ export default function Today() {
   const handleStartTour = () => {
     setTourActive(true);
   };
-  const handleCompleteTour = () => {
+  const handleCompleteTour = async () => {
     setTourActive(false);
+    
+    // Mark onboarding as completed in database
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase
+          .from('user_profiles')
+          .update({ 
+            onboarding_completed: true,
+            onboarding_completed_at: new Date().toISOString()
+          })
+          .eq('id', user.id);
+        
+        // Also set localStorage for faster subsequent checks
+        localStorage.setItem("welcomeShown", "true");
+        localStorage.setItem("tourCompleted", "true");
+      }
+    } catch (error) {
+      console.error('Error updating onboarding status:', error);
+    }
   };
-  const handleSkipTour = () => {
+  const handleSkipTour = async () => {
     setTourActive(false);
+    
+    // Mark onboarding as completed even if skipped
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase
+          .from('user_profiles')
+          .update({ 
+            onboarding_completed: true,
+            onboarding_completed_at: new Date().toISOString()
+          })
+          .eq('id', user.id);
+        
+        localStorage.setItem("welcomeShown", "true");
+        localStorage.setItem("tourCompleted", "true");
+      }
+    } catch (error) {
+      console.error('Error updating onboarding status:', error);
+    }
   };
   const handleApprove = async (id: string) => {
     const item = queue.find(q => q.id === id);

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Zap, TrendingUp, CheckCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface WelcomeModalProps {
   open: boolean;
@@ -52,8 +53,25 @@ export function WelcomeModal({ open, onOpenChange, onStartTour }: WelcomeModalPr
     }
   };
 
-  const handleSkip = () => {
+  const handleSkip = async () => {
     onOpenChange(false);
+    
+    // Mark onboarding as completed in database when skipped
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase
+          .from('user_profiles')
+          .update({ 
+            onboarding_completed: true,
+            onboarding_completed_at: new Date().toISOString()
+          })
+          .eq('id', user.id);
+      }
+    } catch (error) {
+      console.error('Error updating onboarding status:', error);
+    }
+    
     localStorage.setItem("welcomeShown", "true");
   };
 
