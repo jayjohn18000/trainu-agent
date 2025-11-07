@@ -70,11 +70,26 @@ export function TourOverlay({ active, onComplete, onSkip }: TourOverlayProps) {
     window.addEventListener("resize", updatePosition);
     window.addEventListener("scroll", updatePosition);
 
+    // Safety timeout: automatically close overlay after 3 seconds on last step
+    // This prevents the tour from getting stuck if something goes wrong
+    const isLastStep = currentStep === tourSteps.length - 1;
+    let safetyTimeout: NodeJS.Timeout | undefined;
+    
+    if (isLastStep) {
+      safetyTimeout = setTimeout(() => {
+        console.warn('Tour safety timeout triggered - force completing tour');
+        onComplete();
+      }, 3000);
+    }
+
     return () => {
       window.removeEventListener("resize", updatePosition);
       window.removeEventListener("scroll", updatePosition);
+      if (safetyTimeout) {
+        clearTimeout(safetyTimeout);
+      }
     };
-  }, [active, currentStep]);
+  }, [active, currentStep, onComplete]);
 
   if (!active || !targetRect) return null;
 

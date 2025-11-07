@@ -229,50 +229,58 @@ export default function Today() {
   const handleStartTour = () => {
     setTourActive(true);
   };
-  const handleCompleteTour = async () => {
+  const handleCompleteTour = () => {
+    // Immediately dismiss the tour overlay for responsive UI
     setTourActive(false);
     
-    // Mark onboarding as completed in database
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await supabase
-          .from('user_profiles')
-          .update({ 
-            onboarding_completed: true,
-            onboarding_completed_at: new Date().toISOString()
-          })
-          .eq('id', user.id);
-        
-        // Also set localStorage for faster subsequent checks
-        localStorage.setItem("welcomeShown", "true");
-        localStorage.setItem("tourCompleted", "true");
+    // Push async database work to next event loop tick
+    // This ensures React processes the state update first
+    setTimeout(async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await supabase
+            .from('user_profiles')
+            .update({ 
+              onboarding_completed: true,
+              onboarding_completed_at: new Date().toISOString()
+            })
+            .eq('id', user.id);
+          
+          // Also set localStorage for faster subsequent checks
+          localStorage.setItem("welcomeShown", "true");
+          localStorage.setItem("tourCompleted", "true");
+        }
+      } catch (error) {
+        console.error('Error updating onboarding status:', error);
       }
-    } catch (error) {
-      console.error('Error updating onboarding status:', error);
-    }
+    }, 0);
   };
-  const handleSkipTour = async () => {
+  const handleSkipTour = () => {
+    // Immediately dismiss the tour overlay for responsive UI
     setTourActive(false);
     
-    // Mark onboarding as completed even if skipped
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await supabase
-          .from('user_profiles')
-          .update({ 
-            onboarding_completed: true,
-            onboarding_completed_at: new Date().toISOString()
-          })
-          .eq('id', user.id);
-        
-        localStorage.setItem("welcomeShown", "true");
-        localStorage.setItem("tourCompleted", "true");
+    // Push async database work to next event loop tick
+    // This ensures React processes the state update first
+    setTimeout(async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await supabase
+            .from('user_profiles')
+            .update({ 
+              onboarding_completed: true,
+              onboarding_completed_at: new Date().toISOString()
+            })
+            .eq('id', user.id);
+          
+          localStorage.setItem("welcomeShown", "true");
+          localStorage.setItem("tourCompleted", "true");
+        }
+      } catch (error) {
+        console.error('Error updating onboarding status:', error);
       }
-    } catch (error) {
-      console.error('Error updating onboarding status:', error);
-    }
+    }, 0);
   };
   const handleApprove = async (id: string) => {
     const item = queue.find(q => q.id === id);
