@@ -60,6 +60,9 @@ export function TourOverlay({ active, onComplete, onSkip }: TourOverlayProps) {
       const target = document.querySelector(tourSteps[currentStep].target);
       if (target) {
         setTargetRect(target.getBoundingClientRect());
+      } else {
+        // Reset to null if target not found - this will hide the overlay
+        setTargetRect(null);
       }
     };
 

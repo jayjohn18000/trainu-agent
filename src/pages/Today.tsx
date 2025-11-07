@@ -507,7 +507,9 @@ export default function Today() {
   }]);
   const safeItemsCount = queue.filter(item => item.confidence >= 0.8).length;
   return <>
-      <TrainerXPNotification />
+      <div data-tour="level">
+        <TrainerXPNotification />
+      </div>
       
       {/* Achievement Notifications */}
       {newlyUnlockedAchievements.map(achievement => <AchievementUnlockNotification key={achievement.id} achievement={{
@@ -526,7 +528,7 @@ export default function Today() {
             {!isMobile && <Button variant="ghost" size="icon" onClick={() => setShortcutsOpen(true)} title="Keyboard shortcuts (?)" aria-label="View keyboard shortcuts">
                 <Keyboard className="h-4 w-4" />
               </Button>}
-            {safeItemsCount > 0 && <Button variant="outline" size="sm" onClick={handleApproveAllSafe} aria-label={`Approve ${safeItemsCount} safe messages`}>
+            {safeItemsCount > 0 && <Button variant="outline" size="sm" onClick={handleApproveAllSafe} data-tour="approve-btn" aria-label={`Approve ${safeItemsCount} safe messages`}>
                 <Zap className="h-4 w-4 mr-2" aria-hidden="true" />
                 Approve {safeItemsCount} Safe
               </Button>}
