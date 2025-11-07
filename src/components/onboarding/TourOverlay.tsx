@@ -79,13 +79,13 @@ export function TourOverlay({ active, onComplete, onSkip }: TourOverlayProps) {
   if (!active || !targetRect) return null;
 
   const step = tourSteps[currentStep];
-  const isLastStep = currentStep === tourSteps.length - 1;
+  const isLastStep = currentStep === tourSteps.length;
 
   const handleNext = () => {
     if (isLastStep) {
       onComplete();
     } else {
-      setCurrentStep(prev => prev + 1);
+      setCurrentStep((prev) => prev + 1);
     }
   };
 
@@ -144,19 +144,12 @@ export function TourOverlay({ active, onComplete, onSkip }: TourOverlayProps) {
         <CardContent className="p-4">
           <div className="flex items-start justify-between mb-2">
             <h3 className="font-bold text-lg">{step.title}</h3>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 -mt-1 -mr-1"
-              onClick={handleSkip}
-            >
+            <Button variant="ghost" size="icon" className="h-6 w-6 -mt-1 -mr-1" onClick={handleSkip}>
               <X className="h-4 w-4" />
             </Button>
           </div>
 
-          <p className="text-sm text-muted-foreground mb-4">
-            {step.description}
-          </p>
+          <p className="text-sm text-muted-foreground mb-4">{step.description}</p>
 
           <div className="flex items-center justify-between">
             <div className="flex gap-1">
