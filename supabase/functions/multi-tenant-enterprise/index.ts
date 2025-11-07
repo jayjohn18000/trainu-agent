@@ -1,11 +1,115 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.1";
 import { handleError, handleUnauthorizedError } from "../_shared/error-handler.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+// Validation schemas
+const createOrgSchema = z.object({
+  action: z.literal("create_organization"),
+  name: z.string().min(1).max(100),
+  slug: z.string().min(1).max(50).regex(/^[a-z0-9-]+$/),
+  plan_tier: z.enum(["free", "pro", "enterprise"]).optional(),
+  billing_email: z.string().email().max(255).optional(),
+});
+
+const getOrgSchema = z.object({
+  action: z.literal("get_organization"),
+  organization_id: z.string().uuid(),
+});
+
+const updateOrgSchema = z.object({
+  action: z.literal("update_organization"),
+  organization_id: z.string().uuid(),
+  name: z.string().min(1).max(100).optional(),
+  billing_email: z.string().email().max(255).optional(),
+  plan_tier: z.enum(["free", "pro", "enterprise"]).optional(),
+});
+
+const inviteUserSchema = z.object({
+  action: z.literal("invite_user"),
+  organization_id: z.string().uuid(),
+  email: z.string().email().max(255),
+  role_id: z.string().uuid(),
+});
+
+const listTeamSchema = z.object({
+  action: z.literal("list_team_members"),
+  organization_id: z.string().uuid(),
+});
+
+const removeUserSchema = z.object({
+  action: z.literal("remove_user"),
+  organization_id: z.string().uuid(),
+  user_id: z.string().uuid(),
+});
+
+const createRoleSchema = z.object({
+  action: z.literal("create_role"),
+  organization_id: z.string().uuid(),
+  name: z.string().min(1).max(50),
+  description: z.string().max(500).optional(),
+  permissions: z.array(z.string()).min(1),
+});
+
+const listRolesSchema = z.object({
+  action: z.literal("list_roles"),
+  organization_id: z.string().uuid(),
+});
+
+const createApiKeySchema = z.object({
+  action: z.literal("create_api_key"),
+  organization_id: z.string().uuid(),
+  name: z.string().min(1).max(100),
+  permissions: z.array(z.string()).optional(),
+  rate_limit: z.number().int().min(1).max(100000).optional(),
+  expires_days: z.number().int().min(1).max(365).optional(),
+});
+
+const listApiKeysSchema = z.object({
+  action: z.literal("list_api_keys"),
+  organization_id: z.string().uuid(),
+});
+
+const revokeApiKeySchema = z.object({
+  action: z.literal("revoke_api_key"),
+  key_id: z.string().uuid(),
+});
+
+const getUsageSchema = z.object({
+  action: z.literal("get_usage"),
+  organization_id: z.string().uuid(),
+  period_start: z.string().optional(),
+  period_end: z.string().optional(),
+});
+
+const recordUsageSchema = z.object({
+  action: z.literal("record_usage"),
+  organization_id: z.string().uuid(),
+  messages_sent: z.number().int().min(0).optional(),
+  ai_requests: z.number().int().min(0).optional(),
+  api_calls: z.number().int().min(0).optional(),
+});
+
+const actionSchemas = z.discriminatedUnion("action", [
+  createOrgSchema,
+  getOrgSchema,
+  updateOrgSchema,
+  inviteUserSchema,
+  listTeamSchema,
+  removeUserSchema,
+  createRoleSchema,
+  listRolesSchema,
+  createApiKeySchema,
+  listApiKeysSchema,
+  revokeApiKeySchema,
+  getUsageSchema,
+  recordUsageSchema,
+]);
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -29,11 +133,26 @@ serve(async (req) => {
       return handleUnauthorizedError("Authentication required");
     }
 
-    const { action, ...params } = await req.json();
+    const body = await req.json();
+    
+    // Validate input
+    const validation = actionSchemas.safeParse(body);
+    if (!validation.success) {
+      return new Response(
+        JSON.stringify({ 
+          error: "Invalid input", 
+          details: validation.error.format() 
+        }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const validatedData = validation.data;
+    const action = validatedData.action;
 
     // Organization Management
     if (action === "create_organization") {
-      const { name, slug, plan_tier = "free", billing_email } = params;
+      const { name, slug, plan_tier = "free", billing_email } = validatedData;
       
       const { data: org, error: orgError } = await supabase
         .from("organizations")
@@ -94,7 +213,7 @@ serve(async (req) => {
     }
 
     if (action === "get_organization") {
-      const { organization_id } = params;
+      const { organization_id } = validatedData;
       
       const { data: org, error } = await supabase
         .from("organizations")
@@ -121,7 +240,7 @@ serve(async (req) => {
     }
 
     if (action === "update_organization") {
-      const { organization_id, ...updates } = params;
+      const { organization_id, ...updates } = validatedData;
       
       const { data, error } = await supabase
         .from("organizations")
@@ -146,7 +265,7 @@ serve(async (req) => {
 
     // Team Management
     if (action === "invite_user") {
-      const { organization_id, email, role_id } = params;
+      const { organization_id, email, role_id } = validatedData;
       
       const token = crypto.randomUUID();
       const expiresAt = new Date();
@@ -183,7 +302,7 @@ serve(async (req) => {
     }
 
     if (action === "list_team_members") {
-      const { organization_id } = params;
+      const { organization_id } = validatedData;
       
       const { data, error } = await supabase
         .from("organization_users")
@@ -208,7 +327,7 @@ serve(async (req) => {
     }
 
     if (action === "remove_user") {
-      const { organization_id, user_id: target_user_id } = params;
+      const { organization_id, user_id: target_user_id } = validatedData;
       
       const { error } = await supabase
         .from("organization_users")
@@ -232,7 +351,7 @@ serve(async (req) => {
 
     // Role Management
     if (action === "create_role") {
-      const { organization_id, name, description, permissions } = params;
+      const { organization_id, name, description, permissions } = validatedData;
       
       const { data, error } = await supabase
         .from("roles")
@@ -261,7 +380,7 @@ serve(async (req) => {
     }
 
     if (action === "list_roles") {
-      const { organization_id } = params;
+      const { organization_id } = validatedData;
       
       const { data, error } = await supabase
         .from("roles")
@@ -284,7 +403,7 @@ serve(async (req) => {
 
     // API Key Management
     if (action === "create_api_key") {
-      const { organization_id, name, permissions = [], rate_limit = 1000, expires_days } = params;
+      const { organization_id, name, permissions = ["read"], rate_limit = 1000, expires_days } = validatedData;
       
       const apiKey = `sk_${crypto.randomUUID().replace(/-/g, '')}`;
       const keyPrefix = apiKey.substring(0, 12);
@@ -335,7 +454,7 @@ serve(async (req) => {
     }
 
     if (action === "list_api_keys") {
-      const { organization_id } = params;
+      const { organization_id } = validatedData;
       
       const { data, error } = await supabase
         .from("api_keys")
@@ -358,7 +477,7 @@ serve(async (req) => {
     }
 
     if (action === "revoke_api_key") {
-      const { key_id } = params;
+      const { key_id } = validatedData;
       
       const { error } = await supabase
         .from("api_keys")
@@ -381,7 +500,7 @@ serve(async (req) => {
 
     // Usage Tracking
     if (action === "get_usage") {
-      const { organization_id, period_start, period_end } = params;
+      const { organization_id, period_start, period_end } = validatedData;
       
       let query = supabase
         .from("subscription_usage")
@@ -408,7 +527,7 @@ serve(async (req) => {
     }
 
     if (action === "record_usage") {
-      const { organization_id, messages_sent = 0, ai_requests = 0, api_calls = 0 } = params;
+      const { organization_id, messages_sent = 0, ai_requests = 0, api_calls = 0 } = validatedData;
       
       const today = new Date();
       const periodStart = new Date(today.getFullYear(), today.getMonth(), 1);
