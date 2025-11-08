@@ -163,7 +163,7 @@ export function TrainerSidebar({ collapsed, onToggle }: TrainerSidebarProps) {
               }
 
               return (
-                <Link key={item.label} to={item.path!}>
+                <Link key={item.label} to={item.path!} className="block">
                   <Button
                     variant={isActive ? "secondary" : "ghost"}
                     className={cn(
