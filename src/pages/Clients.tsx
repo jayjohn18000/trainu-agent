@@ -9,6 +9,8 @@ import { ClientInspector } from "@/components/clients/ClientInspector";
 import { NudgeDialog } from "@/components/clients/NudgeDialog";
 import { ClientsHeader } from "@/components/clients/ClientsHeader";
 import { ClientsStats } from "@/components/clients/ClientsStats";
+import { SessionReviewDialog } from "@/components/clients/SessionReviewDialog";
+import { ClientCheckInDialog } from "@/components/clients/ClientCheckInDialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Client, ClientDetail } from "@/lib/data/clients/types";
 import { useClients } from "@/hooks/queries/useClients";
@@ -24,6 +26,8 @@ export default function Clients() {
   const [clients, setClients] = useState<Client[]>([]);
   const [selectedClient, setSelectedClient] = useState<ClientDetail | null>(null);
   const [nudgeClient, setNudgeClient] = useState<Client | null>(null);
+  const [sessionReviewOpen, setSessionReviewOpen] = useState(false);
+  const [checkInOpen, setCheckInOpen] = useState(false);
   const [total, setTotal] = useState(0);
 
   const query = searchParams.get("q") || "";
@@ -205,8 +209,25 @@ export default function Clients() {
         onOpenChange={(open) => !open && setNudgeClient(null)}
         client={nudgeClient}
         onSend={handleNudge}
-        onSuccess={() => navigate('/queue')}
       />
+
+      {selectedClient && (
+        <>
+          <SessionReviewDialog
+            open={sessionReviewOpen}
+            onOpenChange={setSessionReviewOpen}
+            contactId={selectedClient.id}
+            contactName={selectedClient.name}
+          />
+
+          <ClientCheckInDialog
+            open={checkInOpen}
+            onOpenChange={setCheckInOpen}
+            contactId={selectedClient.id}
+            contactName={selectedClient.name}
+          />
+        </>
+      )}
     </div>
   );
 }

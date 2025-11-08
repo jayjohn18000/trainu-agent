@@ -83,5 +83,11 @@ verify_jwt = true
 [functions.generate-welcome-draft]
 verify_jwt = true
 
+[functions.generate-session-followup]
+verify_jwt = true
+
+[functions.generate-client-checkin]
+verify_jwt = true
+
 [functions.auto-approval-scheduler]
 verify_jwt = true
