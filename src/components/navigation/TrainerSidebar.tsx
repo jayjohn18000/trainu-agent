@@ -155,9 +155,6 @@ export function TrainerSidebar({ collapsed, onToggle }: TrainerSidebarProps) {
                   >
                     <Icon className="h-5 w-5 mr-3" />
                     <span>{item.label}</span>
-                    <Badge variant="outline" className="ml-auto text-xs">
-                      {item.shortcut}
-                    </Badge>
                   </Button>
                 );
               }
@@ -173,9 +170,6 @@ export function TrainerSidebar({ collapsed, onToggle }: TrainerSidebarProps) {
                   >
                     <Icon className="h-5 w-5 mr-3" />
                     <span>{item.label}</span>
-                    <Badge variant="outline" className="ml-auto text-xs">
-                      {item.shortcut}
-                    </Badge>
                   </Button>
                 </Link>
               );
@@ -216,9 +210,6 @@ export function TrainerSidebar({ collapsed, onToggle }: TrainerSidebarProps) {
                 >
                   <Settings className="h-5 w-5 mr-3" />
                   <span>{settingsItem.label}</span>
-                  <Badge variant="outline" className="ml-auto text-xs">
-                    {settingsItem.shortcut}
-                  </Badge>
                 </Button>
               </Link>
             )}
