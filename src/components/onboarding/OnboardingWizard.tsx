@@ -9,13 +9,14 @@ import { Building2, Clock, Moon, FileUp, CheckCircle2, Loader2 } from "lucide-re
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { CSVImport } from "./CSVImport";
+import { GHLConnection } from "./GHLConnection";
 
 interface OnboardingWizardProps {
   open: boolean;
   onComplete: () => void;
 }
 
-type Step = "studio" | "import" | "draft";
+type Step = "studio" | "connect" | "import" | "draft";
 
 interface StudioData {
   studioName: string;
@@ -58,8 +59,8 @@ export function OnboardingWizard({ open, onComplete }: OnboardingWizardProps) {
 
       if (error) throw error;
 
-      toast({ title: "Studio setup complete", description: "Moving to client import..." });
-      setStep("import");
+      toast({ title: "Studio setup complete", description: "Next: connect your clients..." });
+      setStep("connect");
     } catch (error) {
       console.error("Studio setup error:", error);
       toast({
@@ -142,6 +143,7 @@ export function OnboardingWizard({ open, onComplete }: OnboardingWizardProps) {
         <DialogHeader>
           <DialogTitle>
             {step === "studio" && "Welcome to TrainU Agent"}
+            {step === "connect" && "Connect Your Clients"}
             {step === "import" && "Import Your Clients"}
             {step === "draft" && "Your First AI Draft"}
           </DialogTitle>
@@ -229,6 +231,16 @@ export function OnboardingWizard({ open, onComplete }: OnboardingWizardProps) {
               {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Continue to Client Import
             </Button>
+          </div>
+        )}
+
+        {/* Connect Step */}
+        {step === "connect" && (
+          <div className="py-4">
+            <GHLConnection 
+              onSuccess={() => setStep("import")} 
+              onSkip={() => setStep("import")} 
+            />
           </div>
         )}
 

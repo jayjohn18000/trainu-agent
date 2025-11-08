@@ -91,3 +91,9 @@ verify_jwt = true
 
 [functions.auto-approval-scheduler]
 verify_jwt = true
+
+[functions.ghl-validate]
+verify_jwt = true
+
+[functions.assistant-chat]
+verify_jwt = true
