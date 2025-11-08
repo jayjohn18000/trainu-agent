@@ -12,6 +12,7 @@ import { GHLSettingsModal } from "./GHLSettingsModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { LogOut } from "lucide-react";
+import { useAuthStore } from "@/lib/store/useAuthStore";
 
 interface SettingsModalProps {
   open: boolean;
@@ -23,6 +24,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
   const [ghlModalOpen, setGhlModalOpen] = useState(false);
   const settings = fixtures.settings;
   const navigate = useNavigate();
+  const { logout } = useAuthStore();
 
   const handleSaveAgent = async () => {
     setSaving(true);
@@ -47,8 +49,7 @@ export function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
 
   const handleSignOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      await logout();
       
       toast({ 
         title: "Signed out successfully", 

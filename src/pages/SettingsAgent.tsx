@@ -16,6 +16,7 @@ import { useNavigate } from "react-router-dom";
 import { LogOut } from "lucide-react";
 import { getDbFlag, setDbFlag } from "@/lib/flags";
 import type { AgentSettings } from "@/types/agent";
+import { useAuthStore } from "@/lib/store/useAuthStore";
 
 export default function SettingsAgent() {
   const [settings, setSettings] = useState<AgentSettings>({
@@ -60,6 +61,7 @@ export default function SettingsAgent() {
   
   const [trainerId, setTrainerId] = useState<string>("");
   const navigate = useNavigate();
+  const { logout } = useAuthStore();
 
   // Load trainer data on mount
   useEffect(() => {
@@ -235,8 +237,7 @@ export default function SettingsAgent() {
 
   const handleSignOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      await logout();
       
       toast({ 
         title: "Signed out successfully", 
