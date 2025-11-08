@@ -1216,6 +1216,45 @@ export type Database = {
         }
         Relationships: []
       }
+      dfy_requests: {
+        Row: {
+          additional_notes: string | null
+          business_name: string
+          created_at: string | null
+          current_ghl_account: string | null
+          email: string | null
+          id: string
+          phone: string | null
+          status: string | null
+          trainer_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          additional_notes?: string | null
+          business_name: string
+          created_at?: string | null
+          current_ghl_account?: string | null
+          email?: string | null
+          id?: string
+          phone?: string | null
+          status?: string | null
+          trainer_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          additional_notes?: string | null
+          business_name?: string
+          created_at?: string | null
+          current_ghl_account?: string | null
+          email?: string | null
+          id?: string
+          phone?: string | null
+          status?: string | null
+          trainer_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       edge_function_metrics: {
         Row: {
           cpu_usage_percentage: number | null
@@ -1491,6 +1530,7 @@ export type Database = {
       }
       ghl_config: {
         Row: {
+          admin_notes: string | null
           booking_widget_id: string | null
           contact_field_mapping: Json | null
           created_at: string | null
@@ -1499,9 +1539,13 @@ export type Database = {
           frequency_cap_daily: number | null
           frequency_cap_weekly: number | null
           id: string
-          location_id: string
+          location_id: string | null
+          provisioned_at: string | null
+          provisioned_by: string | null
+          provisioning_status: string | null
           quiet_hours_end: string | null
           quiet_hours_start: string | null
+          setup_type: string | null
           sms_enabled: boolean | null
           templates: Json | null
           trainer_id: string
@@ -1509,6 +1553,7 @@ export type Database = {
           webhook_registered: boolean | null
         }
         Insert: {
+          admin_notes?: string | null
           booking_widget_id?: string | null
           contact_field_mapping?: Json | null
           created_at?: string | null
@@ -1517,9 +1562,13 @@ export type Database = {
           frequency_cap_daily?: number | null
           frequency_cap_weekly?: number | null
           id?: string
-          location_id: string
+          location_id?: string | null
+          provisioned_at?: string | null
+          provisioned_by?: string | null
+          provisioning_status?: string | null
           quiet_hours_end?: string | null
           quiet_hours_start?: string | null
+          setup_type?: string | null
           sms_enabled?: boolean | null
           templates?: Json | null
           trainer_id: string
@@ -1527,6 +1576,7 @@ export type Database = {
           webhook_registered?: boolean | null
         }
         Update: {
+          admin_notes?: string | null
           booking_widget_id?: string | null
           contact_field_mapping?: Json | null
           created_at?: string | null
@@ -1535,9 +1585,13 @@ export type Database = {
           frequency_cap_daily?: number | null
           frequency_cap_weekly?: number | null
           id?: string
-          location_id?: string
+          location_id?: string | null
+          provisioned_at?: string | null
+          provisioned_by?: string | null
+          provisioning_status?: string | null
           quiet_hours_end?: string | null
           quiet_hours_start?: string | null
+          setup_type?: string | null
           sms_enabled?: boolean | null
           templates?: Json | null
           trainer_id?: string
