@@ -139,13 +139,13 @@ export function TabNavigation({ isMobile = false, onNavigate }: TabNavigationPro
     );
   }
 
-  // Desktop navigation - wider spacing between tabs
+  // Desktop navigation
   return (
     <div className="border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="px-4 sm:px-6">
-        {/* Main Tabs - increased gap from gap-4 sm:gap-6 to gap-8 */}
+        {/* Main Tabs */}
         <Tabs value={activeMainTab} onValueChange={handleMainTabChange}>
-          <TabsList className="h-12 bg-transparent border-0 rounded-none p-0 gap-8">
+          <TabsList className="h-12 bg-transparent border-0 rounded-none p-0 gap-4 sm:gap-6">
             {mainTabsToShow.map((tab) => (
               <TabsTrigger
                 key={tab.value}
@@ -162,8 +162,8 @@ export function TabNavigation({ isMobile = false, onNavigate }: TabNavigationPro
           </TabsList>
         </Tabs>
 
-        {/* Sub Tabs - increased gap from gap-4 sm:gap-6 to gap-8 */}
-        <div className="flex gap-8 mt-2 pb-2 overflow-x-auto">
+        {/* Sub Tabs */}
+        <div className="flex gap-4 sm:gap-6 mt-2 pb-2 overflow-x-auto">
           {visibleSubTabs.map((subTab) => (
             <button
               key={subTab.path}

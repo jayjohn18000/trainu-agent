@@ -44,8 +44,6 @@ interface ClientInspectorProps {
   loading?: boolean;
   onUpdateTags: (tags: string[]) => Promise<void>;
   onAddNote: (note: string) => Promise<void>;
-  onOpenSessionReview?: () => void;
-  onOpenCheckIn?: () => void;
 }
 
 export function ClientInspector({
@@ -55,8 +53,6 @@ export function ClientInspector({
   loading,
   onUpdateTags,
   onAddNote,
-  onOpenSessionReview,
-  onOpenCheckIn,
 }: ClientInspectorProps) {
   const [isEditingTags, setIsEditingTags] = useState(false);
   const [newNote, setNewNote] = useState("");
@@ -267,27 +263,138 @@ export function ClientInspector({
 
         <div className="mt-6 space-y-6">
           {/* Quick Actions */}
-          <div className="space-y-2">
-            <h3 className="text-sm font-semibold">Quick Actions</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <Button
-                variant="default"
-                onClick={() => onOpenCheckIn?.()}
-                className="w-full"
-              >
-                <MessageSquare className="h-4 w-4 mr-2" />
-                New Draft to {client.name.split(" ")[0]}
-              </Button>
-              
-              <Button
-                variant="outline"
-                onClick={() => onOpenSessionReview?.()}
-                className="w-full"
-              >
-                <Target className="h-4 w-4 mr-2" />
-                Session Review
-              </Button>
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <Button
+              variant="outline"
+              onClick={async () => {
+                if (!user || !client) return;
+                try {
+                  const messageContent = `Hey ${client.name.split(' ')[0]}, quick check-in — how did your last workout go?`;
+                  
+                  // 1. Create event
+                  await createEvent({
+                    trainer_id: user.id,
+                    event_type: 'check_in',
+                    entity_type: 'contact',
+                    entity_id: client.id,
+                    metadata: { action: 'check_in' },
+                  });
+
+                  // 2. Create/update insight
+                  await createOrUpdateInsight({
+                    trainer_id: user.id,
+                    contact_id: client.id,
+                    risk_score: Math.max(0, client.risk - 5), // Slight improvement
+                    last_activity_at: new Date().toISOString(),
+                  });
+
+                  // 3. Create draft
+                  const { id: draftId } = await createDraftMessage(client.id, messageContent, 'sms');
+
+                  toast({ 
+                    title: "Check-in created", 
+                    description: "Redirecting to queue...",
+                  });
+                  
+                  // Redirect to queue
+                  navigate('/queue');
+                } catch (e) {
+                  toast({ title: "Error", description: "Failed to create check-in.", variant: "destructive" });
+                }
+              }}
+            >
+              Check-in
+            </Button>
+            <Button
+              variant="outline"
+              onClick={async () => {
+                if (!user || !client) return;
+                try {
+                  const messageContent = `Hey ${client.name.split(' ')[0]}, missed you last time. Everything okay? I can help you get back on track — want to pick a new time?`;
+                  
+                  // 1. Create event
+                  await createEvent({
+                    trainer_id: user.id,
+                    event_type: 'recover_no_show',
+                    entity_type: 'contact',
+                    entity_id: client.id,
+                    metadata: { action: 'recover_no_show' },
+                  });
+
+                  // 2. Create/update insight (increase risk for no-show)
+                  await createOrUpdateInsight({
+                    trainer_id: user.id,
+                    contact_id: client.id,
+                    risk_score: Math.min(100, client.risk + 10),
+                    last_activity_at: new Date().toISOString(),
+                  });
+
+                  // 3. Create draft
+                  await createDraftMessage(client.id, messageContent, 'sms');
+
+                  toast({ 
+                    title: "Recover no-show created", 
+                    description: "Redirecting to queue...",
+                  });
+                  
+                  // Redirect to queue
+                  navigate('/queue');
+                } catch (e) {
+                  toast({ title: "Error", description: "Failed to create recover message.", variant: "destructive" });
+                }
+              }}
+            >
+              Recover no-show
+            </Button>
+            <Button
+              variant="outline"
+              onClick={async () => {
+                if (!user || !client) return;
+                try {
+                  const when = client.nextSession ? new Date(client.nextSession) : null;
+                  const whenStr = when ? when.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'your next session';
+                  const messageContent = `Hi ${client.name.split(' ')[0]}, can you confirm ${whenStr}? Reply YES to confirm or NO to reschedule.`;
+                  
+                  // 1. Create event
+                  await createEvent({
+                    trainer_id: user.id,
+                    event_type: 'confirm_session',
+                    entity_type: 'contact',
+                    entity_id: client.id,
+                    metadata: { action: 'confirm', session_time: when?.toISOString() },
+                  });
+
+                  // 2. Create/update insight
+                  await createOrUpdateInsight({
+                    trainer_id: user.id,
+                    contact_id: client.id,
+                    risk_score: Math.max(0, client.risk - 3),
+                    last_activity_at: new Date().toISOString(),
+                  });
+
+                  // 3. Create draft
+                  await createDraftMessage(client.id, messageContent, 'sms');
+
+                  toast({ 
+                    title: "Confirm message created", 
+                    description: "Redirecting to queue...",
+                  });
+                  
+                  // Redirect to queue
+                  navigate('/queue');
+                } catch (e) {
+                  toast({ title: "Error", description: "Failed to create confirm message.", variant: "destructive" });
+                }
+              }}
+            >
+              Confirm
+            </Button>
+            <Button
+              variant="outline"
+              className="shadow-[0_0_15px_rgba(59,130,246,0.5)] hover:shadow-[0_0_20px_rgba(59,130,246,0.6)] transition-all"
+            >
+              Custom Recommendation
+            </Button>
           </div>
 
           <Tabs defaultValue="overview" className="w-full">

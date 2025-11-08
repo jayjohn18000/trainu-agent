@@ -103,17 +103,10 @@ export function AtRiskWidget() {
               size="sm"
               variant="outline"
               className="w-full h-7 text-xs"
-              onClick={() => {
-                toast({
-                  title: "Creating draft",
-                  description: `Generating re-engagement message for ${client.name}`,
-                });
-                // Navigate to inbox to show draft
-                window.location.href = "/inbox";
-              }}
+              onClick={() => handleNudge(client)}
             >
               <Send className="h-3 w-3 mr-1" />
-              Send to Draft
+              Send Nudge
             </Button>
           </div>
         ))}

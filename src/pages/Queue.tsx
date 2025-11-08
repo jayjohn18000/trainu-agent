@@ -19,8 +19,6 @@ export default function Queue() {
   const [editingItem, setEditingItem] = useState<Message | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [bulkActionMode, setBulkActionMode] = useState(false);
   const { toast } = useToast();
   const { awardXP } = useTrainerGamification();
 
@@ -237,84 +235,6 @@ export default function Queue() {
     }
   };
 
-  const handleBulkApprove = async () => {
-    if (selectedIds.size === 0) return;
-
-    try {
-      await Promise.all(Array.from(selectedIds).map(id => approveMessage(id)));
-      
-      setMessages((prev) => prev.filter((item) => !selectedIds.has(item.id)));
-      await awardXP(
-        selectedIds.size * 25 + (selectedIds.size >= 3 ? 75 : 0),
-        `Bulk approved ${selectedIds.size} messages`
-      );
-
-      toast({
-        title: "Bulk approved!",
-        description: `Approved ${selectedIds.size} selected messages.`,
-      });
-      
-      setSelectedIds(new Set());
-      setBulkActionMode(false);
-    } catch (error) {
-      console.error("Failed to bulk approve:", error);
-      toast({
-        title: "Bulk approval failed",
-        description: error instanceof Error ? error.message : "Please try again",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleBulkReject = async () => {
-    if (selectedIds.size === 0) return;
-
-    try {
-      await Promise.all(
-        Array.from(selectedIds).map(id =>
-          supabase.from("messages").delete().eq("id", id)
-        )
-      );
-      
-      setMessages((prev) => prev.filter((item) => !selectedIds.has(item.id)));
-
-      toast({
-        title: "Bulk rejected!",
-        description: `Rejected ${selectedIds.size} selected messages.`,
-      });
-      
-      setSelectedIds(new Set());
-      setBulkActionMode(false);
-    } catch (error) {
-      console.error("Failed to bulk reject:", error);
-      toast({
-        title: "Bulk rejection failed",
-        description: error instanceof Error ? error.message : "Please try again",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const toggleSelect = (id: string) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-  };
-
-  const selectAll = () => {
-    setSelectedIds(new Set(messages.map(m => m.id)));
-  };
-
-  const deselectAll = () => {
-    setSelectedIds(new Set());
-  };
-
   const safeItemsCount = messages.filter((item) => (item.confidence || 0) >= 0.8).length;
 
   return (
@@ -337,79 +257,32 @@ export default function Queue() {
         </div>
 
         <div className="flex gap-2">
-          {bulkActionMode ? (
-            <>
-              <Button variant="outline" size="sm" onClick={selectAll}>
-                Select All
-              </Button>
-              <Button variant="outline" size="sm" onClick={deselectAll}>
-                Deselect All
-              </Button>
-              <Button 
-                variant="default" 
-                size="sm"
-                onClick={handleBulkApprove}
-                disabled={selectedIds.size === 0}
-              >
-                <CheckCircle className="h-4 w-4 mr-2" />
-                Approve ({selectedIds.size})
-              </Button>
-              <Button 
-                variant="destructive" 
-                size="sm"
-                onClick={handleBulkReject}
-                disabled={selectedIds.size === 0}
-              >
-                Reject ({selectedIds.size})
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => {
-                  setBulkActionMode(false);
-                  setSelectedIds(new Set());
-                }}
-              >
-                Cancel
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button 
-                variant="outline" 
-                onClick={() => setBulkActionMode(true)}
-                disabled={messages.length === 0}
-              >
-                Select Multiple
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={handleGenerateNewDrafts}
-                disabled={generating}
-              >
-                {generating ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    Generate New
-                  </>
-                )}
-              </Button>
+          <Button 
+            variant="outline" 
+            onClick={handleGenerateNewDrafts}
+            disabled={generating}
+          >
+            {generating ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-4 w-4 mr-2" />
+                Generate New
+              </>
+            )}
+          </Button>
 
-              {safeItemsCount > 0 && (
-                <Button 
-                  variant="default" 
-                  onClick={handleApproveAllSafe}
-                >
-                  <Zap className="h-4 w-4 mr-2" />
-                  Approve {safeItemsCount} Safe
-                </Button>
-              )}
-            </>
+          {safeItemsCount > 0 && (
+            <Button 
+              variant="default" 
+              onClick={handleApproveAllSafe}
+            >
+              <Zap className="h-4 w-4 mr-2" />
+              Approve {safeItemsCount} Safe
+            </Button>
           )}
         </div>
       </div>
@@ -460,7 +333,6 @@ export default function Queue() {
             const clientName = contact 
               ? `${contact.first_name} ${contact.last_name}`.trim()
               : "Unknown Client";
-            const isSelected = selectedIds.has(msg.id);
             
             return (
               <div key={msg.id} className="space-y-2">
@@ -471,38 +343,22 @@ export default function Queue() {
                     onCancel={loadQueue}
                   />
                 )}
-                <div 
-                  className={`relative ${bulkActionMode ? "cursor-pointer" : ""} ${isSelected ? "ring-2 ring-primary rounded-lg" : ""}`}
-                  onClick={() => bulkActionMode && toggleSelect(msg.id)}
-                >
-                  {bulkActionMode && (
-                    <div className="absolute top-4 left-4 z-10">
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => toggleSelect(msg.id)}
-                        className="h-5 w-5 rounded border-2 border-primary"
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    </div>
-                  )}
-                  <QueueCard
-                    item={{
-                      id: msg.id,
-                      clientId: msg.contact_id,
-                      clientName,
-                      preview: msg.content,
-                      confidence: msg.confidence || 0.8,
-                      status: msg.status as any,
-                      why: msg.why_reasons || [],
-                      createdAt: msg.created_at,
-                    }}
-                    onApprove={() => !bulkActionMode && handleApprove(msg.id)}
-                    onReject={() => !bulkActionMode && handleReject(msg.id)}
-                    onEdit={() => !bulkActionMode && handleEdit(msg.id)}
-                    onSendNow={() => !bulkActionMode && handleSendNow(msg.id)}
-                  />
-                </div>
+                <QueueCard
+                  item={{
+                    id: msg.id,
+                    clientId: msg.contact_id,
+                    clientName,
+                    preview: msg.content,
+                    confidence: msg.confidence || 0.8,
+                    status: msg.status as any,
+                    why: msg.why_reasons || [],
+                    createdAt: msg.created_at,
+                  }}
+                  onApprove={() => handleApprove(msg.id)}
+                  onReject={() => handleReject(msg.id)}
+                  onEdit={() => handleEdit(msg.id)}
+                  onSendNow={() => handleSendNow(msg.id)}
+                />
               </div>
             );
           })}

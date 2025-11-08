@@ -6,7 +6,6 @@ import { listDraftsAndQueued, approveMessage, sendNow } from "@/lib/api/messages
 import { QueueCard } from "@/components/agent/QueueCard";
 import { ActivityFeed } from "@/components/agent/ActivityFeed";
 import { MessageEditor } from "@/components/agent/MessageEditor";
-import { ChatBar } from "@/components/agent/ChatBar";
 import { InsightCard } from "@/components/agent/InsightCard";
 import { getRecentInsightsWithDrafts } from "@/lib/api/events";
 import { ValueMetricsWidget } from "@/components/agent/ValueMetricsWidget";
@@ -14,8 +13,6 @@ import { MessagesWidget } from "@/components/agent/MessagesWidget";
 import { CalendarWidget } from "@/components/agent/CalendarWidget";
 import { AtRiskWidget } from "@/components/agent/AtRiskWidget";
 import { DraftCard } from "@/components/agent/DraftCard";
-import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
-import { AssistantInsightDialog } from "@/components/agent/AssistantInsightDialog";
 import { WelcomeModal } from "@/components/onboarding/WelcomeModal";
 import { TourOverlay } from "@/components/onboarding/TourOverlay";
 import { Confetti } from "@/components/effects/Confetti";
@@ -75,10 +72,6 @@ export default function Today() {
   const [isLoading, setIsLoading] = useState(true);
   const [previousLevel, setPreviousLevel] = useState<number | null>(null);
   const [insights, setInsights] = useState<Awaited<ReturnType<typeof getRecentInsightsWithDrafts>>>([]);
-  const [chatMessages, setChatMessages] = useState<Array<{ id: string; role: 'user' | 'assistant'; content: string; timestamp: Date }>>([]);
-  const [chatLoading, setChatLoading] = useState(false);
-  const [assistantInsight, setAssistantInsight] = useState<any>(null);
-  const [insightDialogOpen, setInsightDialogOpen] = useState(false);
   const {
     toast
   } = useToast();
@@ -399,81 +392,29 @@ export default function Today() {
       updateStats({
         messagesEdited: (feed.filter(f => f.action === 'sent').length || 0) + 1
       });
-      
+
       // Track analytics
+      analytics.track('queue_item_edited', {
+        id: editingItem.id
+      });
       analytics.track('xp_earned', {
         amount: 50,
         reason: 'Edited message'
       });
       toast({
-        title: "Changes saved",
-        description: <div className="flex items-center gap-2">
-            <CheckCircle className="h-4 w-4" />
-            <span>Message updated successfully</span>
-            <span className="text-primary font-semibold flex items-center gap-1">
-              <Zap className="h-3 w-3" aria-hidden="true" />
-              +50 XP
-            </span>
-          </div>
+        title: "Message updated",
+        description: `Draft updated with ${tone} tone. +50 XP`
       });
       setEditingItem(null);
-      loadData();
     } catch (error) {
-      console.error('Failed to save edit:', error);
+      console.error('Failed to edit:', error);
       toast({
         title: "Error",
-        description: "Failed to update message.",
+        description: "Failed to save changes. Please try again.",
         variant: "destructive"
       });
     }
   };
-
-  const handleChatSubmit = async (message: string) => {
-    const userMessage = {
-      id: Date.now().toString(),
-      role: 'user' as const,
-      content: message,
-      timestamp: new Date(),
-    };
-    setChatMessages(prev => [...prev, userMessage]);
-    setChatLoading(true);
-
-    try {
-      const { data, error } = await supabase.functions.invoke("assistant-chat", {
-        body: {
-          message,
-          conversationHistory: chatMessages,
-        },
-      });
-
-      if (error) throw error;
-
-      const assistantMessage = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant' as const,
-        content: typeof data.response === 'string' ? data.response : JSON.stringify(data.response),
-        timestamp: new Date(),
-      };
-
-      setChatMessages(prev => [...prev, assistantMessage]);
-
-      // If response is a draft insight, show dialog
-      if (data.response?.type === 'draft_insight') {
-        setAssistantInsight(data.response);
-        setInsightDialogOpen(true);
-      }
-    } catch (error) {
-      console.error("Chat error:", error);
-      toast({
-        title: "Assistant unavailable",
-        description: error instanceof Error ? error.message : "Please try again",
-        variant: "destructive",
-      });
-    } finally {
-      setChatLoading(false);
-    }
-  };
-
   const handleApproveAllSafe = async () => {
     const safeItems = queue.filter(item => item.confidence >= 0.8);
     if (safeItems.length === 0) {
@@ -689,25 +630,8 @@ export default function Today() {
       {/* Message Editor */}
       {editingItem && <MessageEditor open={!!editingItem} onOpenChange={open => !open && setEditingItem(null)} queueItem={editingItem} onSave={handleSaveEdit} />}
 
-      {/* Assistant Insight Dialog */}
-      <AssistantInsightDialog 
-        open={insightDialogOpen} 
-        onOpenChange={setInsightDialogOpen} 
-        insight={assistantInsight} 
-      />
-
-      {/* Chat Bar */}
-      <ChatBar 
-        messages={chatMessages}
-        onSubmit={handleChatSubmit}
-        loading={chatLoading}
-      />
-
       {/* Modals */}
-      <OnboardingWizard open={welcomeOpen} onComplete={() => {
-        setWelcomeOpen(false);
-        handleCompleteTour();
-      }} />
+      <WelcomeModal open={welcomeOpen} onOpenChange={setWelcomeOpen} onStartTour={handleStartTour} />
       <TourOverlay active={tourActive} onComplete={handleCompleteTour} onSkip={handleSkipTour} />
       <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
       <CalendarModal open={calendarOpen} onOpenChange={setCalendarOpen} />

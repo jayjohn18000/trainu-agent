@@ -1827,13 +1827,10 @@ export type Database = {
       message_templates: {
         Row: {
           category: string | null
-          channel: string
           content: string
           created_at: string | null
-          description: string | null
           id: string
           name: string
-          template_id: string | null
           tone: string | null
           trainer_id: string | null
           updated_at: string | null
@@ -1841,13 +1838,10 @@ export type Database = {
         }
         Insert: {
           category?: string | null
-          channel?: string
           content: string
           created_at?: string | null
-          description?: string | null
           id?: string
           name: string
-          template_id?: string | null
           tone?: string | null
           trainer_id?: string | null
           updated_at?: string | null
@@ -1855,13 +1849,10 @@ export type Database = {
         }
         Update: {
           category?: string | null
-          channel?: string
           content?: string
           created_at?: string | null
-          description?: string | null
           id?: string
           name?: string
-          template_id?: string | null
           tone?: string | null
           trainer_id?: string | null
           updated_at?: string | null

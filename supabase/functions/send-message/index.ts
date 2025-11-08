@@ -4,18 +4,6 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 import { checkQuietHours } from "../_shared/timeguard.ts";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
-// STOP Compliance for SMS
-function addStopCompliance(message: string, channel: string): string {
-  if (channel !== "sms") return message;
-  
-  const stopText = "\n\nReply STOP to unsubscribe";
-  if (message.toLowerCase().includes("stop") && message.toLowerCase().includes("unsubscribe")) {
-    return message;
-  }
-  
-  return message + stopText;
-}
-
 // Input validation schema
 const sendMessageSchema = z.object({
   messageId: z.string().uuid({ message: "messageId must be a valid UUID" }),
@@ -81,9 +69,7 @@ serve(async (req) => {
       return new Response(JSON.stringify({ deferred: true, scheduled_for: quiet.nextAvailable!.toISOString() }), { status: 200, headers: { 'Content-Type': 'application/json' } });
     }
 
-    // Call GHL integration to send (with STOP compliance for SMS)
-    const compliantContent = addStopCompliance(message.content, message.channel || "sms");
-    
+    // Call GHL integration to send
     const { data: ghlResult, error: fnErr } = await supabase.functions.invoke('ghl-integration', {
       body: {
         action: 'send_message',
@@ -94,7 +80,7 @@ serve(async (req) => {
           phone: (contact as any)?.phone ?? '',
         },
         messageData: {
-          content: compliantContent,
+          content: message.content,
         },
       },
     });

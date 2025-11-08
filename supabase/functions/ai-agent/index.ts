@@ -84,36 +84,6 @@ const tools: Tool[] = [
         properties: {}
       }
     }
-  },
-  {
-    type: "function",
-    function: {
-      name: "create_draft_message",
-      description: "Create a draft message for a client. Use this when the trainer asks to draft, create, or send a message to a client. The message will be saved as a draft for review before sending.",
-      parameters: {
-        type: "object",
-        properties: {
-          contact_id: { 
-            type: "string", 
-            description: "The client's UUID" 
-          },
-          contact_name: { 
-            type: "string", 
-            description: "The client's name for context" 
-          },
-          message_context: { 
-            type: "string", 
-            description: "Why this message is needed (e.g., 'client facing personal challenges', 'at-risk client', 'post-session followup', 'check-in needed')" 
-          },
-          channel: { 
-            type: "string", 
-            enum: ["sms", "email"], 
-            description: "Communication channel (defaults to sms)" 
-          }
-        },
-        required: ["contact_id", "contact_name", "message_context"]
-      }
-    }
   }
 ];
 
@@ -125,15 +95,6 @@ Your capabilities:
 - Suggest intelligent tags based on client behavior patterns (at-risk, engaged, vip, new, needs-attention, high-performer, comeback)
 - Provide insights about at-risk clients and engagement trends
 - Analyze workout patterns and session attendance
-- **CREATE DRAFT MESSAGES for clients** - You can and should create personalized, empathetic message drafts when requested
-
-When creating drafts:
-- Be empathetic and supportive, especially for clients facing personal challenges or hardships
-- Personalize messages based on client history, current situation, and engagement metrics
-- Keep messages concise but warm (1-3 sentences for SMS, more detailed for email)
-- Use the client's context to make relevant, actionable suggestions
-- Always create drafts for trainer review - never claim you cannot help with sensitive topics
-- The draft will be saved for the trainer to review and approve before sending
 
 Be concise, actionable, and supportive. Use the tools available to fetch real data.
 Always cite specific metrics when making recommendations.
@@ -348,108 +309,6 @@ async function getTrainerStats(supabase: any, trainerId: string) {
   };
 }
 
-async function createDraftMessage(supabase: any, trainerId: string, contactId: string, contactName: string, messageContext: string, channel: string = 'sms') {
-  console.log(`Creating draft message for ${contactName} (${contactId})`);
-  
-  // Get client details and insights for context
-  const { data: contact } = await supabase
-    .from('contacts')
-    .select('*, insights(*)')
-    .eq('id', contactId)
-    .eq('trainer_id', trainerId)
-    .single();
-
-  if (!contact) {
-    return { error: "Client not found or access denied" };
-  }
-
-  const insight = contact.insights?.[0];
-  
-  // Build context for AI message generation
-  const contextPrompt = `Generate a ${channel === 'email' ? 'detailed' : 'concise'} ${channel} message for a fitness client.
-
-Client: ${contactName}
-Context: ${messageContext}
-Metrics:
-- Risk score: ${insight?.risk_score || 'unknown'}
-- Engagement: ${insight?.engagement_score ? Math.round(insight.engagement_score * 100) + '%' : 'unknown'}
-- Missed sessions: ${insight?.missed_sessions || 0}
-- Current streak: ${insight?.current_streak || 0} weeks
-- Last activity: ${insight?.last_activity_at || 'unknown'}
-
-Requirements:
-${channel === 'sms' ? '- Keep it under 160 characters if possible, max 2-3 sentences' : '- 2-4 paragraphs, warm and detailed'}
-- Be empathetic and supportive
-- Reference their specific situation
-- Offer concrete next steps or encouragement
-- Use a friendly, personal tone
-- Do not use emojis
-- Sign it naturally (no formal signature needed for SMS)
-
-Generate only the message content, no subject line or formatting.`;
-
-  const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-  if (!LOVABLE_API_KEY) {
-    return { error: "AI service not configured" };
-  }
-
-  // Generate message content using AI
-  const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      model: 'google/gemini-2.5-flash',
-      messages: [
-        { role: 'system', content: 'You are a supportive fitness trainer crafting personalized messages to clients.' },
-        { role: 'user', content: contextPrompt }
-      ]
-    })
-  });
-
-  if (!aiResponse.ok) {
-    console.error('AI generation failed:', await aiResponse.text());
-    return { error: "Failed to generate message content" };
-  }
-
-  const aiData = await aiResponse.json();
-  const messageContent = aiData.choices[0].message.content.trim();
-
-  // Create draft message in database
-  const { data: draft, error: insertError } = await supabase
-    .from('messages')
-    .insert({
-      trainer_id: trainerId,
-      contact_id: contactId,
-      content: messageContent,
-      status: 'draft', // CRITICAL: Always draft, requires approval
-      channel: channel,
-      confidence: 0.85,
-      reasoning: messageContext,
-      created_by: 'ai_agent'
-    })
-    .select()
-    .single();
-
-  if (insertError) {
-    console.error('Draft creation error:', insertError);
-    return { error: "Failed to save draft message" };
-  }
-
-  console.log(`Draft created successfully: ${draft.id}`);
-  
-  return {
-    success: true,
-    draft_id: draft.id,
-    message_preview: messageContent.substring(0, 100) + (messageContent.length > 100 ? '...' : ''),
-    channel: channel,
-    status: 'draft',
-    note: 'Draft created and ready for review in your Queue/Inbox'
-  };
-}
-
 async function executeTool(supabase: any, trainerId: string, toolName: string, args: any) {
   console.log(`Executing tool: ${toolName}`, args);
   
@@ -464,8 +323,6 @@ async function executeTool(supabase: any, trainerId: string, toolName: string, a
       return await applyTags(supabase, trainerId, args.contact_id, args.tags_to_add, args.tags_to_remove);
     case 'get_trainer_stats':
       return await getTrainerStats(supabase, trainerId);
-    case 'create_draft_message':
-      return await createDraftMessage(supabase, trainerId, args.contact_id, args.contact_name, args.message_context, args.channel);
     default:
       return { error: `Unknown tool: ${toolName}` };
   }
