@@ -1,8 +1,14 @@
 import { Card } from "@/components/ui/card";
-import { Check, X, ChevronDown } from "lucide-react";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Check, X, Info } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 const features = [
   { 
@@ -70,113 +76,168 @@ const features = [
   },
 ];
 
-function FeatureRow({ feature, index }: { feature: typeof features[0], index: number }) {
-  const [isOpen, setIsOpen] = useState(false);
-
+function FeatureRow({ 
+  feature, 
+  index, 
+  onClick 
+}: { 
+  feature: typeof features[0]; 
+  index: number;
+  onClick: () => void;
+}) {
   return (
-    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <CollapsibleTrigger asChild>
-        <tr 
-          className={cn(
-            "border-b border-border last:border-0 cursor-pointer transition-all duration-300",
-            "hover:bg-primary/5 hover:shadow-sm",
-            isOpen && "bg-primary/5"
-          )}
-          style={{ animationDelay: `${index * 50}ms` }}
-        >
-          <td className="p-4 text-foreground font-medium">
-            <div className="flex items-center gap-2">
-              <ChevronDown 
-                className={cn(
-                  "h-4 w-4 text-muted-foreground transition-transform duration-300 flex-shrink-0",
-                  isOpen && "rotate-180"
-                )} 
-              />
-              <span>{feature.name}</span>
-            </div>
-          </td>
-          <td className="p-4 text-center">
-            {typeof feature.trainu === 'boolean' ? (
-              feature.trainu ? (
-                <Check className="h-5 w-5 text-success mx-auto animate-scale-in" style={{ animationDelay: `${index * 100}ms` }} />
-              ) : (
-                <X className="h-5 w-5 text-muted-foreground/40 mx-auto" />
-              )
-            ) : (
-              <span className="font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full inline-block">
-                {feature.trainu}
-              </span>
-            )}
-          </td>
-          <td className="p-4 text-center">
-            {typeof feature.exercise === 'boolean' ? (
-              feature.exercise ? (
-                <Check className="h-5 w-5 text-muted-foreground/60 mx-auto" />
-              ) : (
-                <X className="h-5 w-5 text-muted-foreground/40 mx-auto" />
-              )
-            ) : (
-              <span className="text-muted-foreground font-medium">{feature.exercise}</span>
-            )}
-          </td>
-          <td className="p-4 text-center">
-            {typeof feature.trainerize === 'boolean' ? (
-              feature.trainerize ? (
-                <Check className="h-5 w-5 text-muted-foreground/60 mx-auto" />
-              ) : (
-                <X className="h-5 w-5 text-muted-foreground/40 mx-auto" />
-              )
-            ) : (
-              <span className="text-muted-foreground font-medium">{feature.trainerize}</span>
-            )}
-          </td>
-        </tr>
-      </CollapsibleTrigger>
-      <CollapsibleContent asChild>
-        <tr className="border-b border-border last:border-0">
-          <td colSpan={4} className="p-0">
-            <div className="px-6 py-4 bg-card/50 backdrop-blur-sm animate-accordion-down">
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                {feature.description}
-              </p>
-            </div>
-          </td>
-        </tr>
-      </CollapsibleContent>
-    </Collapsible>
+    <tr 
+      className={cn(
+        "border-b border-border/50 last:border-0 cursor-pointer transition-all duration-200",
+        "hover:bg-primary/5"
+      )}
+      style={{ animationDelay: `${index * 50}ms` }}
+      onClick={onClick}
+    >
+      <td className="p-4 text-left align-middle">
+        <div className="flex items-center gap-2">
+          <Info className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+          <span className="font-medium text-foreground truncate" title={feature.name}>
+            {feature.name}
+          </span>
+        </div>
+      </td>
+      <td className="p-4 text-center align-middle w-[200px]">
+        {typeof feature.trainu === 'boolean' ? (
+          feature.trainu ? (
+            <Check className="h-5 w-5 text-success mx-auto" strokeWidth={2.5} />
+          ) : (
+            <X className="h-5 w-5 text-muted-foreground/40 mx-auto" strokeWidth={2.5} />
+          )
+        ) : (
+          <span className="font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full inline-block tabular-nums">
+            {feature.trainu}
+          </span>
+        )}
+      </td>
+      <td className="p-4 text-center align-middle w-[200px]">
+        {typeof feature.exercise === 'boolean' ? (
+          feature.exercise ? (
+            <Check className="h-5 w-5 text-muted-foreground/60 mx-auto" strokeWidth={2.5} />
+          ) : (
+            <X className="h-5 w-5 text-muted-foreground/40 mx-auto" strokeWidth={2.5} />
+          )
+        ) : (
+          <span className="text-muted-foreground font-medium tabular-nums">{feature.exercise}</span>
+        )}
+      </td>
+      <td className="p-4 text-center align-middle w-[200px]">
+        {typeof feature.trainerize === 'boolean' ? (
+          feature.trainerize ? (
+            <Check className="h-5 w-5 text-muted-foreground/60 mx-auto" strokeWidth={2.5} />
+          ) : (
+            <X className="h-5 w-5 text-muted-foreground/40 mx-auto" strokeWidth={2.5} />
+          )
+        ) : (
+          <span className="text-muted-foreground font-medium tabular-nums">{feature.trainerize}</span>
+        )}
+      </td>
+    </tr>
   );
 }
 
 export function CompetitorTable() {
+  const [selectedFeature, setSelectedFeature] = useState<typeof features[0] | null>(null);
+
   return (
-    <Card className="overflow-hidden border-primary/20 shadow-glow backdrop-blur-xl bg-card/90">
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border-b border-primary/20 sticky top-0 backdrop-blur-xl z-10">
-            <tr>
-              <th className="text-left p-4 font-bold text-foreground">Feature</th>
-              <th className="p-4 font-bold text-primary">
-                <div className="flex flex-col items-center gap-1">
-                  <span>TrainU</span>
-                  <span className="text-xs font-normal text-muted-foreground">(You)</span>
-                </div>
-              </th>
-              <th className="p-4 font-semibold text-muted-foreground">Exercise.com</th>
-              <th className="p-4 font-semibold text-muted-foreground">Trainerize</th>
-            </tr>
-          </thead>
-          <tbody>
-            {features.map((feature, index) => (
-              <FeatureRow key={index} feature={feature} index={index} />
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <div className="p-4 bg-gradient-to-r from-primary/5 to-transparent border-t border-primary/10">
-        <p className="text-xs text-muted-foreground text-center">
-          💡 Click any row to see detailed feature descriptions
-        </p>
-      </div>
-    </Card>
+    <>
+      <Card className="overflow-hidden border-primary/20 shadow-glow backdrop-blur-xl bg-card/90">
+        <div className="overflow-x-auto">
+          <table className="w-full table-fixed">
+            <thead className="bg-gradient-to-r from-primary/10 via-primary/5 to-primary/10 border-b border-primary/20 sticky top-0 backdrop-blur-xl z-10">
+              <tr>
+                <th className="text-left p-5 font-bold text-foreground w-[40%]">
+                  Feature
+                </th>
+                <th className="p-5 font-bold text-primary w-[20%]">
+                  <div className="flex flex-col items-center gap-1">
+                    <span>TrainU</span>
+                    <span className="text-xs font-normal text-muted-foreground">(You)</span>
+                  </div>
+                </th>
+                <th className="p-5 font-semibold text-muted-foreground w-[20%]">
+                  Exercise.com
+                </th>
+                <th className="p-5 font-semibold text-muted-foreground w-[20%]">
+                  Trainerize
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {features.map((feature, index) => (
+                <FeatureRow 
+                  key={index} 
+                  feature={feature} 
+                  index={index}
+                  onClick={() => setSelectedFeature(feature)}
+                />
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div className="p-4 bg-gradient-to-r from-primary/5 to-transparent border-t border-primary/10">
+          <p className="text-xs text-muted-foreground text-center">
+            💡 Click any row to see detailed feature descriptions
+          </p>
+        </div>
+      </Card>
+
+      <Sheet open={!!selectedFeature} onOpenChange={(open) => !open && setSelectedFeature(null)}>
+        <SheetContent className="w-full sm:max-w-lg">
+          <SheetHeader>
+            <SheetTitle className="text-xl">{selectedFeature?.name}</SheetTitle>
+            <SheetDescription className="text-base leading-relaxed pt-4">
+              {selectedFeature?.description}
+            </SheetDescription>
+          </SheetHeader>
+          
+          <div className="mt-8 space-y-4">
+            <div className="flex items-center justify-between p-4 rounded-lg bg-primary/10 border border-primary/20">
+              <span className="font-semibold text-foreground">TrainU</span>
+              {typeof selectedFeature?.trainu === 'boolean' ? (
+                selectedFeature.trainu ? (
+                  <Check className="h-6 w-6 text-success" strokeWidth={2.5} />
+                ) : (
+                  <X className="h-6 w-6 text-muted-foreground/40" strokeWidth={2.5} />
+                )
+              ) : (
+                <span className="font-semibold text-primary tabular-nums">{selectedFeature?.trainu}</span>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50 border border-border">
+              <span className="font-medium text-muted-foreground">Exercise.com</span>
+              {typeof selectedFeature?.exercise === 'boolean' ? (
+                selectedFeature.exercise ? (
+                  <Check className="h-6 w-6 text-muted-foreground/60" strokeWidth={2.5} />
+                ) : (
+                  <X className="h-6 w-6 text-muted-foreground/40" strokeWidth={2.5} />
+                )
+              ) : (
+                <span className="font-medium text-muted-foreground tabular-nums">{selectedFeature?.exercise}</span>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50 border border-border">
+              <span className="font-medium text-muted-foreground">Trainerize</span>
+              {typeof selectedFeature?.trainerize === 'boolean' ? (
+                selectedFeature.trainerize ? (
+                  <Check className="h-6 w-6 text-muted-foreground/60" strokeWidth={2.5} />
+                ) : (
+                  <X className="h-6 w-6 text-muted-foreground/40" strokeWidth={2.5} />
+                )
+              ) : (
+                <span className="font-medium text-muted-foreground tabular-nums">{selectedFeature?.trainerize}</span>
+              )}
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+    </>
   );
 }
