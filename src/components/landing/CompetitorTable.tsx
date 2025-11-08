@@ -118,9 +118,9 @@ function FeatureRow({
       <td className="p-4 text-center align-middle w-[200px]">
         {typeof feature.exercise === 'boolean' ? (
           feature.exercise ? (
-            <Check className="h-5 w-5 text-muted-foreground/60 mx-auto" strokeWidth={2.5} />
+            <Check className="h-5 w-5 text-success/60 mx-auto" strokeWidth={2.5} />
           ) : (
-            <X className="h-5 w-5 text-muted-foreground/40 mx-auto" strokeWidth={2.5} />
+            <X className="h-5 w-5 text-danger/60 mx-auto" strokeWidth={2.5} />
           )
         ) : (
           <span className="text-muted-foreground font-medium tabular-nums">{feature.exercise}</span>
@@ -129,9 +129,9 @@ function FeatureRow({
       <td className="p-4 text-center align-middle w-[200px]">
         {typeof feature.trainerize === 'boolean' ? (
           feature.trainerize ? (
-            <Check className="h-5 w-5 text-muted-foreground/60 mx-auto" strokeWidth={2.5} />
+            <Check className="h-5 w-5 text-success/60 mx-auto" strokeWidth={2.5} />
           ) : (
-            <X className="h-5 w-5 text-muted-foreground/40 mx-auto" strokeWidth={2.5} />
+            <X className="h-5 w-5 text-danger/60 mx-auto" strokeWidth={2.5} />
           )
         ) : (
           <span className="text-muted-foreground font-medium tabular-nums">{feature.trainerize}</span>
@@ -214,9 +214,9 @@ export function CompetitorTable() {
               <span className="font-medium text-muted-foreground">Exercise.com</span>
               {typeof selectedFeature?.exercise === 'boolean' ? (
                 selectedFeature.exercise ? (
-                  <Check className="h-6 w-6 text-muted-foreground/60" strokeWidth={2.5} />
+                  <Check className="h-6 w-6 text-success/60" strokeWidth={2.5} />
                 ) : (
-                  <X className="h-6 w-6 text-muted-foreground/40" strokeWidth={2.5} />
+                  <X className="h-6 w-6 text-danger/60" strokeWidth={2.5} />
                 )
               ) : (
                 <span className="font-medium text-muted-foreground tabular-nums">{selectedFeature?.exercise}</span>
@@ -227,9 +227,9 @@ export function CompetitorTable() {
               <span className="font-medium text-muted-foreground">Trainerize</span>
               {typeof selectedFeature?.trainerize === 'boolean' ? (
                 selectedFeature.trainerize ? (
-                  <Check className="h-6 w-6 text-muted-foreground/60" strokeWidth={2.5} />
+                  <Check className="h-6 w-6 text-success/60" strokeWidth={2.5} />
                 ) : (
-                  <X className="h-6 w-6 text-muted-foreground/40" strokeWidth={2.5} />
+                  <X className="h-6 w-6 text-danger/60" strokeWidth={2.5} />
                 )
               ) : (
                 <span className="font-medium text-muted-foreground tabular-nums">{selectedFeature?.trainerize}</span>
