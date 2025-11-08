@@ -1,186 +1,135 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.76.1'
-import { checkQuietHours } from '../_shared/timeguard.ts'
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { checkQuietHours, checkFrequencyCap } from "../_shared/timeguard.ts";
+import { corsHeaders } from "../_shared/responses.ts";
+import { handleError } from "../_shared/error-handler.ts";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
-
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-    );
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const now = new Date();
-    
-    // Find all messages ready for auto-approval
-    const { data: messages, error: fetchError } = await supabase
-      .from('messages')
-      .select('id, trainer_id, contact_id, content, confidence, scheduled_for')
-      .eq('status', 'draft')
-      .not('auto_approval_at', 'is', null)
-      .lte('auto_approval_at', now.toISOString())
-      .order('auto_approval_at', { ascending: true })
-      .limit(100);
+    // Get all pending auto-approval drafts that are past their countdown
+    const { data: drafts, error: draftsError } = await supabase
+      .from("messages")
+      .select(`
+        id,
+        trainer_id,
+        contact_id,
+        content,
+        scheduled_for,
+        contacts!inner(
+          first_name,
+          quiet_hours_start,
+          quiet_hours_end,
+          frequency_cap_daily,
+          frequency_cap_weekly,
+          messages_sent_today,
+          messages_sent_this_week
+        )
+      `)
+      .eq("status", "draft")
+      .eq("requires_approval", false)
+      .lte("scheduled_for", new Date().toISOString());
 
-    if (fetchError) {
-      console.error('Error fetching auto-approval messages:', fetchError);
-      return new Response(JSON.stringify({ error: fetchError.message }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    if (draftsError) throw draftsError;
+    if (!drafts || drafts.length === 0) {
+      return new Response(
+        JSON.stringify({ processed: 0, message: "No drafts ready for auto-approval" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    if (!messages || messages.length === 0) {
-      console.log('No messages ready for auto-approval');
-      return new Response(JSON.stringify({ processed: 0 }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    const results = [];
+
+    for (const draft of drafts) {
+      const contact = Array.isArray(draft.contacts) ? draft.contacts[0] : draft.contacts;
+      const now = new Date();
+
+      // Check quiet hours
+      const quietCheck = checkQuietHours(now, {
+        quiet_hours_start: contact.quiet_hours_start,
+        quiet_hours_end: contact.quiet_hours_end,
       });
-    }
 
-    console.log(`Processing ${messages.length} messages for auto-approval`);
+      if (!quietCheck.allowed) {
+        // Reschedule for next available time
+        await supabase
+          .from("messages")
+          .update({ scheduled_for: quietCheck.nextAvailable })
+          .eq("id", draft.id);
 
-    const results = await Promise.all(
-      messages.map(async (message) => {
-        try {
-          // Get trainer settings
-          const { data: settings } = await supabase
-            .from('auto_approval_settings')
-            .select('enabled, max_daily_auto_approvals')
-            .eq('trainer_id', message.trainer_id)
-            .single();
+        results.push({
+          id: draft.id,
+          status: "rescheduled",
+          next_send: quietCheck.nextAvailable,
+        });
+        continue;
+      }
 
-          // Skip if auto-approval disabled
-          if (!settings?.enabled) {
-            console.log(`Auto-approval disabled for trainer ${message.trainer_id}`);
-            return { id: message.id, status: 'skipped', reason: 'disabled' };
-          }
-
-          // Check daily limit
-          const todayStart = new Date(now);
-          todayStart.setHours(0, 0, 0, 0);
-          
-          const { count: todayCount } = await supabase
-            .from('messages')
-            .select('id', { count: 'exact', head: true })
-            .eq('trainer_id', message.trainer_id)
-            .in('status', ['queued', 'sent'])
-            .eq('generated_by', 'ai')
-            .gte('created_at', todayStart.toISOString());
-
-          const dailyLimit = settings.max_daily_auto_approvals || 20;
-          if ((todayCount || 0) >= dailyLimit) {
-            console.log(`Daily limit reached for trainer ${message.trainer_id}`);
-            // Clear auto_approval_at so trainer must manually review
-            await supabase
-              .from('messages')
-              .update({ auto_approval_at: null })
-              .eq('id', message.id);
-            return { id: message.id, status: 'skipped', reason: 'daily_limit' };
-          }
-
-          // Check contact opt-out
-          const { data: contact } = await supabase
-            .from('contacts')
-            .select('consent_status')
-            .eq('id', message.contact_id)
-            .single();
-
-          if (contact?.consent_status === 'opted_out') {
-            console.log(`Contact opted out: ${message.contact_id}`);
-            await supabase
-              .from('messages')
-              .update({ status: 'failed', auto_approval_at: null })
-              .eq('id', message.id);
-            return { id: message.id, status: 'failed', reason: 'opted_out' };
-          }
-
-          // Get GHL config for quiet hours
-          const { data: config } = await supabase
-            .from('ghl_config')
-            .select('quiet_hours_start, quiet_hours_end')
-            .eq('trainer_id', message.trainer_id)
-            .single();
-
-          // Check quiet hours
-          const scheduledFor = message.scheduled_for ? new Date(message.scheduled_for) : now;
-          const quietCheck = checkQuietHours(scheduledFor, {
-            quiet_hours_start: config?.quiet_hours_start ?? null,
-            quiet_hours_end: config?.quiet_hours_end ?? null,
-          });
-
-          const finalScheduledFor = quietCheck.allowed ? scheduledFor : quietCheck.nextAvailable!;
-
-          // Approve the message
-          const { error: updateError } = await supabase
-            .from('messages')
-            .update({ 
-              status: 'queued', 
-              scheduled_for: finalScheduledFor.toISOString(),
-              auto_approval_at: null, // Clear the auto-approval timestamp
-            })
-            .eq('id', message.id);
-
-          if (updateError) {
-            console.error(`Error approving message ${message.id}:`, updateError);
-            return { id: message.id, status: 'error', reason: updateError.message };
-          }
-
-          // Log the auto-approval
-          await supabase.from('events').insert({
-            trainer_id: message.trainer_id,
-            event_type: 'message_auto_approved',
-            entity_type: 'message',
-            entity_id: message.id,
-            metadata: {
-              confidence: message.confidence,
-              scheduled_for: finalScheduledFor.toISOString(),
-              deferred_by_quiet_hours: !quietCheck.allowed,
-            },
-          });
-
-          console.log(`Auto-approved message ${message.id} for trainer ${message.trainer_id}`);
-          return { 
-            id: message.id, 
-            status: 'approved', 
-            scheduledFor: finalScheduledFor.toISOString(),
-            deferredByQuietHours: !quietCheck.allowed,
-          };
-        } catch (error) {
-          console.error(`Error processing message ${message.id}:`, error);
-          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-          return { id: message.id, status: 'error', reason: errorMessage };
+      // Check frequency caps
+      const freqCheck = checkFrequencyCap(
+        {
+          today: contact.messages_sent_today || 0,
+          week: contact.messages_sent_this_week || 0,
+        },
+        {
+          frequency_cap_daily: contact.frequency_cap_daily,
+          frequency_cap_weekly: contact.frequency_cap_weekly,
         }
-      })
+      );
+
+      if (!freqCheck.allowed) {
+        // Mark as blocked
+        await supabase
+          .from("messages")
+          .update({ status: "blocked" })
+          .eq("id", draft.id);
+
+        results.push({
+          id: draft.id,
+          status: "blocked",
+          reason: `${freqCheck.limit} cap reached`,
+        });
+        continue;
+      }
+
+      // Approve and queue for sending
+      const { error: updateError } = await supabase
+        .from("messages")
+        .update({
+          status: "queued",
+          approved_at: new Date().toISOString(),
+        })
+        .eq("id", draft.id);
+
+      if (updateError) {
+        console.error(`Failed to approve draft ${draft.id}:`, updateError);
+        results.push({ id: draft.id, status: "error", error: updateError.message });
+        continue;
+      }
+
+      // Increment message counters
+      await supabase.rpc("increment_message_counters", {
+        contact_id: draft.contact_id,
+      });
+
+      results.push({ id: draft.id, status: "approved" });
+    }
+
+    return new Response(
+      JSON.stringify({
+        processed: results.length,
+        results,
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-
-    const summary = {
-      processed: messages.length,
-      approved: results.filter(r => r.status === 'approved').length,
-      skipped: results.filter(r => r.status === 'skipped').length,
-      failed: results.filter(r => r.status === 'failed').length,
-      errors: results.filter(r => r.status === 'error').length,
-      timestamp: now.toISOString(),
-    };
-
-    console.log('Auto-approval scheduler summary:', summary);
-
-    return new Response(JSON.stringify({ summary, results }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
-
   } catch (error) {
-    console.error('Auto-approval scheduler error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return new Response(JSON.stringify({ error: errorMessage }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return handleError("auto-approval-scheduler", error);
   }
 });

@@ -42,6 +42,15 @@ export function ClientCheckInDialog({ open, onOpenChange, contactId, contactName
 
       if (error) throw error;
 
+      // Log activity
+      await supabase.rpc("log_pii_access", {
+        p_action: "INSERT",
+        p_table_name: "messages",
+        p_record_id: data.draftId,
+        p_pii_fields: ["content"],
+        p_metadata: { type: "client_checkin", template_id: templateId },
+      });
+
       setDraftCreated(true);
       toast({
         title: "Draft created!",
