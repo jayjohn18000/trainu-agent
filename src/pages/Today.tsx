@@ -13,6 +13,7 @@ import { MessagesWidget } from "@/components/agent/MessagesWidget";
 import { CalendarWidget } from "@/components/agent/CalendarWidget";
 import { AtRiskWidget } from "@/components/agent/AtRiskWidget";
 import { DraftCard } from "@/components/agent/DraftCard";
+import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
 import { WelcomeModal } from "@/components/onboarding/WelcomeModal";
 import { TourOverlay } from "@/components/onboarding/TourOverlay";
 import { Confetti } from "@/components/effects/Confetti";
@@ -631,7 +632,10 @@ export default function Today() {
       {editingItem && <MessageEditor open={!!editingItem} onOpenChange={open => !open && setEditingItem(null)} queueItem={editingItem} onSave={handleSaveEdit} />}
 
       {/* Modals */}
-      <WelcomeModal open={welcomeOpen} onOpenChange={setWelcomeOpen} onStartTour={handleStartTour} />
+      <OnboardingWizard open={welcomeOpen} onComplete={() => {
+        setWelcomeOpen(false);
+        handleCompleteTour();
+      }} />
       <TourOverlay active={tourActive} onComplete={handleCompleteTour} onSkip={handleSkipTour} />
       <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
       <CalendarModal open={calendarOpen} onOpenChange={setCalendarOpen} />

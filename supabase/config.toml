@@ -79,3 +79,9 @@ verify_jwt = true
 
 [functions.enhanced-client-risk-analytics]
 verify_jwt = true
+
+[functions.generate-welcome-draft]
+verify_jwt = true
+
+[functions.auto-approval-scheduler]
+verify_jwt = true
