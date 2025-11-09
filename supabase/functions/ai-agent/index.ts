@@ -408,7 +408,9 @@ async function searchClients(supabase: any, trainerId: string, query?: string, t
   }
   
   if (tags && tags.length > 0) {
-    dbQuery = dbQuery.contains('tags', tags);
+    // Use flexible text search on tags to handle malformed data (e.g., ["avengers] instead of ["avengers"])
+    const tagFilters = tags.map(tag => `tags::text.ilike.%${tag}%`).join(',');
+    dbQuery = dbQuery.or(tagFilters);
   }
   
   const { data } = await dbQuery.limit(20);
