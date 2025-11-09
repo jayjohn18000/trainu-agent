@@ -74,19 +74,11 @@ Deno.serve(async (req) => {
 
       // Handle progress request
       if (action === 'progress') {
-        const { data: profile, error } = await supabase
+        const { data: profile } = await supabase
           .from('trainer_profiles')
           .select('*')
           .eq('id', user.id)
-          .single();
-
-        if (error) {
-          console.error('Error fetching profile:', error);
-          return new Response(JSON.stringify({ error: error.message }), {
-            status: 500,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
-        }
+          .maybeSingle();
 
         const level = profile?.level || 1;
         const xp = profile?.xp || 0;
@@ -111,7 +103,7 @@ Deno.serve(async (req) => {
           .from('trainer_profiles')
           .select('*')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
         const { data: unlockedAchievements } = await supabase
           .from('trainer_achievements')
@@ -158,7 +150,7 @@ Deno.serve(async (req) => {
           .from('trainer_profiles')
           .select('*')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
         const currentXP = profile?.xp || 0;
         const newXP = currentXP + amount;
