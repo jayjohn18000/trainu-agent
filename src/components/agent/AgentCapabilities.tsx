@@ -87,6 +87,7 @@ export function AgentCapabilities() {
         <p className="text-xs font-medium text-muted-foreground">Try these commands:</p>
         <div className="flex flex-col gap-0.5 text-xs text-muted-foreground">
           <span>• "What are Alexis Cruz's current tags?"</span>
+          <span>• "Change Alexis's tag to 'punisher'" or "Add 'vip' tag to Jordan"</span>
           <span>• "Who has the 'avengers' tag?" or "Find all VIP clients"</span>
           <span>• "Tag all at-risk clients as 'needs-attention'"</span>
           <span>• "Show me VIP clients and assign them the advanced program"</span>

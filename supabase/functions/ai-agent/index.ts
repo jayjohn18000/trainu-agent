@@ -76,15 +76,15 @@ const tools: Tool[] = [
     type: "function",
     function: {
       name: "apply_tags",
-      description: "Apply or remove tags for a specific client",
+      description: "Apply or remove tags for a specific client. Can search by name or UUID.",
       parameters: {
         type: "object",
         properties: {
-          contact_id: { type: "string", description: "The client's UUID" },
+          client_name_or_id: { type: "string", description: "Client's name (first, last, or full) or UUID" },
           tags_to_add: { type: "array", items: { type: "string" }, description: "Tags to add" },
           tags_to_remove: { type: "array", items: { type: "string" }, description: "Tags to remove" }
         },
-        required: ["contact_id"]
+        required: ["client_name_or_id"]
       }
     }
   },
@@ -272,7 +272,8 @@ You have REAL ACCESS to client data, bookings, engagement metrics, and message h
 - list_programs: View available training programs
 
 🔗 TOOL CHAINING (CRITICAL!):
-- To view/edit tags: ALWAYS call get_client_info FIRST to see current tags, THEN apply_tags
+- To view tags: call get_client_info (shows current tags)
+- To edit tags: call apply_tags directly with name (it will look them up automatically!)
 - To work with "at-risk clients": Call list_clients with filter='at-risk', THEN use bulk tools
 - To modify multiple clients: Use list_clients or search_clients to get IDs, THEN use bulk tools
 - NEVER assume what data exists - always fetch it first!
@@ -280,7 +281,7 @@ You have REAL ACCESS to client data, bookings, engagement metrics, and message h
 
 🎯 BE PROACTIVE WITH TOOLS:
 - When asked "What are X's tags?" → Call get_client_info immediately
-- When asked to modify tags → Call get_client_info FIRST to see current tags, then apply_tags
+- When asked to modify tags → Can call apply_tags directly with name (e.g., "Alexis" or "Alexis Cruz")
 - When asked about multiple clients → Use bulk operations for efficiency
 - Don't say "I cannot see" - you CAN see by calling the right tool!
 
@@ -290,11 +291,11 @@ You have REAL ACCESS to client data, bookings, engagement metrics, and message h
 - Bulk tools: apply_tags_bulk, schedule_sessions_bulk, assign_program_bulk
 
 💡 WHEN TO USE WHICH TOOL:
-- Single client by name → get_client_info (handles first name, last name, or full name)
+- Single client by name → get_client_info (for viewing info) OR apply_tags (for editing tags with name directly)
 - Search by specific tags (e.g., "who has 'avengers' tag") → search_clients with tags parameter
 - Search by name/email/phone → search_clients with query parameter
 - List with status filters (all/at-risk/engaged/new) → list_clients
-- Tag modifications → get_client_info first, then apply_tags or apply_tags_bulk
+- Tag modifications → apply_tags with client name or UUID (no need to get UUID first!)
 - Stats questions → get_trainer_stats
 
 🏷️ TAG SEARCHING (IMPORTANT!):
@@ -530,15 +531,40 @@ async function suggestTags(supabase: any, trainerId: string) {
   return suggestions;
 }
 
-async function applyTags(supabase: any, trainerId: string, contactId: string, tagsToAdd: string[] = [], tagsToRemove: string[] = []) {
-  const { data: contact } = await supabase
+async function applyTags(supabase: any, trainerId: string, clientNameOrId: string, tagsToAdd: string[] = [], tagsToRemove: string[] = []) {
+  // Try to find client by UUID or name
+  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(clientNameOrId);
+  
+  let query = supabase
     .from('contacts')
-    .select('tags, first_name, last_name')
-    .eq('id', contactId)
-    .eq('trainer_id', trainerId)
-    .single();
-
-  if (!contact) return { error: "Client not found or unauthorized" };
+    .select('id, tags, first_name, last_name')
+    .eq('trainer_id', trainerId);
+  
+  if (isUUID) {
+    query = query.eq('id', clientNameOrId);
+  } else {
+    // Search by name
+    const searchTerm = clientNameOrId.toLowerCase();
+    query = query.or(`first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%`);
+  }
+  
+  const { data: contacts } = await query.limit(5);
+  
+  if (!contacts || contacts.length === 0) {
+    return { error: `Client "${clientNameOrId}" not found` };
+  }
+  
+  if (contacts.length > 1) {
+    return { 
+      error: `Multiple clients found matching "${clientNameOrId}". Please be more specific.`,
+      matches: contacts.map((c: any) => ({
+        id: c.id,
+        name: `${c.first_name} ${c.last_name || ''}`.trim()
+      }))
+    };
+  }
+  
+  const contact = contacts[0];
 
   let currentTags = contact.tags || [];
   
@@ -555,7 +581,7 @@ async function applyTags(supabase: any, trainerId: string, contactId: string, ta
   const { error } = await supabase
     .from('contacts')
     .update({ tags: currentTags })
-    .eq('id', contactId)
+    .eq('id', contact.id)
     .eq('trainer_id', trainerId);
 
   if (error) {
@@ -912,7 +938,7 @@ async function executeTool(supabase: any, trainerId: string, toolName: string, a
         result = await suggestTags(supabase, trainerId);
         break;
       case 'apply_tags':
-        result = await applyTags(supabase, trainerId, args.contact_id, args.tags_to_add, args.tags_to_remove);
+        result = await applyTags(supabase, trainerId, args.client_name_or_id, args.tags_to_add, args.tags_to_remove);
         break;
       case 'apply_tags_bulk':
         result = await applyTagsBulk(supabase, trainerId, args.contact_ids, args.tags_to_add, args.tags_to_remove);
