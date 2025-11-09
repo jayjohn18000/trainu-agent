@@ -12,10 +12,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { updateGHLConfigStatus, getGHLConfigForTrainer, DFYRequestWithTrainer } from "@/lib/api/admin";
+import { updateGHLConfigStatus, getGHLConfigForTrainer, DFYRequestWithTrainer, triggerProvisioning } from "@/lib/api/admin";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
-import { Building2, Mail, Phone, CheckCircle2, AlertCircle } from "lucide-react";
+import { Building2, Mail, Phone, CheckCircle2, AlertCircle, Loader2, Rocket } from "lucide-react";
 
 type Props = {
   request: DFYRequestWithTrainer;
@@ -50,6 +50,34 @@ export function DFYRequestDetailDialog({ request, open, onOpenChange }: Props) {
       toast({
         title: "Update failed",
         description: error.message || "Failed to update configuration",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const provisionMutation = useMutation({
+    mutationFn: () => triggerProvisioning(request.id, request.trainer_id),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-dfy-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['ghl-config', request.trainer_id] });
+      if (data.success) {
+        toast({
+          title: "Provisioning started",
+          description: `GHL location ${data.locationId} created successfully`,
+        });
+        onOpenChange(false);
+      } else {
+        toast({
+          title: "Provisioning failed",
+          description: data.error || "Failed to provision account",
+          variant: "destructive",
+        });
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Provisioning failed",
+        description: error.message || "Failed to trigger provisioning",
         variant: "destructive",
       });
     },
@@ -196,21 +224,34 @@ export function DFYRequestDetailDialog({ request, open, onOpenChange }: Props) {
             <div className="flex gap-2">
               <Button
                 variant="outline"
+                onClick={() => provisionMutation.mutate()}
+                disabled={provisionMutation.isPending || updateConfigMutation.isPending}
+                className="gap-2"
+              >
+                {provisionMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Rocket className="h-4 w-4" />
+                )}
+                Auto Provision
+              </Button>
+              <Button
+                variant="outline"
                 onClick={() => updateConfigMutation.mutate('in_progress')}
-                disabled={updateConfigMutation.isPending}
+                disabled={updateConfigMutation.isPending || provisionMutation.isPending}
               >
                 Mark In Progress
               </Button>
               <Button
                 variant="destructive"
                 onClick={() => updateConfigMutation.mutate('failed')}
-                disabled={updateConfigMutation.isPending}
+                disabled={updateConfigMutation.isPending || provisionMutation.isPending}
               >
                 Mark Failed
               </Button>
               <Button
                 onClick={() => updateConfigMutation.mutate('completed')}
-                disabled={updateConfigMutation.isPending}
+                disabled={updateConfigMutation.isPending || provisionMutation.isPending}
               >
                 Mark Completed
               </Button>

@@ -109,3 +109,23 @@ export async function checkAdminRole(): Promise<boolean> {
   if (error) return false;
   return !!data;
 }
+
+export async function triggerProvisioning(
+  dfyRequestId?: string,
+  trainerId?: string
+): Promise<{ success: boolean; locationId?: string; error?: string }> {
+  try {
+    const { data, error } = await supabase.functions.invoke('ghl-provisioning', {
+      body: { dfyRequestId, trainerId },
+    });
+
+    if (error) throw error;
+    return data;
+  } catch (error: any) {
+    console.error('Provisioning failed:', error);
+    return {
+      success: false,
+      error: error.message || 'Provisioning failed',
+    };
+  }
+}
