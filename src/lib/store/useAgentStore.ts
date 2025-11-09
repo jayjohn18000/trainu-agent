@@ -50,16 +50,18 @@ export const useAgentStore = create<AgentState>((set, get) => ({
   
   loadHistory: async () => {
     try {
+      // Load last 50 messages in ascending order (oldest first)
       const { data, error } = await supabase
         .from('conversation_history')
         .select('*')
-        .order('created_at', { ascending: true })
-        .limit(20);
+        .order('created_at', { ascending: false })
+        .limit(50);
 
       if (error) throw error;
 
       if (data) {
-        const msgs: AgentMessage[] = data.map((d) => ({
+        // Reverse to show oldest first in UI
+        const msgs: AgentMessage[] = data.reverse().map((d) => ({
           id: d.id,
           role: d.role as 'user' | 'assistant',
           content: d.content,

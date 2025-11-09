@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Send, Loader2, MessageSquare, X, Trash2 } from "lucide-react";
+import { Send, Loader2, MessageSquare, X, Trash2, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useIsMobile } from "@/hooks/use-mobile.tsx";
@@ -40,7 +40,9 @@ export function ChatBar({ messages = [], onSubmit, placeholder, disabled, loadin
   const [historyOpen, setHistoryOpen] = useState(false);
   const [currentPlaceholder, setCurrentPlaceholder] = useState(0);
   const [showClearDialog, setShowClearDialog] = useState(false);
+  const [isAtBottom, setIsAtBottom] = useState(true);
   const inputRef = useRef<HTMLInputElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
   const loading = externalLoading || false;
   const { clearHistory } = useAgentStore();
@@ -54,6 +56,27 @@ export function ChatBar({ messages = [], onSubmit, placeholder, disabled, loadin
 
     return () => clearInterval(interval);
   }, []);
+
+  // Auto-scroll to bottom when messages change (only if user is at bottom)
+  useEffect(() => {
+    if (isAtBottom && scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, loading, isAtBottom]);
+
+  // Track scroll position
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const element = e.currentTarget;
+    const isBottom = element.scrollHeight - element.scrollTop <= element.clientHeight + 50;
+    setIsAtBottom(isBottom);
+  };
+
+  const scrollToBottom = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      setIsAtBottom(true);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,10 +128,11 @@ export function ChatBar({ messages = [], onSubmit, placeholder, disabled, loadin
             !isMobile && (sidebarCollapsed ? 'left-14 right-0' : 'left-60 right-0')
           )}
         >
-          <div className="flex items-center justify-between p-3 border-b">
+          <div className="sticky top-0 z-20 flex items-center justify-between p-3 border-b bg-card">
             <div className="flex items-center gap-2">
               <MessageSquare className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm font-medium">AI Agent Conversation</span>
+              <span className="text-xs text-muted-foreground">({messages.length} messages)</span>
             </div>
             <div className="flex items-center gap-1">
               <Button
@@ -132,8 +156,12 @@ export function ChatBar({ messages = [], onSubmit, placeholder, disabled, loadin
               </Button>
             </div>
           </div>
-          <ScrollArea className="h-[calc(100%-3rem)] p-4">
-            <div className="space-y-4">
+          <div 
+            ref={scrollRef}
+            onScroll={handleScroll}
+            className="h-[calc(100%-3rem)] overflow-y-auto scroll-smooth p-4 relative"
+          >
+            <div className="space-y-4 pb-2">
               {messages.map((msg) => (
                 <div
                   key={msg.id}
@@ -165,7 +193,19 @@ export function ChatBar({ messages = [], onSubmit, placeholder, disabled, loadin
                 </div>
               )}
             </div>
-          </ScrollArea>
+            
+            {/* Scroll to Bottom Button */}
+            {!isAtBottom && (
+              <Button
+                size="sm"
+                onClick={scrollToBottom}
+                className="absolute bottom-4 right-4 rounded-full shadow-lg h-10 w-10 p-0"
+                title="Scroll to bottom"
+              >
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
         </div>
       )}
 
