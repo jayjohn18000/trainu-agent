@@ -11,9 +11,10 @@ import { AutoApprovalSettings } from "@/components/agent/AutoApprovalSettings";
 import { AutoApprovalAnalytics } from "@/components/agent/AutoApprovalAnalytics";
 import { LearningInsights } from "@/components/agent/LearningInsights";
 import { GHLSettingsModal } from "@/components/modals/GHLSettingsModal";
+import { TrainerOnboardingWizard } from "@/components/onboarding/TrainerOnboardingWizard";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { LogOut } from "lucide-react";
+import { LogOut, Upload } from "lucide-react";
 import { getDbFlag, setDbFlag } from "@/lib/flags";
 import type { AgentSettings } from "@/types/agent";
 import { useAuthStore } from "@/lib/store/useAuthStore";
@@ -47,7 +48,8 @@ export default function SettingsAgent() {
   
   const [saving, setSaving] = useState(false);
   const [ghlModalOpen, setGhlModalOpen] = useState(false);
-  const [flags, setFlags] = useState<{ 
+  const [onboardingWizardOpen, setOnboardingWizardOpen] = useState(false);
+  const [flags, setFlags] = useState<{
     ai_drafts_on: boolean | null; 
     approve_all_safe_on: boolean | null; 
     digest_on: boolean | null; 
@@ -465,6 +467,15 @@ export default function SettingsAgent() {
             
             <div className="border-t pt-4 mt-6">
               <Button 
+                onClick={() => setOnboardingWizardOpen(true)}
+                variant="outline" 
+                className="w-full mb-3"
+              >
+                <Upload className="mr-2 h-4 w-4" />
+                Import Profile / CSV
+              </Button>
+              
+              <Button 
                 onClick={handleSignOut} 
                 variant="destructive" 
                 className="w-full"
@@ -581,6 +592,7 @@ export default function SettingsAgent() {
       </Tabs>
 
       <GHLSettingsModal open={ghlModalOpen} onOpenChange={setGhlModalOpen} />
+      <TrainerOnboardingWizard open={onboardingWizardOpen} onOpenChange={setOnboardingWizardOpen} />
     </div>
   );
 }

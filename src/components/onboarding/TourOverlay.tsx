@@ -52,6 +52,7 @@ const tourSteps: TourStep[] = [
 export function TourOverlay({ active, onComplete, onSkip }: TourOverlayProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     if (!active) return;
@@ -60,9 +61,24 @@ export function TourOverlay({ active, onComplete, onSkip }: TourOverlayProps) {
       const target = document.querySelector(tourSteps[currentStep].target);
       if (target) {
         setTargetRect(target.getBoundingClientRect());
+        setRetryCount(0); // Reset retry count on success
       } else {
-        // Reset to null if target not found - this will hide the overlay
-        setTargetRect(null);
+        // Retry finding the element up to 10 times (5 seconds total)
+        if (retryCount < 10) {
+          setTimeout(() => {
+            setRetryCount(prev => prev + 1);
+          }, 500);
+        } else {
+          console.warn(`Tour step ${currentStep} target not found after retries, skipping step`);
+          // Skip to next step instead of hiding entire tour
+          if (currentStep < tourSteps.length - 1) {
+            setCurrentStep(prev => prev + 1);
+            setRetryCount(0);
+          } else {
+            // If it's the last step and still not found, complete the tour
+            onComplete();
+          }
+        }
       }
     };
 
@@ -70,26 +86,11 @@ export function TourOverlay({ active, onComplete, onSkip }: TourOverlayProps) {
     window.addEventListener("resize", updatePosition);
     window.addEventListener("scroll", updatePosition);
 
-    // Safety timeout: automatically close overlay after 3 seconds on last step
-    // This prevents the tour from getting stuck if something goes wrong
-    const isLastStep = currentStep === tourSteps.length - 1;
-    let safetyTimeout: NodeJS.Timeout | undefined;
-    
-    if (isLastStep) {
-      safetyTimeout = setTimeout(() => {
-        console.warn('Tour safety timeout triggered - force completing tour');
-        onComplete();
-      }, 3000);
-    }
-
     return () => {
       window.removeEventListener("resize", updatePosition);
       window.removeEventListener("scroll", updatePosition);
-      if (safetyTimeout) {
-        clearTimeout(safetyTimeout);
-      }
     };
-  }, [active, currentStep, onComplete]);
+  }, [active, currentStep, retryCount, onComplete]);
 
   if (!active || !targetRect) return null;
 
