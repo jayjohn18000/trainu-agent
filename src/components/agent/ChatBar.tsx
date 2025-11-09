@@ -28,10 +28,11 @@ interface ChatBarProps {
 }
 
 const placeholders = [
-  "Ask agent to draft a message...",
-  "Check client status...",
-  "Review queue items...",
-  "What's my next action?",
+  "Show me my at-risk clients",
+  "Schedule a session for tomorrow",
+  "What are my stats this month?",
+  "Suggest tags for all clients",
+  "Who needs attention today?",
 ];
 
 export function ChatBar({ messages = [], onSubmit, placeholder, disabled, loading: externalLoading, sidebarCollapsed = false }: ChatBarProps) {

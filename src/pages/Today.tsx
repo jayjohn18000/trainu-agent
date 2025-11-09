@@ -34,7 +34,7 @@ import { useAchievementTracker } from "@/hooks/useAchievementTracker";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { TrainerXPNotification } from "@/components/gamification/TrainerXPNotification";
 import { AchievementUnlockNotification } from "@/components/ui/AchievementUnlockNotification";
-import { PersistentLevelDisplay } from "@/components/gamification/PersistentLevelDisplay";
+
 import { markTourComplete, shouldShowAiTour } from "@/lib/utils/tourManager";
 import type { TourType } from "@/components/onboarding/TourOverlay";
 import { Zap, CheckCircle, TrendingUp, Keyboard, X } from "lucide-react";
@@ -575,9 +575,6 @@ export default function Today() {
         <header className="flex items-center justify-between mb-6 md:mb-8">
           <h1 className="text-2xl md:text-3xl font-bold">Today</h1>
           <div className="flex items-center gap-2">
-            <div data-tour="level">
-              <PersistentLevelDisplay />
-            </div>
             {!isMobile && <Button variant="ghost" size="icon" onClick={() => setShortcutsOpen(true)} title="Keyboard shortcuts (?)" aria-label="View keyboard shortcuts">
                 <Keyboard className="h-4 w-4" />
               </Button>}

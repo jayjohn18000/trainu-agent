@@ -83,9 +83,15 @@ export function AgentCapabilities() {
         </div>
       </TooltipProvider>
       
-      <p className="text-xs text-muted-foreground mt-1">
-        Try: "Schedule Sarah for tomorrow at 3pm" or "Show me at-risk clients"
-      </p>
+      <div className="space-y-1 mt-2">
+        <p className="text-xs font-medium text-muted-foreground">Try these commands:</p>
+        <div className="flex flex-col gap-0.5 text-xs text-muted-foreground">
+          <span>• "Show me my at-risk clients"</span>
+          <span>• "Schedule John for tomorrow at 2pm"</span>
+          <span>• "What are my stats this month?"</span>
+          <span>• "Suggest tags for all my clients"</span>
+        </div>
+      </div>
     </div>
   );
 }
