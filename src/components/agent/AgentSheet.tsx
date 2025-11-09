@@ -3,6 +3,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAgentStore } from "@/lib/store/useAgentStore";
+import { AgentCapabilities } from "./AgentCapabilities";
 
 interface Props {
   open: boolean;
@@ -29,6 +30,7 @@ export function AgentSheet({ open, onOpenChange }: Props) {
           <SheetTitle>AI Agent</SheetTitle>
         </SheetHeader>
         <div className="mt-4 space-y-3">
+          <AgentCapabilities />
           <form onSubmit={handleSubmit} className="flex gap-2">
             <Input
               placeholder="Ask about clients, suggest tags, or get insights..."
