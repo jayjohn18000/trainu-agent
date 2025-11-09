@@ -3,16 +3,49 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { CheckCircle2, AlertCircle } from "lucide-react";
+import { DFYRequestsTable } from "@/components/admin/DFYRequestsTable";
+import { useQuery } from "@tanstack/react-query";
+import { checkAdminRole } from "@/lib/api/admin";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function Admin() {
+  const { data: isAdmin, isLoading } = useQuery({
+    queryKey: ['check-admin-role'],
+    queryFn: checkAdminRole,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Access denied. You do not have admin permissions.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="text-3xl font-bold text-foreground">Admin Panel</h1>
         <p className="text-muted-foreground mt-1">
-          Manage trainer verification and system health.
+          Manage DFY requests, trainer verification and system health.
         </p>
       </div>
+
+      {/* DFY Requests Management */}
+      <DFYRequestsTable />
 
       {/* Trainers Management */}
       <div className="metric-card">
