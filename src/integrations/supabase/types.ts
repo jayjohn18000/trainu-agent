@@ -872,6 +872,7 @@ export type Database = {
           messages_sent_this_week: number | null
           messages_sent_today: number | null
           phone: string | null
+          program_id: string | null
           tags: string[] | null
           trainer_id: string
           updated_at: string | null
@@ -888,6 +889,7 @@ export type Database = {
           messages_sent_this_week?: number | null
           messages_sent_today?: number | null
           phone?: string | null
+          program_id?: string | null
           tags?: string[] | null
           trainer_id: string
           updated_at?: string | null
@@ -904,11 +906,20 @@ export type Database = {
           messages_sent_this_week?: number | null
           messages_sent_today?: number | null
           phone?: string | null
+          program_id?: string | null
           tags?: string[] | null
           trainer_id?: string
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "contacts_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       conversation_ai: {
         Row: {
@@ -2532,6 +2543,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      programs: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          duration_weeks: number | null
+          id: string
+          is_active: boolean | null
+          name: string
+          total_sessions: number | null
+          trainer_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          duration_weeks?: number | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          total_sessions?: number | null
+          trainer_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          duration_weeks?: number | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          total_sessions?: number | null
+          trainer_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       query_performance_logs: {
         Row: {

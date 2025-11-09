@@ -84,6 +84,82 @@ const tools: Tool[] = [
         properties: {}
       }
     }
+  },
+  {
+    type: "function",
+    function: {
+      name: "schedule_session",
+      description: "Schedule a new training session for a client",
+      parameters: {
+        type: "object",
+        properties: {
+          contact_id: { type: "string", description: "The client's UUID" },
+          scheduled_at: { type: "string", description: "ISO timestamp for session start time" },
+          session_type: { type: "string", description: "Type of session (e.g., 'Personal Training', 'Check-in', 'Assessment')" },
+          notes: { type: "string", description: "Optional session notes" }
+        },
+        required: ["contact_id", "scheduled_at"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "update_session",
+      description: "Update an existing session (reschedule, change type, add notes, update status)",
+      parameters: {
+        type: "object",
+        properties: {
+          booking_id: { type: "string", description: "The session's UUID" },
+          scheduled_at: { type: "string", description: "New ISO timestamp (optional)" },
+          session_type: { type: "string", description: "New session type (optional)" },
+          notes: { type: "string", description: "Updated notes (optional)" },
+          status: { type: "string", enum: ["scheduled", "completed", "cancelled", "no_show"], description: "New status (optional)" }
+        },
+        required: ["booking_id"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "cancel_session",
+      description: "Cancel a scheduled session",
+      parameters: {
+        type: "object",
+        properties: {
+          booking_id: { type: "string", description: "The session's UUID" },
+          reason: { type: "string", description: "Optional cancellation reason" }
+        },
+        required: ["booking_id"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "assign_program",
+      description: "Assign a training program to a client",
+      parameters: {
+        type: "object",
+        properties: {
+          contact_id: { type: "string", description: "The client's UUID" },
+          program_id: { type: "string", description: "The program's UUID" }
+        },
+        required: ["contact_id", "program_id"]
+      }
+    }
+  },
+  {
+    type: "function",
+    function: {
+      name: "list_programs",
+      description: "List all available training programs",
+      parameters: {
+        type: "object",
+        properties: {}
+      }
+    }
   }
 ];
 
@@ -95,6 +171,9 @@ Your capabilities:
 - Suggest intelligent tags based on client behavior patterns (at-risk, engaged, vip, new, needs-attention, high-performer, comeback)
 - Provide insights about at-risk clients and engagement trends
 - Analyze workout patterns and session attendance
+- Schedule, reschedule, and cancel training sessions
+- Assign training programs to clients
+- Manage client information and next session details
 
 Be concise, actionable, and supportive. Use the tools available to fetch real data.
 Always cite specific metrics when making recommendations.
@@ -107,7 +186,18 @@ Tag criteria:
 - "new": Created within last 30 days, fewer than 3 total sessions
 - "comeback": Had gap in activity, recently returned
 - "high-performer": Low risk score, high engagement, strong streak
-- "needs-attention": Moderate risk (40-74), declining engagement`;
+- "needs-attention": Moderate risk (40-74), declining engagement
+
+When scheduling sessions:
+- Default to 60-minute sessions if not specified
+- Avoid scheduling during trainer's quiet hours (check agent settings)
+- Confirm client name and session time clearly
+- Use session_type like "Personal Training", "Group Class", "Assessment", "Check-in"
+
+When assigning programs:
+- Consider client's current fitness level and goals
+- Explain why you're recommending the specific program
+- Confirm assignment with client name and program name`;
 
 async function getClientInfo(supabase: any, trainerId: string, clientName: string) {
   const { data: contacts } = await supabase
@@ -309,6 +399,157 @@ async function getTrainerStats(supabase: any, trainerId: string) {
   };
 }
 
+async function scheduleSession(supabase: any, trainerId: string, contactId: string, scheduledAt: string, sessionType: string = 'Personal Training', notes?: string) {
+  // Validate contact belongs to trainer
+  const { data: contact } = await supabase
+    .from('contacts')
+    .select('id, first_name, last_name')
+    .eq('id', contactId)
+    .eq('trainer_id', trainerId)
+    .single();
+
+  if (!contact) return { error: "Client not found or unauthorized" };
+
+  // Insert booking
+  const { data: booking, error } = await supabase
+    .from('bookings')
+    .insert({
+      trainer_id: trainerId,
+      contact_id: contactId,
+      scheduled_at: scheduledAt,
+      session_type: sessionType,
+      notes: notes || null,
+      status: 'scheduled'
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Schedule session error:', error);
+    return { error: `Failed to schedule session: ${error.message}` };
+  }
+
+  return {
+    success: true,
+    booking,
+    message: `✅ Scheduled ${sessionType} for ${contact.first_name} ${contact.last_name || ''} at ${new Date(scheduledAt).toLocaleString()}`
+  };
+}
+
+async function updateSession(supabase: any, trainerId: string, bookingId: string, updates: any) {
+  // Validate booking belongs to trainer
+  const { data: existing } = await supabase
+    .from('bookings')
+    .select('*')
+    .eq('id', bookingId)
+    .eq('trainer_id', trainerId)
+    .single();
+
+  if (!existing) return { error: "Session not found or unauthorized" };
+
+  // Build update object
+  const updateData: any = {};
+  if (updates.scheduled_at) updateData.scheduled_at = updates.scheduled_at;
+  if (updates.session_type) updateData.session_type = updates.session_type;
+  if (updates.notes) updateData.notes = updates.notes;
+  if (updates.status) updateData.status = updates.status;
+
+  const { data: updated, error } = await supabase
+    .from('bookings')
+    .update(updateData)
+    .eq('id', bookingId)
+    .eq('trainer_id', trainerId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Update session error:', error);
+    return { error: `Failed to update session: ${error.message}` };
+  }
+
+  return { success: true, booking: updated, message: `✅ Session updated successfully` };
+}
+
+async function cancelSession(supabase: any, trainerId: string, bookingId: string, reason?: string) {
+  // Validate booking belongs to trainer
+  const { data: existing } = await supabase
+    .from('bookings')
+    .select('*')
+    .eq('id', bookingId)
+    .eq('trainer_id', trainerId)
+    .single();
+
+  if (!existing) return { error: "Session not found or unauthorized" };
+
+  const updateData: any = { status: 'cancelled' };
+  if (reason) {
+    updateData.notes = existing.notes ? `${existing.notes}\n\nCancellation reason: ${reason}` : `Cancellation reason: ${reason}`;
+  }
+
+  const { error } = await supabase
+    .from('bookings')
+    .update(updateData)
+    .eq('id', bookingId)
+    .eq('trainer_id', trainerId);
+
+  if (error) {
+    console.error('Cancel session error:', error);
+    return { error: `Failed to cancel session: ${error.message}` };
+  }
+
+  return { success: true, message: `❌ Session cancelled` };
+}
+
+async function assignProgram(supabase: any, trainerId: string, contactId: string, programId: string) {
+  // Validate contact belongs to trainer
+  const { data: contact } = await supabase
+    .from('contacts')
+    .select('id, first_name, last_name')
+    .eq('id', contactId)
+    .eq('trainer_id', trainerId)
+    .single();
+
+  if (!contact) return { error: "Client not found or unauthorized" };
+
+  // Validate program belongs to trainer
+  const { data: program } = await supabase
+    .from('programs')
+    .select('*')
+    .eq('id', programId)
+    .eq('trainer_id', trainerId)
+    .single();
+
+  if (!program) return { error: "Program not found or unauthorized" };
+
+  // Update contact with program
+  const { error } = await supabase
+    .from('contacts')
+    .update({ program_id: programId })
+    .eq('id', contactId)
+    .eq('trainer_id', trainerId);
+
+  if (error) {
+    console.error('Assign program error:', error);
+    return { error: `Failed to assign program: ${error.message}` };
+  }
+
+  return {
+    success: true,
+    message: `✅ Assigned "${program.name}" to ${contact.first_name} ${contact.last_name || ''} (${program.duration_weeks} weeks, ${program.total_sessions} sessions)`
+  };
+}
+
+async function listPrograms(supabase: any, trainerId: string) {
+  const { data: programs } = await supabase
+    .from('programs')
+    .select('*')
+    .eq('trainer_id', trainerId)
+    .eq('is_active', true)
+    .order('name');
+
+  return programs || [];
+}
+
 async function executeTool(supabase: any, trainerId: string, toolName: string, args: any) {
   console.log(`Executing tool: ${toolName}`, args);
   
@@ -323,6 +564,16 @@ async function executeTool(supabase: any, trainerId: string, toolName: string, a
       return await applyTags(supabase, trainerId, args.contact_id, args.tags_to_add, args.tags_to_remove);
     case 'get_trainer_stats':
       return await getTrainerStats(supabase, trainerId);
+    case 'schedule_session':
+      return await scheduleSession(supabase, trainerId, args.contact_id, args.scheduled_at, args.session_type, args.notes);
+    case 'update_session':
+      return await updateSession(supabase, trainerId, args.booking_id, args);
+    case 'cancel_session':
+      return await cancelSession(supabase, trainerId, args.booking_id, args.reason);
+    case 'assign_program':
+      return await assignProgram(supabase, trainerId, args.contact_id, args.program_id);
+    case 'list_programs':
+      return await listPrograms(supabase, trainerId);
     default:
       return { error: `Unknown tool: ${toolName}` };
   }

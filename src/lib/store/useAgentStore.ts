@@ -1,5 +1,7 @@
 import { create } from "zustand";
 import { supabase } from "@/integrations/supabase/client";
+import { queryClient } from "@/lib/query/client";
+import { queryKeys } from "@/lib/query/keys";
 
 interface AgentMessage {
   id: string;
@@ -83,6 +85,11 @@ export const useAgentStore = create<AgentState>((set, get) => ({
           timestamp: new Date()
         };
         set((state) => ({ messages: [...state.messages, assistantMsg] }));
+
+        // Invalidate queries after AI actions
+        queryClient.invalidateQueries({ queryKey: queryKeys.calendar.all });
+        queryClient.invalidateQueries({ queryKey: queryKeys.sessions.all });
+        queryClient.invalidateQueries({ queryKey: queryKeys.clients.all });
       }
     } catch (error) {
       console.error('Failed to send message:', error);

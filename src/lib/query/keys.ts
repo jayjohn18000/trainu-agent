@@ -33,6 +33,11 @@ export const queryKeys = {
     all: ['sessions'] as const,
     upcoming: () => [...queryKeys.sessions.all, 'upcoming'] as const,
   },
+  programs: {
+    all: ['programs'] as const,
+    list: () => [...queryKeys.programs.all, 'list'] as const,
+    detail: (id: string) => [...queryKeys.programs.all, 'detail', id] as const,
+  },
 };
 
 
