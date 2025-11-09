@@ -87,6 +87,17 @@ export function TrainerOnboardingWizard({ open, onOpenChange }: TrainerOnboardin
     }
   };
 
+  // Normalize CSV headers to handle various formats
+  const normalizeHeader = (header: string): string => {
+    return header
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, '_')                    // "First Name" → "first_name"
+      .replace(/email\s*address/i, 'email')    // "Email Address" → "email"
+      .replace(/([a-z])([A-Z])/g, '$1_$2')    // camelCase → snake_case
+      .toLowerCase();
+  };
+
   const handleCsvUpload = async () => {
     if (!csvFile) {
       toast({
@@ -106,7 +117,7 @@ export function TrainerOnboardingWizard({ open, onOpenChange }: TrainerOnboardin
         throw new Error("CSV file must have at least a header row and one data row");
       }
 
-      const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+      const headers = lines[0].split(',').map(h => normalizeHeader(h));
       const requiredHeaders = ['first_name', 'last_name', 'email'];
       
       const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));

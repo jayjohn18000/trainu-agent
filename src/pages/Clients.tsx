@@ -9,22 +9,27 @@ import { ClientInspector } from "@/components/clients/ClientInspector";
 import { NudgeDialog } from "@/components/clients/NudgeDialog";
 import { ClientsHeader } from "@/components/clients/ClientsHeader";
 import { ClientsStats } from "@/components/clients/ClientsStats";
+import { ClientCSVImport } from "@/components/clients/ClientCSVImport";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Client, ClientDetail } from "@/lib/data/clients/types";
 import { useClients } from "@/hooks/queries/useClients";
 import { useClient } from "@/hooks/queries/useClient";
 import { useNudgeClient, useUpdateClientTags, useAddClientNote } from "@/hooks/mutations/useClientMutations";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
-import { Users, Loader2 } from "lucide-react";
+import { Users, Loader2, Upload } from "lucide-react";
 import { analytics } from "@/lib/analytics";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query/keys";
 
 export default function Clients() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [clients, setClients] = useState<Client[]>([]);
   const [selectedClient, setSelectedClient] = useState<ClientDetail | null>(null);
   const [nudgeClient, setNudgeClient] = useState<Client | null>(null);
   const [total, setTotal] = useState(0);
+  const [showCSVImport, setShowCSVImport] = useState(false);
 
   const query = searchParams.get("q") || "";
   const selectedId = searchParams.get("id") || undefined;
@@ -135,9 +140,19 @@ export default function Clients() {
     },
   ]);
 
+  const handleCSVImportSuccess = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.clients.all });
+  }, [queryClient]);
+
   return (
     <div className="space-y-4 md:space-y-6 p-4 md:p-6 animate-fade-in" role="main" aria-label="Clients page">
-      <ClientsHeader />
+      <div className="flex items-center justify-between">
+        <ClientsHeader />
+        <Button onClick={() => setShowCSVImport(true)} className="gap-2">
+          <Upload className="h-4 w-4" />
+          Import CSV
+        </Button>
+      </div>
 
       <div className="flex flex-col md:flex-row gap-3">
         <div className="flex-1">
@@ -206,6 +221,12 @@ export default function Clients() {
         client={nudgeClient}
         onSend={handleNudge}
         onSuccess={() => navigate('/queue')}
+      />
+
+      <ClientCSVImport
+        open={showCSVImport}
+        onOpenChange={setShowCSVImport}
+        onSuccess={handleCSVImportSuccess}
       />
     </div>
   );
