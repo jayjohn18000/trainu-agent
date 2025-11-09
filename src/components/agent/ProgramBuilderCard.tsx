@@ -1,11 +1,11 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Dumbbell } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 export function ProgramBuilderCard() {
   const handleCreateProgram = () => {
-    // TODO: Open program builder wizard/dialog
-    console.log("Opening program builder...");
+    toast({ title: "Not Available", description: "This feature is not available in the demo.", variant: "destructive" });
   };
 
   return (

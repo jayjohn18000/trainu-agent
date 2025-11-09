@@ -81,9 +81,7 @@ export default function Programs() {
           return (
             <Button
               onClick={() =>
-                enabled
-                  ? toast({ title: "Create Program", description: "Opening program builder..." })
-                  : toast({ title: "Coming soon", description: "Enable Programs shell in Dev Flags", variant: "destructive" })
+                toast({ title: "Not Available", description: "This feature is not available in the demo.", variant: "destructive" })
               }
               variant={enabled ? "default" : "outline"}
               disabled={!enabled}
@@ -137,7 +135,7 @@ export default function Programs() {
                 <div className="flex gap-2">
                   <Button
                     onClick={() =>
-                      toast({ title: "View Program", description: "Loading program details..." })
+                      toast({ title: "Not Available", description: "This feature is not available in the demo.", variant: "destructive" })
                     }
                   >
                     View Program
@@ -145,7 +143,7 @@ export default function Programs() {
                   <Button
                     variant="outline"
                     onClick={() =>
-                      toast({ title: "Mark Complete", description: "Marking workout as complete..." })
+                      toast({ title: "Not Available", description: "This feature is not available in the demo.", variant: "destructive" })
                     }
                   >
                     <CheckCircle2 className="h-4 w-4 mr-2" />
@@ -195,7 +193,7 @@ export default function Programs() {
                     <Button
                       size="sm"
                       onClick={() =>
-                        toast({ title: "Edit Template", description: "Opening program editor..." })
+                        toast({ title: "Not Available", description: "This feature is not available in the demo.", variant: "destructive" })
                       }
                     >
                       Edit
@@ -204,7 +202,7 @@ export default function Programs() {
                       size="sm"
                       variant="outline"
                       onClick={() =>
-                        toast({ title: "Assign Program", description: "Select clients to assign..." })
+                        toast({ title: "Not Available", description: "This feature is not available in the demo.", variant: "destructive" })
                       }
                     >
                       Assign
@@ -226,7 +224,7 @@ export default function Programs() {
           <p className="text-sm text-muted-foreground mb-4">
             Book a session with a trainer to get started with a personalized program
           </p>
-          <Button onClick={() => toast({ title: "Find Trainer", description: "Redirecting..." })}>
+          <Button onClick={() => toast({ title: "Not Available", description: "This feature is not available in the demo.", variant: "destructive" })}>
             Find a Trainer
           </Button>
         </Card>
