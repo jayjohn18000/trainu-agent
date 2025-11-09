@@ -53,6 +53,7 @@ export function TourOverlay({ active, onComplete, onSkip }: TourOverlayProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [isClosing, setIsClosing] = useState(false);
 
   useEffect(() => {
     if (!active) return;
@@ -92,21 +93,42 @@ export function TourOverlay({ active, onComplete, onSkip }: TourOverlayProps) {
     };
   }, [active, currentStep, retryCount, onComplete]);
 
-  if (!active || !targetRect) return null;
+  // Handle Escape key to close tour
+  useEffect(() => {
+    if (!active) return;
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        handleSkip();
+      }
+    };
+
+    window.addEventListener("keydown", handleEscape);
+    return () => window.removeEventListener("keydown", handleEscape);
+  }, [active]);
+
+  if (!active || !targetRect || isClosing) return null;
 
   const step = tourSteps[currentStep];
   const isLastStep = currentStep === tourSteps.length - 1;
 
   const handleNext = () => {
-    if (isLastStep) {
-      onComplete();
-    } else {
-      setCurrentStep(prev => prev + 1);
-    }
+    setIsClosing(true);
+    setTimeout(() => {
+      if (isLastStep) {
+        onComplete();
+      } else {
+        setIsClosing(false);
+        setCurrentStep(prev => prev + 1);
+      }
+    }, 300);
   };
 
   const handleSkip = () => {
-    onSkip();
+    setIsClosing(true);
+    setTimeout(() => {
+      onSkip();
+    }, 300);
   };
 
   // Calculate tooltip position
@@ -142,7 +164,10 @@ export function TourOverlay({ active, onComplete, onSkip }: TourOverlayProps) {
   return (
     <>
       {/* Overlay */}
-      <div className="fixed inset-0 bg-black/60 z-[9998] animate-fade-in" />
+      <div 
+        className={`fixed inset-0 bg-black/60 z-[9998] ${isClosing ? 'animate-fade-out' : 'animate-fade-in'}`}
+        onClick={handleSkip}
+      />
 
       {/* Highlight */}
       <div
@@ -156,7 +181,10 @@ export function TourOverlay({ active, onComplete, onSkip }: TourOverlayProps) {
       />
 
       {/* Tooltip */}
-      <Card className="w-80 z-[9999] animate-scale-in shadow-glow-intense" style={getTooltipStyle()}>
+      <Card 
+        className={`w-80 z-[9999] shadow-glow-intense ${isClosing ? 'animate-fade-out' : 'animate-scale-in'}`}
+        style={getTooltipStyle()}
+      >
         <CardContent className="p-4">
           <div className="flex items-start justify-between mb-2">
             <h3 className="font-bold text-lg">{step.title}</h3>
