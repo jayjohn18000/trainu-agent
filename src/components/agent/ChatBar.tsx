@@ -1,10 +1,22 @@
 import { useState, useEffect, useRef } from "react";
-import { Send, Loader2, MessageSquare, X } from "lucide-react";
+import { Send, Loader2, MessageSquare, X, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useIsMobile } from "@/hooks/use-mobile.tsx";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
+import { useAgentStore } from "@/lib/store/useAgentStore";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface ChatBarProps {
   messages?: Array<{ id: string; role: 'user' | 'assistant'; content: string; timestamp: Date }>;
@@ -26,9 +38,12 @@ export function ChatBar({ messages = [], onSubmit, placeholder, disabled, loadin
   const [input, setInput] = useState("");
   const [historyOpen, setHistoryOpen] = useState(false);
   const [currentPlaceholder, setCurrentPlaceholder] = useState(0);
+  const [showClearDialog, setShowClearDialog] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
   const loading = externalLoading || false;
+  const { clearHistory } = useAgentStore();
+  const { toast } = useToast();
 
   // Cycle through placeholders every 4 seconds
   useEffect(() => {
@@ -59,6 +74,24 @@ export function ChatBar({ messages = [], onSubmit, placeholder, disabled, loadin
     }
   };
 
+  const handleClearHistory = async () => {
+    try {
+      await clearHistory();
+      toast({
+        title: "History cleared",
+        description: "AI conversation history has been reset.",
+      });
+      setShowClearDialog(false);
+      setHistoryOpen(false);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to clear history. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <>
       {/* Conversation History Panel */}
@@ -76,14 +109,26 @@ export function ChatBar({ messages = [], onSubmit, placeholder, disabled, loadin
               <MessageSquare className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm font-medium">AI Agent Conversation</span>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setHistoryOpen(false)}
-              className="h-8 w-8"
-            >
-              <X className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowClearDialog(true)}
+                disabled={loading || messages.length === 0}
+                className="h-8 w-8"
+                title="Clear History"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setHistoryOpen(false)}
+                className="h-8 w-8"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
           <ScrollArea className="h-[calc(100%-3rem)] p-4">
             <div className="space-y-4">
@@ -166,6 +211,23 @@ export function ChatBar({ messages = [], onSubmit, placeholder, disabled, loadin
           )}
         </Button>
       </form>
+
+      <AlertDialog open={showClearDialog} onOpenChange={setShowClearDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear conversation history?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete all messages in your AI conversation. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleClearHistory}>
+              Clear History
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
