@@ -139,7 +139,7 @@ const QueueCardComponent = ({
                 <Undo className="h-4 w-4 mr-2" aria-hidden="true" />
                 Undo
               </Button> : <>
-                {onApprove && <Button size="sm" onClick={handleApprove} disabled={isApproving} className="flex-1 btn-press hover:shadow-glow transition-smooth" data-tour="approve-btn" aria-label="Approve and send message">
+                {onApprove && <Button size="sm" onClick={handleApprove} disabled={isApproving} className="flex-[1.3] btn-press hover:shadow-glow transition-smooth" data-tour="approve-btn" aria-label="Approve and send message">
                     {isApproving ? <>
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" aria-hidden="true" />
                         Approving...
@@ -148,13 +148,13 @@ const QueueCardComponent = ({
                         Approve
                       </>}
                   </Button>}
-                {onReject && <Button size="sm" variant="destructive" onClick={() => onReject(item.id)} aria-label="Reject message">
+                {onReject && <Button size="sm" variant="destructive" onClick={() => onReject(item.id)} className="flex-1" aria-label="Reject message">
                     Reject
                   </Button>}
-                {onSendNow && <Button size="sm" variant="outline" onClick={() => onSendNow(item.id)} disabled={inQuietHours} title={inQuietHours ? getQuietHoursMessage() : undefined} aria-label="Send message now">
+                {onSendNow && <Button size="sm" variant="outline" onClick={() => onSendNow(item.id)} disabled={inQuietHours} title={inQuietHours ? getQuietHoursMessage() : undefined} className="flex-1" aria-label="Send message now">
                     Send Now
                   </Button>}
-                {onEdit && <Button size="sm" variant="outline" onClick={() => onEdit(item.id)} aria-label="Edit message">
+                {onEdit && <Button size="sm" variant="outline" onClick={() => onEdit(item.id)} className="flex-1" aria-label="Edit message">
                     <Edit className="h-4 w-4 mr-2" aria-hidden="true" />
                     Edit
                   </Button>}
