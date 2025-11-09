@@ -51,7 +51,7 @@ const capabilities = [
 
 export function AgentCapabilities() {
   return (
-    <div className="flex flex-col gap-2 p-3 bg-muted/50 rounded-lg border border-border">
+    <div className="flex flex-col gap-2 p-3 bg-muted/50 rounded-lg border border-border" data-tour="ai-capabilities">
       <div className="flex items-center justify-between">
         <span className="text-xs font-medium text-muted-foreground">
           AI Agent Capabilities

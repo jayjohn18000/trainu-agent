@@ -10,13 +10,16 @@ interface TourStep {
   position: "top" | "bottom" | "left" | "right";
 }
 
+export type TourType = 'main' | 'ai-agent';
+
 interface TourOverlayProps {
   active: boolean;
   onComplete: () => void;
   onSkip: () => void;
+  tourType?: TourType;
 }
 
-const tourSteps: TourStep[] = [
+const mainTourSteps: TourStep[] = [
   {
     target: "[data-tour='queue']",
     title: "Review Queue",
@@ -49,14 +52,55 @@ const tourSteps: TourStep[] = [
   },
 ];
 
-export function TourOverlay({ active, onComplete, onSkip }: TourOverlayProps) {
+const aiAgentTourSteps: TourStep[] = [
+  {
+    target: "[data-tour='ai-chat-input']",
+    title: "AI Agent Chat",
+    description: "Ask your AI agent to schedule sessions, assign programs, get client insights, and more!",
+    position: "top",
+  },
+  {
+    target: "[data-tour='ai-capabilities']",
+    title: "Agent Capabilities",
+    description: "See what your AI agent can do - from managing sessions to analyzing client data.",
+    position: "bottom",
+  },
+  {
+    target: "[data-tour='ai-history']",
+    title: "Conversation History",
+    description: "View past conversations with your AI agent. Click the message icon to see history.",
+    position: "left",
+  },
+  {
+    target: "[data-tour='ai-clear']",
+    title: "Reset Conversation",
+    description: "Clear the conversation history to give the AI a fresh start with updated capabilities.",
+    position: "top",
+  },
+];
+
+export function TourOverlay({ active, onComplete, onSkip, tourType = 'main' }: TourOverlayProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [isClosing, setIsClosing] = useState(false);
+  const [isReady, setIsReady] = useState(false);
 
+  const tourSteps = tourType === 'main' ? mainTourSteps : aiAgentTourSteps;
+
+  // Wait for page to be fully ready before starting tour
   useEffect(() => {
     if (!active) return;
+
+    const readyTimer = setTimeout(() => {
+      setIsReady(true);
+    }, 1000); // 1 second delay after activation
+
+    return () => clearTimeout(readyTimer);
+  }, [active]);
+
+  useEffect(() => {
+    if (!active || !isReady) return;
 
     const updatePosition = () => {
       const target = document.querySelector(tourSteps[currentStep].target);
@@ -91,7 +135,7 @@ export function TourOverlay({ active, onComplete, onSkip }: TourOverlayProps) {
       window.removeEventListener("resize", updatePosition);
       window.removeEventListener("scroll", updatePosition);
     };
-  }, [active, currentStep, retryCount, onComplete]);
+  }, [active, isReady, currentStep, retryCount, onComplete, tourSteps]);
 
   // Handle Escape key to close tour
   useEffect(() => {

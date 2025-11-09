@@ -23,7 +23,7 @@ import { SettingsModal } from "@/components/modals/SettingsModal";
 import { CalendarModal } from "@/components/modals/CalendarModal";
 import { MessagesModal } from "@/components/modals/MessagesModal";
 import { KeyboardShortcutsOverlay } from "@/components/navigation/KeyboardShortcutsOverlay";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -34,7 +34,10 @@ import { useAchievementTracker } from "@/hooks/useAchievementTracker";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { TrainerXPNotification } from "@/components/gamification/TrainerXPNotification";
 import { AchievementUnlockNotification } from "@/components/ui/AchievementUnlockNotification";
-import { Zap, CheckCircle, TrendingUp, Keyboard } from "lucide-react";
+import { PersistentLevelDisplay } from "@/components/gamification/PersistentLevelDisplay";
+import { markTourComplete, shouldShowAiTour } from "@/lib/utils/tourManager";
+import type { TourType } from "@/components/onboarding/TourOverlay";
+import { Zap, CheckCircle, TrendingUp, Keyboard, X } from "lucide-react";
 import { analytics } from "@/lib/analytics";
 import { resolveGhlLink } from "@/lib/ghl/links";
 import { getFlags } from "@/lib/flags";
@@ -68,6 +71,9 @@ export default function Today() {
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [welcomeOpen, setWelcomeOpen] = useState(false);
   const [tourActive, setTourActive] = useState(false);
+  const [aiTourActive, setAiTourActive] = useState(false);
+  const [currentTourType, setCurrentTourType] = useState<TourType>('main');
+  const [showAiTourPrompt, setShowAiTourPrompt] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [previousLevel, setPreviousLevel] = useState<number | null>(null);
@@ -227,11 +233,32 @@ export default function Today() {
     }
   }, [progress.level, previousLevel]);
   const handleStartTour = () => {
+    setCurrentTourType('main');
     setTourActive(true);
   };
+
+  const handleStartAiTour = () => {
+    setCurrentTourType('ai-agent');
+    setAiTourActive(true);
+    setShowAiTourPrompt(false);
+  };
   const handleCompleteTour = () => {
+    const isAiTour = currentTourType === 'ai-agent';
+    
     // Immediately dismiss the tour overlay for responsive UI
-    setTourActive(false);
+    if (isAiTour) {
+      setAiTourActive(false);
+      markTourComplete('ai-agent');
+    } else {
+      setTourActive(false);
+      
+      // Check if we should show AI tour prompt after main tour
+      setTimeout(() => {
+        if (shouldShowAiTour()) {
+          setShowAiTourPrompt(true);
+        }
+      }, 1000);
+    }
     
     // Push async database work to next event loop tick
     // This ensures React processes the state update first
@@ -247,9 +274,13 @@ export default function Today() {
             })
             .eq('id', user.id);
           
-          // Also set localStorage for faster subsequent checks
-          localStorage.setItem("welcomeShown", "true");
-          localStorage.setItem("tourCompleted", "true");
+          // Mark tour as complete in localStorage
+          if (isAiTour) {
+            markTourComplete('ai-agent');
+          } else {
+            localStorage.setItem("welcomeShown", "true");
+            markTourComplete('main');
+          }
         }
       } catch (error) {
         console.error('Error updating onboarding status:', error);
@@ -257,8 +288,16 @@ export default function Today() {
     }, 0);
   };
   const handleSkipTour = () => {
+    const isAiTour = currentTourType === 'ai-agent';
+    
     // Immediately dismiss the tour overlay for responsive UI
-    setTourActive(false);
+    if (isAiTour) {
+      setAiTourActive(false);
+      markTourComplete('ai-agent');
+      setShowAiTourPrompt(false);
+    } else {
+      setTourActive(false);
+    }
     
     // Push async database work to next event loop tick
     // This ensures React processes the state update first
@@ -274,8 +313,13 @@ export default function Today() {
             })
             .eq('id', user.id);
           
-          localStorage.setItem("welcomeShown", "true");
-          localStorage.setItem("tourCompleted", "true");
+          // Mark tour as complete
+          if (isAiTour) {
+            markTourComplete('ai-agent');
+          } else {
+            localStorage.setItem("welcomeShown", "true");
+            markTourComplete('main');
+          }
         }
       } catch (error) {
         console.error('Error updating onboarding status:', error);
@@ -515,9 +559,7 @@ export default function Today() {
   }]);
   const safeItemsCount = queue.filter(item => item.confidence >= 0.8).length;
   return <>
-      <div data-tour="level">
-        <TrainerXPNotification />
-      </div>
+      <TrainerXPNotification />
       
       {/* Achievement Notifications */}
       {newlyUnlockedAchievements.map(achievement => <AchievementUnlockNotification key={achievement.id} achievement={{
@@ -533,6 +575,9 @@ export default function Today() {
         <header className="flex items-center justify-between mb-6 md:mb-8">
           <h1 className="text-2xl md:text-3xl font-bold">Today</h1>
           <div className="flex items-center gap-2">
+            <div data-tour="level">
+              <PersistentLevelDisplay />
+            </div>
             {!isMobile && <Button variant="ghost" size="icon" onClick={() => setShortcutsOpen(true)} title="Keyboard shortcuts (?)" aria-label="View keyboard shortcuts">
                 <Keyboard className="h-4 w-4" />
               </Button>}
@@ -632,7 +677,42 @@ export default function Today() {
 
       {/* Modals */}
       <WelcomeModal open={welcomeOpen} onOpenChange={setWelcomeOpen} onStartTour={handleStartTour} />
-      <TourOverlay active={tourActive} onComplete={handleCompleteTour} onSkip={handleSkipTour} />
+      <TourOverlay active={tourActive} onComplete={handleCompleteTour} onSkip={handleSkipTour} tourType="main" />
+      <TourOverlay active={aiTourActive} onComplete={handleCompleteTour} onSkip={handleSkipTour} tourType="ai-agent" />
+      
+      {/* AI Tour Prompt */}
+      {showAiTourPrompt && (
+        <Card className="fixed bottom-4 right-4 z-50 w-80 shadow-lg animate-slide-in-from-bottom">
+          <CardContent className="p-4">
+            <div className="flex items-start justify-between mb-2">
+              <h3 className="font-semibold">Discover AI Agent</h3>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 -mt-1 -mr-1"
+                onClick={() => setShowAiTourPrompt(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <p className="text-sm text-muted-foreground mb-3">
+              Learn how to use your AI agent to manage clients, schedule sessions, and more!
+            </p>
+            <div className="flex gap-2">
+              <Button size="sm" onClick={handleStartAiTour}>
+                Take Tour
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => {
+                setShowAiTourPrompt(false);
+                markTourComplete('ai-agent');
+              }}>
+                Skip
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      
       <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
       <CalendarModal open={calendarOpen} onOpenChange={setCalendarOpen} />
       <MessagesModal open={messagesOpen} onOpenChange={setMessagesOpen} />

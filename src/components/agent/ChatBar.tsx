@@ -115,6 +115,7 @@ export function ChatBar({ messages = [], onSubmit, placeholder, disabled, loadin
                 size="icon"
                 onClick={() => setShowClearDialog(true)}
                 disabled={loading || messages.length === 0}
+                data-tour="ai-clear"
                 className="h-8 w-8"
                 title="Clear History"
               >
@@ -170,6 +171,7 @@ export function ChatBar({ messages = [], onSubmit, placeholder, disabled, loadin
       {/* Input Bar */}
       <form
         onSubmit={handleSubmit}
+        data-tour="ai-chat-input"
         className={cn(
           "fixed right-0 z-10 border-t bg-card/95 backdrop-blur-sm",
           "flex items-center gap-2 p-3 px-4 transition-all duration-200",
@@ -183,6 +185,7 @@ export function ChatBar({ messages = [], onSubmit, placeholder, disabled, loadin
             variant="ghost"
             size="icon"
             onClick={() => setHistoryOpen(!historyOpen)}
+            data-tour="ai-history"
             className="shrink-0"
           >
             <MessageSquare className="h-4 w-4" />
