@@ -18,6 +18,7 @@ interface AgentState {
   setInput: (text: string) => void;
   toggleHistory: () => void;
   clear: () => void;
+  clearHistory: () => Promise<void>;
   sendMessage: (text: string) => Promise<void>;
   loadHistory: () => Promise<void>;
 }
@@ -30,6 +31,22 @@ export const useAgentStore = create<AgentState>((set, get) => ({
   setInput: (text) => set({ input: text }),
   toggleHistory: () => set((state) => ({ historyExpanded: !state.historyExpanded })),
   clear: () => set({ input: "", messages: [] }),
+  
+  clearHistory: async () => {
+    try {
+      const { error } = await supabase
+        .from('conversation_history')
+        .delete()
+        .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all records
+
+      if (error) throw error;
+      
+      set({ messages: [], input: "" });
+    } catch (error) {
+      console.error('Failed to clear history:', error);
+      throw error;
+    }
+  },
   
   loadHistory: async () => {
     try {
