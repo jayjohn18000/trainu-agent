@@ -2,17 +2,12 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { statusBadgeVariants } from "@/lib/design-system/colors";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown, Check, Edit, Undo, Loader2 } from "lucide-react";
 import { useState, memo } from "react";
 import type { QueueItem } from "@/types/agent";
 import { useTouchGestures } from "@/hooks/useTouchGestures";
 import { isQuietHours, getQuietHoursMessage } from "@/lib/utils/quietHours";
-
 interface QueueCardProps {
   item: QueueItem;
   onApprove?: (id: string) => void;
@@ -23,7 +18,6 @@ interface QueueCardProps {
   showUndo?: boolean;
   isSelected?: boolean;
 }
-
 const QueueCardComponent = ({
   item,
   onApprove,
@@ -32,7 +26,7 @@ const QueueCardComponent = ({
   onUndo,
   onSendNow,
   showUndo = false,
-  isSelected = false,
+  isSelected = false
 }: QueueCardProps) => {
   const [isWhyOpen, setIsWhyOpen] = useState(false);
   const [isSliding, setIsSliding] = useState(false);
@@ -40,7 +34,10 @@ const QueueCardComponent = ({
   const [isApproving, setIsApproving] = useState(false);
 
   // Touch gesture support for mobile
-  const { handlers, swipeProgress } = useTouchGestures({
+  const {
+    handlers,
+    swipeProgress
+  } = useTouchGestures({
     onSwipeRight: () => {
       if (onApprove) {
         setSwiped(true);
@@ -49,15 +46,12 @@ const QueueCardComponent = ({
         }, 300);
       }
     },
-    threshold: 100,
+    threshold: 100
   });
-
   const handleApprove = async () => {
     if (isApproving || !onApprove) return;
-    
     setIsApproving(true);
     setIsSliding(true);
-    
     try {
       await onApprove(item.id);
     } finally {
@@ -65,52 +59,38 @@ const QueueCardComponent = ({
       setIsSliding(false);
     }
   };
-
   const getConfidenceBadge = (confidence: number) => {
     if (confidence >= 0.8) {
       return {
         variant: "success" as const,
-        className: statusBadgeVariants.success,
+        className: statusBadgeVariants.success
       };
     }
     if (confidence >= 0.5) {
       return {
         variant: "warning" as const,
-        className: statusBadgeVariants.warning,
+        className: statusBadgeVariants.warning
       };
     }
     return {
       variant: "danger" as const,
-      className: statusBadgeVariants.danger,
+      className: statusBadgeVariants.danger
     };
   };
-
   const badge = getConfidenceBadge(item.confidence);
   const inQuietHours = isQuietHours();
-
-  return (
-    <Card 
-      {...handlers}
-      className={`transition-all hover:shadow-lg hover-lift touch-pan-y select-none ${
-        isSliding || swiped ? "animate-slide-out-left" : ""
-      } ${isSelected ? "ring-2 ring-primary shadow-glow" : ""}`}
-      style={{
-        transform: `translateX(${swipeProgress * 20}px)`,
-        opacity: 1 - swipeProgress * 0.3,
-      }}
-      role="article"
-      aria-label={`Queue item for ${item.clientName}`}
-    >
+  return <Card {...handlers} className={`transition-all hover:shadow-lg hover-lift touch-pan-y select-none ${isSliding || swiped ? "animate-slide-out-left" : ""} ${isSelected ? "ring-2 ring-primary shadow-glow" : ""}`} style={{
+    transform: `translateX(${swipeProgress * 20}px)`,
+    opacity: 1 - swipeProgress * 0.3
+  }} role="article" aria-label={`Queue item for ${item.clientName}`}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <div className="font-semibold text-base">{item.clientName}</div>
-              {item.confidence < 0.8 && (
-                <Badge variant="warning" className="text-xs">
+              {item.confidence < 0.8 && <Badge variant="warning" className="text-xs">
                   REQUIRES APPROVAL
-                </Badge>
-              )}
+                </Badge>}
             </div>
             <p className="text-sm text-muted-foreground line-clamp-2">
               {item.preview}
@@ -121,53 +101,33 @@ const QueueCardComponent = ({
           </Badge>
         </div>
         <div className="mt-2 flex flex-wrap gap-2">
-          {item.confidence < 0.8 && (
-            <Badge variant="outline" className="text-xs">
-              REQUIRES APPROVAL
-            </Badge>
-          )}
-          {(item as any).edit_count > 0 && (
-            <Badge variant="secondary" className="text-xs">
+          {item.confidence < 0.8}
+          {(item as any).edit_count > 0 && <Badge variant="secondary" className="text-xs">
               ✏️ {(item as any).edit_count} edit{(item as any).edit_count > 1 ? 's' : ''}
-            </Badge>
-          )}
-          {Boolean((item as any).scheduledFor) && new Date((item as any).scheduledFor) > new Date() ? (
-            <Badge variant="outline" className="text-xs">
-              ⏰ Queued for {new Date((item as any).scheduledFor).toLocaleString([], { 
-                month: 'short',
-                day: 'numeric',
-                hour: '2-digit', 
-                minute: '2-digit' 
-              })}
-            </Badge>
-          ) : inQuietHours && (
-            <Badge variant="secondary" className="text-xs">
+            </Badge>}
+          {Boolean((item as any).scheduledFor) && new Date((item as any).scheduledFor) > new Date() ? <Badge variant="outline" className="text-xs">
+              ⏰ Queued for {new Date((item as any).scheduledFor).toLocaleString([], {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          })}
+            </Badge> : inQuietHours && <Badge variant="secondary" className="text-xs">
               Will send after quiet hours (8 AM)
-            </Badge>
-          )}
+            </Badge>}
         </div>
       </CardHeader>
 
       <CardContent className="space-y-3 pt-0">
         {/* Why Suggested */}
         <Collapsible open={isWhyOpen} onOpenChange={setIsWhyOpen}>
-          <CollapsibleTrigger 
-            className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            aria-label="View reason for suggestion"
-          >
-            <ChevronDown
-              className={`h-4 w-4 transition-transform ${
-                isWhyOpen ? "rotate-180" : ""
-              }`}
-              aria-hidden="true"
-            />
+          <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors" aria-label="View reason for suggestion">
+            <ChevronDown className={`h-4 w-4 transition-transform ${isWhyOpen ? "rotate-180" : ""}`} aria-hidden="true" />
             Why suggested
           </CollapsibleTrigger>
           <CollapsibleContent className="mt-2">
             <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-              {item.why.map((reason, idx) => (
-                <li key={idx}>{reason}</li>
-              ))}
+              {item.why.map((reason, idx) => <li key={idx}>{reason}</li>)}
             </ul>
           </CollapsibleContent>
         </Collapsible>
@@ -175,86 +135,37 @@ const QueueCardComponent = ({
         {/* Actions */}
         <div className="space-y-2">
           <div className="flex gap-2">
-            {showUndo && onUndo ? (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => onUndo(item.id)}
-                className="flex-1"
-                aria-label="Undo message"
-              >
+            {showUndo && onUndo ? <Button size="sm" variant="outline" onClick={() => onUndo(item.id)} className="flex-1" aria-label="Undo message">
                 <Undo className="h-4 w-4 mr-2" aria-hidden="true" />
                 Undo
-              </Button>
-            ) : (
-              <>
-                {onApprove && (
-                  <Button
-                    size="sm"
-                    onClick={handleApprove}
-                    disabled={isApproving}
-                    className="flex-1 btn-press hover:shadow-glow transition-smooth"
-                    data-tour="approve-btn"
-                    aria-label="Approve and send message"
-                  >
-                    {isApproving ? (
-                      <>
+              </Button> : <>
+                {onApprove && <Button size="sm" onClick={handleApprove} disabled={isApproving} className="flex-1 btn-press hover:shadow-glow transition-smooth" data-tour="approve-btn" aria-label="Approve and send message">
+                    {isApproving ? <>
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" aria-hidden="true" />
                         Approving...
-                      </>
-                    ) : (
-                      <>
+                      </> : <>
                         <Check className="h-4 w-4 mr-2" aria-hidden="true" />
                         Approve
-                      </>
-                    )}
-                  </Button>
-                )}
-                {onReject && (
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => onReject(item.id)}
-                    aria-label="Reject message"
-                  >
+                      </>}
+                  </Button>}
+                {onReject && <Button size="sm" variant="destructive" onClick={() => onReject(item.id)} aria-label="Reject message">
                     Reject
-                  </Button>
-                )}
-                {onSendNow && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => onSendNow(item.id)}
-                    disabled={inQuietHours}
-                    title={inQuietHours ? getQuietHoursMessage() : undefined}
-                    aria-label="Send message now"
-                  >
+                  </Button>}
+                {onSendNow && <Button size="sm" variant="outline" onClick={() => onSendNow(item.id)} disabled={inQuietHours} title={inQuietHours ? getQuietHoursMessage() : undefined} aria-label="Send message now">
                     Send Now
-                  </Button>
-                )}
-                {onEdit && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => onEdit(item.id)}
-                    aria-label="Edit message"
-                  >
+                  </Button>}
+                {onEdit && <Button size="sm" variant="outline" onClick={() => onEdit(item.id)} aria-label="Edit message">
                     <Edit className="h-4 w-4 mr-2" aria-hidden="true" />
                     Edit
-                  </Button>
-                )}
-              </>
-            )}
+                  </Button>}
+              </>}
           </div>
-          {inQuietHours && (
-            <p className="text-xs text-muted-foreground">
+          {inQuietHours && <p className="text-xs text-muted-foreground">
               {getQuietHoursMessage()}
-            </p>
-          )}
+            </p>}
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 };
 
 // Memoize for performance
