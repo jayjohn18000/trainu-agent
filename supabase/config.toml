@@ -81,7 +81,7 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.ghl-provisioning]
-verify_jwt = false
+verify_jwt = true
 
 [functions.auto-approval-scheduler]
 verify_jwt = true

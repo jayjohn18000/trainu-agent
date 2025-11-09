@@ -139,13 +139,14 @@ Deno.serve(async (req) => {
     const errorId = generateErrorId();
     logError(FUNCTION_NAME, errorId, error);
 
-    // Try to update status to failed if we have request info
+    // Try to update status to cancelled if we have request info
+    // Note: Using variables from the start of the function to avoid reading body again
     try {
-      const { dfyRequestId } = await req.json().catch(() => ({}));
+      const { dfyRequestId } = await req.clone().json().catch(() => ({}));
       if (dfyRequestId) {
         await supabaseClient
           .from('dfy_requests')
-          .update({ status: 'failed' })
+          .update({ status: 'cancelled', updated_at: new Date().toISOString() })
           .eq('id', dfyRequestId);
       }
     } catch (updateError) {
