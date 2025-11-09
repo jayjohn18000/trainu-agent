@@ -360,6 +360,47 @@ serve(async (req) => {
       const data = payload.data as any;
       console.log('GHL Webhook received:', event);
 
+      // Handle incoming messages (SMS, Email, DM)
+      if (event === 'message.inbound' || event === 'message.received' || event === 'sms.received' || event === 'email.received') {
+        const message = data?.message || data;
+        const contactId = message.contactId || message.contact_id;
+        
+        // Get contact to find trainer_id and client name
+        const { data: contact } = await supabase
+          .from('contacts')
+          .select('id, trainer_id, first_name, last_name')
+          .eq('ghl_contact_id', String(contactId))
+          .single();
+
+        if (contact) {
+          // Determine channel from event type or message type
+          let channel = 'sms'; // default
+          if (event.includes('email')) channel = 'email';
+          else if (message.type === 'Email' || message.channel === 'email') channel = 'email';
+          else if (message.type === 'SMS' || message.channel === 'sms') channel = 'sms';
+          else if (message.type === 'DM' || message.channel === 'dm') channel = 'dm';
+
+          const clientName = [contact.first_name, contact.last_name].filter(Boolean).join(' ') || 'Client';
+
+          // Insert into activity_feed
+          await supabase.from('activity_feed').insert({
+            trainer_id: contact.trainer_id,
+            client_id: contact.id,
+            client_name: clientName,
+            action: 'received',
+            status: 'success',
+            why: `Received ${channel.toUpperCase()} from client`,
+            message_preview: message.body || message.content || '',
+            ghl_message_id: message.id || message.messageId,
+            ghl_channel: channel,
+            ghl_status: 'delivered',
+            ghl_delivered_at: message.createdAt || new Date().toISOString(),
+          });
+
+          console.log(`Activity feed updated for incoming ${channel} from ${clientName}`);
+        }
+      }
+
       // Contacts upsert
       if (event?.startsWith('contact.')) {
         const contact = data?.contact || data;

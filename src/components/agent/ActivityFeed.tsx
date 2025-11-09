@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EmptyState } from "@/components/ui/empty-state";
 import { formatDistanceToNow, differenceInMinutes } from "date-fns";
-import { Send, Edit, CheckCircle, XCircle, Undo, Clock } from "lucide-react";
+import { Send, Edit, CheckCircle, XCircle, Undo, Clock, MessageCircle } from "lucide-react";
 import type { FeedItem } from "@/types/agent";
 
 interface ActivityFeedProps {
@@ -42,6 +42,8 @@ export function ActivityFeed({ items, onUndo, className }: ActivityFeedProps) {
     switch (action) {
       case "sent":
         return <Send className="h-4 w-4" />;
+      case "received":
+        return <MessageCircle className="h-4 w-4" />;
       case "edited":
         return <Edit className="h-4 w-4" />;
       case "drafted":
