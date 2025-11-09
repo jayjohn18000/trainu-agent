@@ -86,10 +86,12 @@ export function AgentCapabilities() {
       <div className="space-y-1 mt-2">
         <p className="text-xs font-medium text-muted-foreground">Try these commands:</p>
         <div className="flex flex-col gap-0.5 text-xs text-muted-foreground">
-          <span>• "Show me my at-risk clients"</span>
-          <span>• "Schedule John for tomorrow at 2pm"</span>
+          <span>• "What are Alexis Cruz's current tags?"</span>
+          <span>• "Tag all at-risk clients as 'needs-attention'"</span>
+          <span>• "Show me VIP clients and assign them the advanced program"</span>
+          <span>• "Schedule check-ins for all new clients tomorrow at 2pm"</span>
+          <span>• "Remove 'new' tag from clients with more than 5 sessions"</span>
           <span>• "What are my stats this month?"</span>
-          <span>• "Suggest tags for all my clients"</span>
         </div>
       </div>
     </div>
