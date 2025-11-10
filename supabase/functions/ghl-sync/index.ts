@@ -77,6 +77,7 @@ Deno.serve(async (req) => {
               email: contact.email || null,
               phone: contact.phone || null,
               tags: contact.tags || [],
+              sync_source: 'ghl', // Mark as coming from GHL
               last_contacted_at: contact.dateAdded ? new Date(contact.dateAdded).toISOString() : null,
             }, {
               onConflict: 'ghl_contact_id',
@@ -165,6 +166,7 @@ Deno.serve(async (req) => {
                 status: appointment.status === 'confirmed' ? 'confirmed' : 'scheduled',
                 session_type: appointment.title || 'Training Session',
                 notes: appointment.notes || null,
+                sync_source: 'ghl', // Mark as coming from GHL
               }, {
                 onConflict: 'ghl_appointment_id',
                 ignoreDuplicates: false,

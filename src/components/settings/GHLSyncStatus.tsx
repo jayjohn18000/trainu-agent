@@ -195,9 +195,10 @@ export function GHLSyncStatus() {
         <div className="flex items-start gap-3">
           <TrendingUp className="h-5 w-5 text-primary mt-0.5" />
           <div>
-            <h4 className="font-medium text-foreground mb-1">Automatic Sync Schedule</h4>
+            <h4 className="font-medium text-foreground mb-1">Bidirectional Sync</h4>
             <p className="text-sm text-muted-foreground">
-              Your GHL data syncs automatically every 30 minutes. Webhooks provide real-time updates for messages and appointments.
+              <strong>From GHL:</strong> Data syncs every 30 minutes. Webhooks provide real-time updates.<br/>
+              <strong>To GHL:</strong> Changes in TrainU push to GHL automatically every 2 minutes.
             </p>
           </div>
         </div>

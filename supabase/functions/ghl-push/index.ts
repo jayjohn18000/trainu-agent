@@ -1,0 +1,310 @@
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.76.1'
+import { jsonResponse, errorResponse } from '../_shared/responses.ts'
+
+const GHL_API_BASE = Deno.env.get('GHL_API_BASE') || 'https://services.leadconnectorhq.com';
+
+Deno.serve(async (req) => {
+  try {
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+    );
+
+    console.log('Starting bidirectional GHL push...');
+
+    // Get GHL access token
+    const ghlAccessToken = Deno.env.get('GHL_ACCESS_TOKEN');
+    if (!ghlAccessToken) {
+      console.error('GHL_ACCESS_TOKEN not configured');
+      return errorResponse('GHL_ACCESS_TOKEN not configured', 500);
+    }
+
+    // Get pending sync queue items (limit to 50 per run)
+    const { data: queueItems, error: queueError } = await supabase
+      .from('ghl_sync_queue')
+      .select('*')
+      .eq('status', 'pending')
+      .lt('attempts', 3) // Max 3 retry attempts
+      .order('created_at', { ascending: true })
+      .limit(50);
+
+    if (queueError) {
+      console.error('Error fetching sync queue:', queueError);
+      return errorResponse(queueError.message, 500);
+    }
+
+    if (!queueItems || queueItems.length === 0) {
+      console.log('No pending sync items');
+      return jsonResponse({ processed: 0, message: 'No pending items' });
+    }
+
+    console.log(`Processing ${queueItems.length} sync items`);
+
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const item of queueItems) {
+      // Mark as processing
+      await supabase
+        .from('ghl_sync_queue')
+        .update({ status: 'processing', attempts: item.attempts + 1 })
+        .eq('id', item.id);
+
+      try {
+        // Get trainer's GHL config
+        const { data: config } = await supabase
+          .from('ghl_config')
+          .select('location_id')
+          .eq('trainer_id', item.trainer_id)
+          .single();
+
+        if (!config?.location_id) {
+          throw new Error('No GHL location configured for trainer');
+        }
+
+        if (item.entity_type === 'contact') {
+          await processContactSync(item, config.location_id, ghlAccessToken, supabase);
+        } else if (item.entity_type === 'booking') {
+          await processBookingSync(item, config.location_id, ghlAccessToken, supabase);
+        }
+
+        // Mark as completed
+        await supabase
+          .from('ghl_sync_queue')
+          .update({ 
+            status: 'completed', 
+            processed_at: new Date().toISOString(),
+            error_message: null 
+          })
+          .eq('id', item.id);
+
+        successCount++;
+        console.log(`Successfully processed ${item.entity_type} ${item.operation}`);
+
+      } catch (error) {
+        console.error(`Error processing sync item ${item.id}:`, error);
+        
+        // Mark as failed if max attempts reached, otherwise back to pending
+        const newStatus = item.attempts + 1 >= 3 ? 'failed' : 'pending';
+        await supabase
+          .from('ghl_sync_queue')
+          .update({ 
+            status: newStatus,
+            error_message: error instanceof Error ? error.message : 'Unknown error'
+          })
+          .eq('id', item.id);
+
+        failCount++;
+      }
+    }
+
+    console.log(`Push completed: ${successCount} succeeded, ${failCount} failed`);
+    return jsonResponse({ 
+      processed: queueItems.length,
+      succeeded: successCount,
+      failed: failCount,
+      timestamp: new Date().toISOString(),
+    });
+
+  } catch (error) {
+    console.error('GHL push error:', error);
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return errorResponse(message, 500);
+  }
+});
+
+async function processContactSync(
+  item: any, 
+  locationId: string, 
+  accessToken: string,
+  supabase: any
+) {
+  const payload = item.payload;
+
+  if (item.operation === 'create') {
+    // Create new contact in GHL
+    if (!payload.ghl_contact_id) {
+      const createUrl = `${GHL_API_BASE}/contacts/`;
+      const createResponse = await fetch(createUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Version': '2021-07-28',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          locationId: locationId,
+          firstName: payload.first_name,
+          lastName: payload.last_name,
+          email: payload.email,
+          phone: payload.phone,
+          tags: payload.tags || [],
+        }),
+      });
+
+      if (!createResponse.ok) {
+        const errorText = await createResponse.text();
+        throw new Error(`GHL API error: ${errorText}`);
+      }
+
+      const createdContact = await createResponse.json();
+      
+      // Update local contact with GHL ID (mark as ghl source to avoid re-triggering)
+      await supabase
+        .from('contacts')
+        .update({ 
+          ghl_contact_id: createdContact.contact.id,
+          sync_source: 'ghl',
+          last_synced_to_ghl_at: new Date().toISOString()
+        })
+        .eq('id', item.entity_id);
+      
+      // Reset sync_source back to trainu for future changes
+      await supabase
+        .from('contacts')
+        .update({ sync_source: 'trainu' })
+        .eq('id', item.entity_id);
+    }
+  } else if (item.operation === 'update' && payload.ghl_contact_id) {
+    // Update existing contact in GHL
+    const updateUrl = `${GHL_API_BASE}/contacts/${payload.ghl_contact_id}`;
+    const updateResponse = await fetch(updateUrl, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Version': '2021-07-28',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        firstName: payload.first_name,
+        lastName: payload.last_name,
+        email: payload.email,
+        phone: payload.phone,
+        tags: payload.tags || [],
+      }),
+    });
+
+    if (!updateResponse.ok) {
+      const errorText = await updateResponse.text();
+      throw new Error(`GHL API error: ${errorText}`);
+    }
+
+    // Update sync timestamp
+    await supabase
+      .from('contacts')
+      .update({ 
+        sync_source: 'ghl',
+        last_synced_to_ghl_at: new Date().toISOString()
+      })
+      .eq('id', item.entity_id);
+    
+    // Reset sync_source
+    await supabase
+      .from('contacts')
+      .update({ sync_source: 'trainu' })
+      .eq('id', item.entity_id);
+  }
+}
+
+async function processBookingSync(
+  item: any, 
+  locationId: string, 
+  accessToken: string,
+  supabase: any
+) {
+  const payload = item.payload;
+
+  // Get contact's GHL ID
+  const { data: contact } = await supabase
+    .from('contacts')
+    .select('ghl_contact_id')
+    .eq('id', payload.contact_id)
+    .single();
+
+  if (!contact?.ghl_contact_id) {
+    throw new Error('Contact not synced to GHL');
+  }
+
+  if (item.operation === 'create') {
+    // Create appointment in GHL
+    if (!payload.ghl_appointment_id) {
+      const createUrl = `${GHL_API_BASE}/calendars/events`;
+      const createResponse = await fetch(createUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Version': '2021-07-28',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          locationId: locationId,
+          contactId: contact.ghl_contact_id,
+          startTime: payload.scheduled_at,
+          title: payload.session_type || 'Training Session',
+          appointmentStatus: payload.status === 'confirmed' ? 'confirmed' : 'scheduled',
+          notes: payload.notes,
+        }),
+      });
+
+      if (!createResponse.ok) {
+        const errorText = await createResponse.text();
+        throw new Error(`GHL API error: ${errorText}`);
+      }
+
+      const createdEvent = await createResponse.json();
+      
+      // Update local booking with GHL appointment ID
+      await supabase
+        .from('bookings')
+        .update({ 
+          ghl_appointment_id: createdEvent.id,
+          sync_source: 'ghl',
+          last_synced_to_ghl_at: new Date().toISOString()
+        })
+        .eq('id', item.entity_id);
+      
+      // Reset sync_source
+      await supabase
+        .from('bookings')
+        .update({ sync_source: 'trainu' })
+        .eq('id', item.entity_id);
+    }
+  } else if (item.operation === 'update' && payload.ghl_appointment_id) {
+    // Update appointment in GHL
+    const updateUrl = `${GHL_API_BASE}/calendars/events/${payload.ghl_appointment_id}`;
+    const updateResponse = await fetch(updateUrl, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Version': '2021-07-28',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        startTime: payload.scheduled_at,
+        title: payload.session_type || 'Training Session',
+        appointmentStatus: payload.status === 'confirmed' ? 'confirmed' : 'scheduled',
+        notes: payload.notes,
+      }),
+    });
+
+    if (!updateResponse.ok) {
+      const errorText = await updateResponse.text();
+      throw new Error(`GHL API error: ${errorText}`);
+    }
+
+    // Update sync timestamp
+    await supabase
+      .from('bookings')
+      .update({ 
+        sync_source: 'ghl',
+        last_synced_to_ghl_at: new Date().toISOString()
+      })
+      .eq('id', item.entity_id);
+    
+    // Reset sync_source
+    await supabase
+      .from('bookings')
+      .update({ sync_source: 'trainu' })
+      .eq('id', item.entity_id);
+  }
+}

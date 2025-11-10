@@ -699,10 +699,12 @@ export type Database = {
           created_at: string | null
           ghl_appointment_id: string | null
           id: string
+          last_synced_to_ghl_at: string | null
           notes: string | null
           scheduled_at: string
           session_type: string | null
           status: Database["public"]["Enums"]["booking_status"] | null
+          sync_source: string | null
           trainer_id: string
           updated_at: string | null
         }
@@ -711,10 +713,12 @@ export type Database = {
           created_at?: string | null
           ghl_appointment_id?: string | null
           id?: string
+          last_synced_to_ghl_at?: string | null
           notes?: string | null
           scheduled_at: string
           session_type?: string | null
           status?: Database["public"]["Enums"]["booking_status"] | null
+          sync_source?: string | null
           trainer_id: string
           updated_at?: string | null
         }
@@ -723,10 +727,12 @@ export type Database = {
           created_at?: string | null
           ghl_appointment_id?: string | null
           id?: string
+          last_synced_to_ghl_at?: string | null
           notes?: string | null
           scheduled_at?: string
           session_type?: string | null
           status?: Database["public"]["Enums"]["booking_status"] | null
+          sync_source?: string | null
           trainer_id?: string
           updated_at?: string | null
         }
@@ -869,10 +875,12 @@ export type Database = {
           id: string
           last_message_sent_at: string | null
           last_name: string | null
+          last_synced_to_ghl_at: string | null
           messages_sent_this_week: number | null
           messages_sent_today: number | null
           phone: string | null
           program_id: string | null
+          sync_source: string | null
           tags: string[] | null
           trainer_id: string
           updated_at: string | null
@@ -886,10 +894,12 @@ export type Database = {
           id?: string
           last_message_sent_at?: string | null
           last_name?: string | null
+          last_synced_to_ghl_at?: string | null
           messages_sent_this_week?: number | null
           messages_sent_today?: number | null
           phone?: string | null
           program_id?: string | null
+          sync_source?: string | null
           tags?: string[] | null
           trainer_id: string
           updated_at?: string | null
@@ -903,10 +913,12 @@ export type Database = {
           id?: string
           last_message_sent_at?: string | null
           last_name?: string | null
+          last_synced_to_ghl_at?: string | null
           messages_sent_this_week?: number | null
           messages_sent_today?: number | null
           phone?: string | null
           program_id?: string | null
+          sync_source?: string | null
           tags?: string[] | null
           trainer_id?: string
           updated_at?: string | null
@@ -1629,6 +1641,48 @@ export type Database = {
           trainer_id?: string
           updated_at?: string | null
           webhook_registered?: boolean | null
+        }
+        Relationships: []
+      }
+      ghl_sync_queue: {
+        Row: {
+          attempts: number | null
+          created_at: string | null
+          entity_id: string
+          entity_type: string
+          error_message: string | null
+          id: string
+          operation: string
+          payload: Json
+          processed_at: string | null
+          status: string
+          trainer_id: string
+        }
+        Insert: {
+          attempts?: number | null
+          created_at?: string | null
+          entity_id: string
+          entity_type: string
+          error_message?: string | null
+          id?: string
+          operation: string
+          payload: Json
+          processed_at?: string | null
+          status?: string
+          trainer_id: string
+        }
+        Update: {
+          attempts?: number | null
+          created_at?: string | null
+          entity_id?: string
+          entity_type?: string
+          error_message?: string | null
+          id?: string
+          operation?: string
+          payload?: Json
+          processed_at?: string | null
+          status?: string
+          trainer_id?: string
         }
         Relationships: []
       }
