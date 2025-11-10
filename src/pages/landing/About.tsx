@@ -9,52 +9,57 @@ import { AnimatedCounter } from "@/components/landing/AnimatedCounter";
 import trainerClientGym from "@/assets/trainer-client-gym.jpg";
 import trainerOverhead from "@/assets/trainer-client-overhead.jpg";
 import gradientBg from "@/assets/gradient-mesh-bg.svg";
-
-const milestones = [
-  { year: "2022", event: "Founded", description: "Two frustrated trainers lose 40% of clients to silent churn" },
-  { year: "2023", event: "Beta Launch", description: "50 trainers pilot AI-powered retention automation" },
-  { year: "2023", event: "Product-Market Fit", description: "92% of beta users renew. Average 30% revenue increase" },
-  { year: "2024", event: "GHL Integration", description: "Native GoHighLevel connector for seamless workflows" },
-  { year: "2024", event: "100+ Trainers", description: "Crossed 100 active trainers, 3,000+ clients retained" },
-  { year: "2025", event: "Series A", description: "Raised $8M to scale AI and expand to studios/gyms" },
-];
-
-const values = [
-  {
-    icon: Heart,
-    title: "Human-First AI",
-    description: "Technology should amplify relationships, not replace them. We believe in AI-assisted, trainer-approved communication.",
-  },
-  {
-    icon: Target,
-    title: "Evidence-Led",
-    description: "Every feature backed by data. We A/B test relentlessly and share what works (and what doesn't) with our community.",
-  },
-  {
-    icon: TrendingUp,
-    title: "Transparency",
-    description: "No hidden fees, no vendor lock-in. We publish our retention benchmarks and product roadmap publicly.",
-  },
-  {
-    icon: Users,
-    title: "Trainer Success",
-    description: "Our only metric that matters: are trainers growing their businesses and losing fewer clients? Everything else is noise.",
-  },
-];
-
+const milestones = [{
+  year: "2022",
+  event: "Founded",
+  description: "Two frustrated trainers lose 40% of clients to silent churn"
+}, {
+  year: "2023",
+  event: "Beta Launch",
+  description: "50 trainers pilot AI-powered retention automation"
+}, {
+  year: "2023",
+  event: "Product-Market Fit",
+  description: "92% of beta users renew. Average 30% revenue increase"
+}, {
+  year: "2024",
+  event: "GHL Integration",
+  description: "Native GoHighLevel connector for seamless workflows"
+}, {
+  year: "2024",
+  event: "100+ Trainers",
+  description: "Crossed 100 active trainers, 3,000+ clients retained"
+}, {
+  year: "2025",
+  event: "Series A",
+  description: "Raised $8M to scale AI and expand to studios/gyms"
+}];
+const values = [{
+  icon: Heart,
+  title: "Human-First AI",
+  description: "Technology should amplify relationships, not replace them. We believe in AI-assisted, trainer-approved communication."
+}, {
+  icon: Target,
+  title: "Evidence-Led",
+  description: "Every feature backed by data. We A/B test relentlessly and share what works (and what doesn't) with our community."
+}, {
+  icon: TrendingUp,
+  title: "Transparency",
+  description: "No hidden fees, no vendor lock-in. We publish our retention benchmarks and product roadmap publicly."
+}, {
+  icon: Users,
+  title: "Trainer Success",
+  description: "Our only metric that matters: are trainers growing their businesses and losing fewer clients? Everything else is noise."
+}];
 export default function About() {
-  return (
-    <LandingLayout>
+  return <LandingLayout>
       {/* Hero */}
       <section className="relative overflow-hidden py-24">
-        <div 
-          className="absolute inset-0 opacity-20"
-          style={{
-            backgroundImage: `url(${gradientBg})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center'
-          }}
-        />
+        <div className="absolute inset-0 opacity-20" style={{
+        backgroundImage: `url(${gradientBg})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      }} />
         <div className="container mx-auto px-4 relative z-10">
           <ScrollReveal>
             <div className="max-w-4xl mx-auto text-center">
@@ -64,7 +69,9 @@ export default function About() {
               </div>
               <h1 className="text-6xl md:text-7xl font-black mb-8 leading-[1.1]">
                 We're on a Mission to{" "}
-                <span className="bg-gradient-to-r from-primary via-primary-hover to-primary bg-clip-text text-transparent animate-gradient-shift" style={{ backgroundSize: '200% auto' }}>
+                <span className="bg-gradient-to-r from-primary via-primary-hover to-primary bg-clip-text text-transparent animate-gradient-shift" style={{
+                backgroundSize: '200% auto'
+              }}>
                   Stop Silent Churn
                 </span>
               </h1>
@@ -149,8 +156,7 @@ export default function About() {
             <h2 className="text-3xl font-bold mb-12 text-center">Our Journey</h2>
             
             <div className="space-y-6">
-              {milestones.map((milestone, index) => (
-                <div key={index} className="flex gap-6 items-start">
+              {milestones.map((milestone, index) => <div key={index} className="flex gap-6 items-start">
                   <div className="flex-shrink-0">
                     <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
                       {milestone.year.slice(-2)}
@@ -163,8 +169,7 @@ export default function About() {
                     </div>
                     <p className="text-muted-foreground">{milestone.description}</p>
                   </Card>
-                </div>
-              ))}
+                </div>)}
             </div>
           </div>
         </div>
@@ -180,15 +185,13 @@ export default function About() {
             </p>
 
             <div className="grid md:grid-cols-2 gap-6">
-              {values.map((value, index) => (
-                <Card key={index} className="p-6">
+              {values.map((value, index) => <Card key={index} className="p-6">
                   <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
                     <value.icon className="h-6 w-6 text-primary" />
                   </div>
                   <h3 className="text-xl font-semibold mb-2">{value.title}</h3>
                   <p className="text-muted-foreground">{value.description}</p>
-                </Card>
-              ))}
+                </Card>)}
             </div>
           </div>
         </div>
@@ -203,40 +206,7 @@ export default function About() {
               Our founding team combines 30+ years of training experience with backgrounds in AI/ML from Google and Meta.
             </p>
 
-            <div className="grid md:grid-cols-3 gap-8">
-              <Card className="p-6 text-center">
-                <div className="h-24 w-24 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 mx-auto mb-4 flex items-center justify-center text-4xl">
-                  👩‍💼
-                </div>
-                <h3 className="font-semibold mb-1">Sarah Mitchell</h3>
-                <p className="text-sm text-primary mb-2">Co-Founder & CEO</p>
-                <p className="text-xs text-muted-foreground">
-                  10 years training, ex-Google AI. Lost too many clients to build this.
-                </p>
-              </Card>
-
-              <Card className="p-6 text-center">
-                <div className="h-24 w-24 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 mx-auto mb-4 flex items-center justify-center text-4xl">
-                  👨‍💻
-                </div>
-                <h3 className="font-semibold mb-1">Marcus Rodriguez</h3>
-                <p className="text-sm text-primary mb-2">Co-Founder & CTO</p>
-                <p className="text-xs text-muted-foreground">
-                  Studio owner, ex-Meta ML. Built AI to scale relationships.
-                </p>
-              </Card>
-
-              <Card className="p-6 text-center">
-                <div className="h-24 w-24 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 mx-auto mb-4 flex items-center justify-center text-4xl">
-                  👨‍🔬
-                </div>
-                <h3 className="font-semibold mb-1">Dr. Alex Chen</h3>
-                <p className="text-sm text-primary mb-2">Head of AI/ML</p>
-                <p className="text-xs text-muted-foreground">
-                  PhD ML, Stanford. Predictive models for human behavior.
-                </p>
-              </Card>
-            </div>
+            
           </div>
         </div>
       </section>
@@ -328,6 +298,5 @@ export default function About() {
           </div>
         </div>
       </section>
-    </LandingLayout>
-  );
+    </LandingLayout>;
 }
