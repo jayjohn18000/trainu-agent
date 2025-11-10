@@ -61,10 +61,21 @@ const prizes = [{
 export default function Challenge() {
   return <LandingLayout>
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary/20 via-background to-background">
-        <div className="absolute inset-0 opacity-20">
-          <img src={gradientBg} alt="" className="w-full h-full object-cover" />
-        </div>
+      <section className="relative overflow-hidden">
+        {/* Video Background */}
+        <video 
+          autoPlay 
+          loop 
+          muted 
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+        >
+          <source src="/challenge-hero-video.mp4" type="video/mp4" />
+        </video>
+        
+        {/* Dark Overlay */}
+        <div className="absolute inset-0 bg-black/60" />
+        
         <div className="container mx-auto px-4 py-20 relative z-10">
           <ScrollReveal className="max-w-4xl mx-auto text-center">
             <Badge className="mb-6 text-sm px-4 py-2">
