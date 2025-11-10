@@ -146,8 +146,8 @@ export default function Contact() {
                     <Mail className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="font-medium text-sm">Email</p>
-                      <a href="mailto:hello@trainu.com" className="text-sm text-muted-foreground hover:text-primary">
-                        hello@trainu.com
+                      <a href="mailto:hello@trainu.us" className="text-sm text-muted-foreground hover:text-primary">
+                        hello@trainu.us
                       </a>
                     </div>
                   </div>
