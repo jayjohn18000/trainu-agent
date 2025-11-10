@@ -1,6 +1,7 @@
 // deno-lint-ignore-file no-explicit-any
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 type TriggerType =
   | "booking_confirmed"
@@ -144,15 +145,33 @@ serve(async (req) => {
     const trainerId = auth.user.id;
 
     const body = (await req.json()) as RequestBody;
-    if (!body?.contactId || !body?.triggerType) {
-      return new Response("Invalid payload", { status: 400 });
+    
+    // Validate request body
+    const requestSchema = z.object({
+      contactId: z.string().uuid(),
+      triggerType: z.enum(['booking_confirmed', 'booking_upcoming', 'missed_session', 'no_activity', 'milestone']),
+      context: z.object({
+        sessionType: z.string().max(100).optional(),
+        dateStr: z.string().max(50).optional(),
+        count: z.number().int().min(0).max(1000).optional()
+      }).optional()
+    });
+    
+    const validation = requestSchema.safeParse(body);
+    if (!validation.success) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid input', details: validation.error.format() }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
     }
+    
+    const validatedBody = validation.data;
 
     const { data: contact, error: contactErr } = await supabase
       .from("contacts")
       .select("id, first_name, last_name")
       .eq("trainer_id", trainerId)
-      .eq("id", body.contactId)
+      .eq("id", validatedBody.contactId)
       .single();
     if (contactErr || !contact) throw contactErr ?? new Error("Contact not found");
 
@@ -172,7 +191,7 @@ serve(async (req) => {
       .limit(10);
 
     // Minimal context for templates; can be extended by querying bookings/insights
-    const template = pickTemplate(body.triggerType, contact as any, {}, editHistory || []);
+    const template = pickTemplate(validatedBody.triggerType, contact as any, validatedBody.context || {}, editHistory || []);
 
     // Determine if this should be auto-approved
     const now = new Date();

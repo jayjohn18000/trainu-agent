@@ -2,6 +2,7 @@ import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-
 import { jsonResponse, errorResponse, optionsResponse } from '../_shared/responses.ts'
 import { ALLOWED_TABLES } from '../_shared/constants.ts'
 import type { MetricDSL, DSLFilter } from '../_shared/types.ts'
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts'
 
 // Build Supabase query from DSL
 function buildQuery(
@@ -120,13 +121,28 @@ Deno.serve(async (req) => {
         return errorResponse('dsl_json required', 400);
       }
 
-      const dsl = dsl_json as MetricDSL;
-      
-      // Validate required fields
-      if (!dsl.table || !dsl.metric) {
-        return errorResponse('table and metric required in DSL', 400);
+      // Validate DSL structure
+      const dslSchema = z.object({
+        table: z.enum(['contacts', 'bookings', 'messages', 'activity_feed', 'trainer_profiles'] as any),
+        metric: z.enum(['count', 'sum', 'avg']),
+        title: z.string().max(100).optional(),
+        period: z.enum(['7d', '30d', 'all']).optional(),
+        sumField: z.string().max(50).optional(),
+        avgField: z.string().max(50).optional(),
+        filters: z.array(z.object({
+          field: z.string().max(50),
+          op: z.enum(['eq', 'neq', 'gt', 'gte', 'lt', 'lte', 'in', 'like']),
+          value: z.union([z.string(), z.number(), z.array(z.string())])
+        })).max(10).optional()
+      });
+
+      const validation = dslSchema.safeParse(dsl_json);
+      if (!validation.success) {
+        return errorResponse('Invalid DSL structure: ' + validation.error.message, 400);
       }
 
+      const dsl = validation.data as MetricDSL;
+      
       // Validate table name (prevent SQL injection)
       if (!ALLOWED_TABLES.includes(dsl.table)) {
         return errorResponse('Invalid table name', 400);

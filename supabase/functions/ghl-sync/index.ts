@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.76.1'
 import { jsonResponse, errorResponse } from '../_shared/responses.ts'
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts'
 
 const GHL_API_BASE = Deno.env.get('GHL_API_BASE') || 'https://services.leadconnectorhq.com';
 
@@ -72,7 +73,26 @@ Deno.serve(async (req) => {
           const contactsData = await contactsResponse.json();
           const contacts = contactsData.contacts || [];
 
+          // Validate GHL contact data
+          const ghlContactSchema = z.object({
+            id: z.string().max(100),
+            firstName: z.string().max(100).optional(),
+            lastName: z.string().max(100).optional(),
+            email: z.string().email().max(255).optional().nullable(),
+            phone: z.string().max(20).optional().nullable(),
+            tags: z.array(z.string().max(50)).max(50).optional(),
+            dateAdded: z.string().optional(),
+            dateUpdated: z.string().optional()
+          });
+
           for (const contact of contacts) {
+            // Validate contact data before inserting
+            const validation = ghlContactSchema.safeParse(contact);
+            if (!validation.success) {
+              console.warn(`Invalid contact data from GHL:`, validation.error);
+              continue; // Skip invalid contacts
+            }
+            const validContact = validation.data;
             // Check for conflicts - if record exists and was modified in TrainU since last sync
             const { data: existing } = await supabase
               .from('contacts')
@@ -100,14 +120,14 @@ Deno.serve(async (req) => {
 
             await supabase.from('contacts').upsert({
               trainer_id,
-              ghl_contact_id: contact.id,
-              first_name: contact.firstName || null,
-              last_name: contact.lastName || null,
-              email: contact.email || null,
-              phone: contact.phone || null,
-              tags: contact.tags || [],
+              ghl_contact_id: validContact.id,
+              first_name: validContact.firstName || null,
+              last_name: validContact.lastName || null,
+              email: validContact.email || null,
+              phone: validContact.phone || null,
+              tags: validContact.tags || [],
               sync_source: 'ghl',
-              last_contacted_at: contact.dateAdded ? new Date(contact.dateAdded).toISOString() : null,
+              last_contacted_at: validContact.dateAdded ? new Date(validContact.dateAdded).toISOString() : null,
             }, {
               onConflict: 'ghl_contact_id',
               ignoreDuplicates: false,

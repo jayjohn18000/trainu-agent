@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -398,19 +399,33 @@ async function getClientInfo(supabase: any, trainerId: string, clientNameOrId: s
 }
 
 async function searchClients(supabase: any, trainerId: string, query?: string, tags?: string[]) {
+  // Validate inputs to prevent SQL injection
+  const searchSchema = z.object({
+    query: z.string().max(200).optional(),
+    tags: z.array(z.string().max(50)).max(20).optional()
+  });
+  
+  const validation = searchSchema.safeParse({ query, tags });
+  if (!validation.success) {
+    return { error: "Invalid search parameters" };
+  }
+  
   let dbQuery = supabase
     .from('contacts')
     .select('id, first_name, last_name, email, phone, tags, insights(risk_score, engagement_score)')
     .eq('trainer_id', trainerId);
   
   if (query) {
-    const searchTerm = `%${query.toLowerCase()}%`;
+    // Sanitize search term to prevent SQL injection
+    const sanitized = query.replace(/[%_\\]/g, '\\$&').toLowerCase();
+    const searchTerm = `%${sanitized}%`;
     dbQuery = dbQuery.or(`first_name.ilike.${searchTerm},last_name.ilike.${searchTerm},email.ilike.${searchTerm},phone.ilike.${searchTerm}`);
   }
   
   if (tags && tags.length > 0) {
     // Use flexible text search on tags to handle malformed data (e.g., ["avengers] instead of ["avengers"])
-    const tagFilters = tags.map(tag => `tags::text.ilike.%${tag}%`).join(',');
+    const sanitizedTags = tags.map(tag => tag.replace(/[%_\\]/g, '\\$&'));
+    const tagFilters = sanitizedTags.map(tag => `tags::text.ilike.%${tag}%`).join(',');
     dbQuery = dbQuery.or(tagFilters);
   }
   
