@@ -73,8 +73,8 @@ export default function Challenge() {
           <source src="/challenge-hero-video.mp4" type="video/mp4" />
         </video>
         
-        {/* Dark Overlay */}
-        <div className="absolute inset-0 bg-black/60" />
+        {/* Dark Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-black/40" />
         
         <div className="container mx-auto px-4 py-20 relative z-10">
           <ScrollReveal className="max-w-4xl mx-auto text-center">
