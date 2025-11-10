@@ -4,6 +4,8 @@ import { jsonResponse, errorResponse } from '../_shared/responses.ts'
 const GHL_API_BASE = Deno.env.get('GHL_API_BASE') || 'https://services.leadconnectorhq.com';
 
 Deno.serve(async (req) => {
+  const syncStartTime = Date.now();
+  
   try {
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -51,6 +53,8 @@ Deno.serve(async (req) => {
       let appointmentsCount = 0;
       let syncStatus = 'success';
       let syncError = null;
+      let conflictsDetected = 0;
+      const trainerSyncStart = Date.now();
 
       console.log(`Syncing data for trainer ${trainer_id}, location ${location_id}`);
 
@@ -69,6 +73,31 @@ Deno.serve(async (req) => {
           const contacts = contactsData.contacts || [];
 
           for (const contact of contacts) {
+            // Check for conflicts - if record exists and was modified in TrainU since last sync
+            const { data: existing } = await supabase
+              .from('contacts')
+              .select('id, updated_at, sync_source, last_synced_to_ghl_at')
+              .eq('ghl_contact_id', contact.id)
+              .eq('trainer_id', trainer_id)
+              .maybeSingle();
+
+            if (existing && existing.sync_source === 'trainu' && 
+                existing.last_synced_to_ghl_at && 
+                new Date(existing.updated_at) > new Date(existing.last_synced_to_ghl_at)) {
+              // Conflict detected - record modified in both systems
+              conflictsDetected++;
+              await supabase.from('ghl_sync_conflicts').insert({
+                trainer_id,
+                entity_type: 'contact',
+                entity_id: existing.id,
+                trainu_data: existing,
+                ghl_data: contact,
+                trainu_updated_at: existing.updated_at,
+                ghl_updated_at: contact.dateUpdated || contact.dateAdded,
+                resolution_strategy: 'ghl_wins', // GHL data wins by default
+              });
+            }
+
             await supabase.from('contacts').upsert({
               trainer_id,
               ghl_contact_id: contact.id,
@@ -77,7 +106,7 @@ Deno.serve(async (req) => {
               email: contact.email || null,
               phone: contact.phone || null,
               tags: contact.tags || [],
-              sync_source: 'ghl', // Mark as coming from GHL
+              sync_source: 'ghl',
               last_contacted_at: contact.dateAdded ? new Date(contact.dateAdded).toISOString() : null,
             }, {
               onConflict: 'ghl_contact_id',
@@ -184,7 +213,12 @@ Deno.serve(async (req) => {
         syncError = error instanceof Error ? error.message : 'Unknown error';
       }
 
-      // Update sync statistics
+      // Calculate performance metrics
+      const trainerSyncDuration = Date.now() - trainerSyncStart;
+      const totalRecords = contactsCount + conversationsCount + appointmentsCount;
+      const throughput = totalRecords > 0 ? (totalRecords / (trainerSyncDuration / 1000 / 60)) : 0;
+
+      // Update sync statistics and performance metrics
       const { error: updateError } = await supabase
         .from('ghl_config')
         .update({ 
@@ -195,8 +229,24 @@ Deno.serve(async (req) => {
           conversations_synced: conversationsCount,
           appointments_synced: appointmentsCount,
           total_sync_count: config.total_sync_count ? config.total_sync_count + 1 : 1,
+          avg_sync_duration_ms: trainerSyncDuration,
+          sync_throughput_per_min: throughput,
+          conflict_count: conflictsDetected,
         })
         .eq('trainer_id', trainer_id);
+
+      // Log performance metrics
+      await supabase.from('ghl_sync_metrics').insert({
+        trainer_id,
+        sync_type: 'pull',
+        started_at: new Date(trainerSyncStart).toISOString(),
+        completed_at: new Date().toISOString(),
+        duration_ms: trainerSyncDuration,
+        records_processed: totalRecords,
+        records_succeeded: totalRecords,
+        records_failed: 0,
+        throughput_per_min: throughput,
+      });
 
       if (updateError) {
         console.error(`Failed to update sync stats for trainer ${trainer_id}:`, updateError);
@@ -212,10 +262,13 @@ Deno.serve(async (req) => {
       });
     }
 
-    console.log(`GHL sync completed. Total records synced: ${totalSynced}`);
+    const totalDuration = Date.now() - syncStartTime;
+    console.log(`GHL sync completed. Total records synced: ${totalSynced}, Duration: ${totalDuration}ms`);
+    
     return jsonResponse({ 
       synced: totalSynced,
       trainers: configs.length,
+      duration_ms: totalDuration,
       timestamp: new Date().toISOString(),
       results,
     });

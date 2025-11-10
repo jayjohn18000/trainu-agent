@@ -4,6 +4,8 @@ import { jsonResponse, errorResponse } from '../_shared/responses.ts'
 const GHL_API_BASE = Deno.env.get('GHL_API_BASE') || 'https://services.leadconnectorhq.com';
 
 Deno.serve(async (req) => {
+  const pushStartTime = Date.now();
+  
   try {
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -98,11 +100,35 @@ Deno.serve(async (req) => {
       }
     }
 
-    console.log(`Push completed: ${successCount} succeeded, ${failCount} failed`);
+    const totalDuration = Date.now() - pushStartTime;
+    const throughput = queueItems.length > 0 ? (queueItems.length / (totalDuration / 1000 / 60)) : 0;
+    
+    console.log(`Push completed: ${successCount} succeeded, ${failCount} failed, Duration: ${totalDuration}ms`);
+    
+    // Log performance metrics
+    if (queueItems.length > 0) {
+      const trainerIds = [...new Set(queueItems.map(item => item.trainer_id))];
+      for (const trainerId of trainerIds) {
+        await supabase.from('ghl_sync_metrics').insert({
+          trainer_id: trainerId,
+          sync_type: 'push',
+          started_at: new Date(pushStartTime).toISOString(),
+          completed_at: new Date().toISOString(),
+          duration_ms: totalDuration,
+          records_processed: queueItems.filter(i => i.trainer_id === trainerId).length,
+          records_succeeded: successCount,
+          records_failed: failCount,
+          throughput_per_min: throughput,
+        });
+      }
+    }
+    
     return jsonResponse({ 
       processed: queueItems.length,
       succeeded: successCount,
       failed: failCount,
+      duration_ms: totalDuration,
+      throughput_per_min: throughput,
       timestamp: new Date().toISOString(),
     });
 

@@ -1555,7 +1555,9 @@ export type Database = {
         Row: {
           admin_notes: string | null
           appointments_synced: number | null
+          avg_sync_duration_ms: number | null
           booking_widget_id: string | null
+          conflict_count: number | null
           contact_field_mapping: Json | null
           contacts_synced: number | null
           conversations_synced: number | null
@@ -1576,16 +1578,21 @@ export type Database = {
           quiet_hours_start: string | null
           setup_type: string | null
           sms_enabled: boolean | null
+          sync_throughput_per_min: number | null
           templates: Json | null
           total_sync_count: number | null
           trainer_id: string
           updated_at: string | null
           webhook_registered: boolean | null
+          webhook_secret: string | null
+          webhook_url: string | null
         }
         Insert: {
           admin_notes?: string | null
           appointments_synced?: number | null
+          avg_sync_duration_ms?: number | null
           booking_widget_id?: string | null
+          conflict_count?: number | null
           contact_field_mapping?: Json | null
           contacts_synced?: number | null
           conversations_synced?: number | null
@@ -1606,16 +1613,21 @@ export type Database = {
           quiet_hours_start?: string | null
           setup_type?: string | null
           sms_enabled?: boolean | null
+          sync_throughput_per_min?: number | null
           templates?: Json | null
           total_sync_count?: number | null
           trainer_id: string
           updated_at?: string | null
           webhook_registered?: boolean | null
+          webhook_secret?: string | null
+          webhook_url?: string | null
         }
         Update: {
           admin_notes?: string | null
           appointments_synced?: number | null
+          avg_sync_duration_ms?: number | null
           booking_widget_id?: string | null
+          conflict_count?: number | null
           contact_field_mapping?: Json | null
           contacts_synced?: number | null
           conversations_synced?: number | null
@@ -1636,11 +1648,104 @@ export type Database = {
           quiet_hours_start?: string | null
           setup_type?: string | null
           sms_enabled?: boolean | null
+          sync_throughput_per_min?: number | null
           templates?: Json | null
           total_sync_count?: number | null
           trainer_id?: string
           updated_at?: string | null
           webhook_registered?: boolean | null
+          webhook_secret?: string | null
+          webhook_url?: string | null
+        }
+        Relationships: []
+      }
+      ghl_sync_conflicts: {
+        Row: {
+          created_at: string | null
+          entity_id: string
+          entity_type: string
+          ghl_data: Json
+          ghl_updated_at: string
+          id: string
+          resolution_strategy: string | null
+          resolved: boolean | null
+          resolved_at: string | null
+          resolved_by: string | null
+          trainer_id: string
+          trainu_data: Json
+          trainu_updated_at: string
+        }
+        Insert: {
+          created_at?: string | null
+          entity_id: string
+          entity_type: string
+          ghl_data: Json
+          ghl_updated_at: string
+          id?: string
+          resolution_strategy?: string | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          trainer_id: string
+          trainu_data: Json
+          trainu_updated_at: string
+        }
+        Update: {
+          created_at?: string | null
+          entity_id?: string
+          entity_type?: string
+          ghl_data?: Json
+          ghl_updated_at?: string
+          id?: string
+          resolution_strategy?: string | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          trainer_id?: string
+          trainu_data?: Json
+          trainu_updated_at?: string
+        }
+        Relationships: []
+      }
+      ghl_sync_metrics: {
+        Row: {
+          completed_at: string | null
+          duration_ms: number | null
+          error_details: Json | null
+          id: string
+          records_failed: number | null
+          records_processed: number | null
+          records_succeeded: number | null
+          started_at: string
+          sync_type: string
+          throughput_per_min: number | null
+          trainer_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          duration_ms?: number | null
+          error_details?: Json | null
+          id?: string
+          records_failed?: number | null
+          records_processed?: number | null
+          records_succeeded?: number | null
+          started_at: string
+          sync_type: string
+          throughput_per_min?: number | null
+          trainer_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          duration_ms?: number | null
+          error_details?: Json | null
+          id?: string
+          records_failed?: number | null
+          records_processed?: number | null
+          records_succeeded?: number | null
+          started_at?: string
+          sync_type?: string
+          throughput_per_min?: number | null
+          trainer_id?: string
         }
         Relationships: []
       }

@@ -6,6 +6,9 @@ verify_jwt = false
 [functions.ghl-push]
 verify_jwt = false
 
+[functions.ghl-webhook-register]
+verify_jwt = true
+
 [functions.ab-testing-framework]
 verify_jwt = true
 
