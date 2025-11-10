@@ -1542,8 +1542,11 @@ export type Database = {
       ghl_config: {
         Row: {
           admin_notes: string | null
+          appointments_synced: number | null
           booking_widget_id: string | null
           contact_field_mapping: Json | null
+          contacts_synced: number | null
+          conversations_synced: number | null
           created_at: string | null
           default_channel: string | null
           email_enabled: boolean | null
@@ -1551,6 +1554,8 @@ export type Database = {
           frequency_cap_weekly: number | null
           id: string
           last_sync_at: string | null
+          last_sync_error: string | null
+          last_sync_status: string | null
           location_id: string | null
           provisioned_at: string | null
           provisioned_by: string | null
@@ -1560,14 +1565,18 @@ export type Database = {
           setup_type: string | null
           sms_enabled: boolean | null
           templates: Json | null
+          total_sync_count: number | null
           trainer_id: string
           updated_at: string | null
           webhook_registered: boolean | null
         }
         Insert: {
           admin_notes?: string | null
+          appointments_synced?: number | null
           booking_widget_id?: string | null
           contact_field_mapping?: Json | null
+          contacts_synced?: number | null
+          conversations_synced?: number | null
           created_at?: string | null
           default_channel?: string | null
           email_enabled?: boolean | null
@@ -1575,6 +1584,8 @@ export type Database = {
           frequency_cap_weekly?: number | null
           id?: string
           last_sync_at?: string | null
+          last_sync_error?: string | null
+          last_sync_status?: string | null
           location_id?: string | null
           provisioned_at?: string | null
           provisioned_by?: string | null
@@ -1584,14 +1595,18 @@ export type Database = {
           setup_type?: string | null
           sms_enabled?: boolean | null
           templates?: Json | null
+          total_sync_count?: number | null
           trainer_id: string
           updated_at?: string | null
           webhook_registered?: boolean | null
         }
         Update: {
           admin_notes?: string | null
+          appointments_synced?: number | null
           booking_widget_id?: string | null
           contact_field_mapping?: Json | null
+          contacts_synced?: number | null
+          conversations_synced?: number | null
           created_at?: string | null
           default_channel?: string | null
           email_enabled?: boolean | null
@@ -1599,6 +1614,8 @@ export type Database = {
           frequency_cap_weekly?: number | null
           id?: string
           last_sync_at?: string | null
+          last_sync_error?: string | null
+          last_sync_status?: string | null
           location_id?: string | null
           provisioned_at?: string | null
           provisioned_by?: string | null
@@ -1608,6 +1625,7 @@ export type Database = {
           setup_type?: string | null
           sms_enabled?: boolean | null
           templates?: Json | null
+          total_sync_count?: number | null
           trainer_id?: string
           updated_at?: string | null
           webhook_registered?: boolean | null
@@ -3435,7 +3453,45 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      ghl_sync_health: {
+        Row: {
+          appointments_synced: number | null
+          contacts_synced: number | null
+          conversations_synced: number | null
+          health_status: string | null
+          last_sync_at: string | null
+          last_sync_error: string | null
+          last_sync_status: string | null
+          location_id: string | null
+          total_sync_count: number | null
+          trainer_id: string | null
+        }
+        Insert: {
+          appointments_synced?: number | null
+          contacts_synced?: number | null
+          conversations_synced?: number | null
+          health_status?: never
+          last_sync_at?: string | null
+          last_sync_error?: string | null
+          last_sync_status?: string | null
+          location_id?: string | null
+          total_sync_count?: number | null
+          trainer_id?: string | null
+        }
+        Update: {
+          appointments_synced?: number | null
+          contacts_synced?: number | null
+          conversations_synced?: number | null
+          health_status?: never
+          last_sync_at?: string | null
+          last_sync_error?: string | null
+          last_sync_status?: string | null
+          location_id?: string | null
+          total_sync_count?: number | null
+          trainer_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {

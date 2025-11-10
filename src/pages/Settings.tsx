@@ -7,6 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
 import { useEffect } from "react";
 import { getDbFlag, setDbFlag } from "@/lib/flags";
+import { GHLSyncStatus } from "@/components/settings/GHLSyncStatus";
 
 export default function Settings() {
   const [saving, setSaving] = useState(false);
@@ -62,10 +63,11 @@ export default function Settings() {
       </div>
 
       <Tabs defaultValue="profile" className="w-full">
-        <TabsList className="grid w-full max-w-md grid-cols-4">
+        <TabsList className="grid w-full max-w-md grid-cols-5">
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
+          <TabsTrigger value="integrations">Integrations</TabsTrigger>
           <TabsTrigger value="flags">Feature Flags</TabsTrigger>
         </TabsList>
 
@@ -159,6 +161,10 @@ export default function Settings() {
               {saving ? "Saving..." : "Save Preferences"}
             </Button>
           </div>
+        </TabsContent>
+
+        <TabsContent value="integrations" className="mt-6">
+          <GHLSyncStatus />
         </TabsContent>
 
         <TabsContent value="flags" className="mt-6">

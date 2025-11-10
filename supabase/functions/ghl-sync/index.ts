@@ -12,11 +12,18 @@ Deno.serve(async (req) => {
 
     console.log('Starting GHL sync...');
 
-    // Get all active GHL configs
+    // Get GHL access token from environment
+    const ghlAccessToken = Deno.env.get('GHL_ACCESS_TOKEN');
+    if (!ghlAccessToken) {
+      console.error('GHL_ACCESS_TOKEN not configured');
+      return errorResponse('GHL_ACCESS_TOKEN not configured', 500);
+    }
+
+    // Get all GHL configs with location IDs
     const { data: configs, error: configError } = await supabase
       .from('ghl_config')
       .select('*')
-      .eq('is_active', true);
+      .not('location_id', 'is', null);
 
     if (configError) {
       console.error('Error fetching GHL configs:', configError);
@@ -24,19 +31,26 @@ Deno.serve(async (req) => {
     }
 
     if (!configs || configs.length === 0) {
-      console.log('No active GHL configs found');
-      return jsonResponse({ synced: 0, message: 'No active configs' });
+      console.log('No GHL configs found');
+      return jsonResponse({ synced: 0, message: 'No configs' });
     }
 
     let totalSynced = 0;
+    const results = [];
 
     for (const config of configs) {
-      const { trainer_id, location_id, ghl_api_key } = config;
+      const { trainer_id, location_id } = config;
       
-      if (!ghl_api_key || !location_id) {
-        console.log(`Skipping trainer ${trainer_id}: missing credentials`);
+      if (!location_id) {
+        console.log(`Skipping trainer ${trainer_id}: missing location_id`);
         continue;
       }
+
+      let contactsCount = 0;
+      let conversationsCount = 0;
+      let appointmentsCount = 0;
+      let syncStatus = 'success';
+      let syncError = null;
 
       console.log(`Syncing data for trainer ${trainer_id}, location ${location_id}`);
 
@@ -45,7 +59,7 @@ Deno.serve(async (req) => {
         const contactsUrl = `${GHL_API_BASE}/contacts/?locationId=${location_id}`;
         const contactsResponse = await fetch(contactsUrl, {
           headers: {
-            'Authorization': `Bearer ${ghl_api_key}`,
+            'Authorization': `Bearer ${ghlAccessToken}`,
             'Version': '2021-07-28',
           },
         });
@@ -70,8 +84,9 @@ Deno.serve(async (req) => {
             });
           }
 
-          console.log(`Synced ${contacts.length} contacts for trainer ${trainer_id}`);
-          totalSynced += contacts.length;
+          contactsCount = contacts.length;
+          console.log(`Synced ${contactsCount} contacts for trainer ${trainer_id}`);
+          totalSynced += contactsCount;
         } else {
           console.error(`Failed to fetch contacts for trainer ${trainer_id}:`, await contactsResponse.text());
         }
@@ -80,7 +95,7 @@ Deno.serve(async (req) => {
         const conversationsUrl = `${GHL_API_BASE}/conversations/search?locationId=${location_id}`;
         const conversationsResponse = await fetch(conversationsUrl, {
           headers: {
-            'Authorization': `Bearer ${ghl_api_key}`,
+            'Authorization': `Bearer ${ghlAccessToken}`,
             'Version': '2021-07-28',
           },
         });
@@ -116,14 +131,15 @@ Deno.serve(async (req) => {
             }
           }
 
-          console.log(`Synced ${conversations.length} conversations for trainer ${trainer_id}`);
+          conversationsCount = conversations.length;
+          console.log(`Synced ${conversationsCount} conversations for trainer ${trainer_id}`);
         }
 
         // Sync appointments
         const appointmentsUrl = `${GHL_API_BASE}/calendars/events?locationId=${location_id}`;
         const appointmentsResponse = await fetch(appointmentsUrl, {
           headers: {
-            'Authorization': `Bearer ${ghl_api_key}`,
+            'Authorization': `Bearer ${ghlAccessToken}`,
             'Version': '2021-07-28',
           },
         });
@@ -156,19 +172,42 @@ Deno.serve(async (req) => {
             }
           }
 
-          console.log(`Synced ${appointments.length} appointments for trainer ${trainer_id}`);
+          appointmentsCount = appointments.length;
+          console.log(`Synced ${appointmentsCount} appointments for trainer ${trainer_id}`);
         }
-
-        // Update last sync timestamp
-        await supabase
-          .from('ghl_config')
-          .update({ last_sync_at: new Date().toISOString() })
-          .eq('trainer_id', trainer_id);
 
       } catch (error) {
         console.error(`Error syncing trainer ${trainer_id}:`, error);
-        continue;
+        syncStatus = 'error';
+        syncError = error instanceof Error ? error.message : 'Unknown error';
       }
+
+      // Update sync statistics
+      const { error: updateError } = await supabase
+        .from('ghl_config')
+        .update({ 
+          last_sync_at: new Date().toISOString(),
+          last_sync_status: syncStatus,
+          last_sync_error: syncError,
+          contacts_synced: contactsCount,
+          conversations_synced: conversationsCount,
+          appointments_synced: appointmentsCount,
+          total_sync_count: config.total_sync_count ? config.total_sync_count + 1 : 1,
+        })
+        .eq('trainer_id', trainer_id);
+
+      if (updateError) {
+        console.error(`Failed to update sync stats for trainer ${trainer_id}:`, updateError);
+      }
+
+      results.push({
+        trainer_id,
+        status: syncStatus,
+        contacts: contactsCount,
+        conversations: conversationsCount,
+        appointments: appointmentsCount,
+        error: syncError,
+      });
     }
 
     console.log(`GHL sync completed. Total records synced: ${totalSynced}`);
@@ -176,6 +215,7 @@ Deno.serve(async (req) => {
       synced: totalSynced,
       trainers: configs.length,
       timestamp: new Date().toISOString(),
+      results,
     });
 
   } catch (error) {
