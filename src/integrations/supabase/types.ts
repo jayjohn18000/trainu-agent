@@ -805,6 +805,128 @@ export type Database = {
           },
         ]
       }
+      challenge_fraud_checks: {
+        Row: {
+          check_type: string
+          flagged_at: string | null
+          id: string
+          notes: string | null
+          rating_id: string | null
+          resolved: boolean | null
+        }
+        Insert: {
+          check_type: string
+          flagged_at?: string | null
+          id?: string
+          notes?: string | null
+          rating_id?: string | null
+          resolved?: boolean | null
+        }
+        Update: {
+          check_type?: string
+          flagged_at?: string | null
+          id?: string
+          notes?: string | null
+          rating_id?: string | null
+          resolved?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_fraud_checks_rating_id_fkey"
+            columns: ["rating_id"]
+            isOneToOne: false
+            referencedRelation: "challenge_ratings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      challenge_ratings: {
+        Row: {
+          created_at: string | null
+          device_fingerprint: string | null
+          id: string
+          ip_address: string | null
+          proof_file_url: string | null
+          rater_email: string
+          rater_name: string
+          rater_phone: string | null
+          rating_communication: number
+          rating_expertise: number
+          rating_motivation: number
+          rating_overall: number | null
+          rating_results: number
+          rating_value: number
+          review_text: string | null
+          trainer_city: string | null
+          trainer_gym: string | null
+          trainer_id: string | null
+          trainer_name: string
+          trainer_slug: string | null
+          trainer_state: string | null
+          updated_at: string | null
+          verification_code: string
+          verification_completed_at: string | null
+          verification_method: string
+          verification_status: string
+        }
+        Insert: {
+          created_at?: string | null
+          device_fingerprint?: string | null
+          id?: string
+          ip_address?: string | null
+          proof_file_url?: string | null
+          rater_email: string
+          rater_name: string
+          rater_phone?: string | null
+          rating_communication: number
+          rating_expertise: number
+          rating_motivation: number
+          rating_overall?: number | null
+          rating_results: number
+          rating_value: number
+          review_text?: string | null
+          trainer_city?: string | null
+          trainer_gym?: string | null
+          trainer_id?: string | null
+          trainer_name: string
+          trainer_slug?: string | null
+          trainer_state?: string | null
+          updated_at?: string | null
+          verification_code: string
+          verification_completed_at?: string | null
+          verification_method: string
+          verification_status?: string
+        }
+        Update: {
+          created_at?: string | null
+          device_fingerprint?: string | null
+          id?: string
+          ip_address?: string | null
+          proof_file_url?: string | null
+          rater_email?: string
+          rater_name?: string
+          rater_phone?: string | null
+          rating_communication?: number
+          rating_expertise?: number
+          rating_motivation?: number
+          rating_overall?: number | null
+          rating_results?: number
+          rating_value?: number
+          review_text?: string | null
+          trainer_city?: string | null
+          trainer_gym?: string | null
+          trainer_id?: string | null
+          trainer_name?: string
+          trainer_slug?: string | null
+          trainer_state?: string | null
+          updated_at?: string | null
+          verification_code?: string
+          verification_completed_at?: string | null
+          verification_method?: string
+          verification_status?: string
+        }
+        Relationships: []
+      }
       client_nudge_history: {
         Row: {
           booking_generated: boolean | null
@@ -3612,6 +3734,22 @@ export type Database = {
       }
     }
     Views: {
+      challenge_leaderboard: {
+        Row: {
+          average_rating: number | null
+          last_updated: string | null
+          rank: number | null
+          total_ratings: number | null
+          trainer_city: string | null
+          trainer_gym: string | null
+          trainer_id: string | null
+          trainer_key: string | null
+          trainer_name: string | null
+          trainer_state: string | null
+          verified_ratings: number | null
+        }
+        Relationships: []
+      }
       ghl_sync_health: {
         Row: {
           appointments_synced: number | null
@@ -3678,6 +3816,7 @@ export type Database = {
         }
         Returns: string
       }
+      refresh_challenge_leaderboard: { Args: never; Returns: undefined }
       user_in_organization: {
         Args: { _organization_id: string; _user_id: string }
         Returns: boolean

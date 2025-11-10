@@ -28,6 +28,7 @@ const Resources = lazyWithRetry(() => import("@/pages/landing/Resources"));
 const About = lazyWithRetry(() => import("@/pages/landing/About"));
 const Contact = lazyWithRetry(() => import("@/pages/landing/Contact"));
 const Challenge = lazyWithRetry(() => import("@/pages/landing/Challenge"));
+const ChallengeRating = lazyWithRetry(() => import("@/pages/ChallengeRating"));
 
 const Directory = lazyWithRetry(() => import("@/pages/Directory"));
 const TrainerProfile = lazyWithRetry(() => import("@/pages/TrainerProfile"));
@@ -96,6 +97,7 @@ export default function App() {
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/challenge" element={<Challenge />} />
+            <Route path="/challenge/rate" element={<ChallengeRating />} />
             
             {/* Public app routes */}
             <Route path="/login" element={<Login />} />

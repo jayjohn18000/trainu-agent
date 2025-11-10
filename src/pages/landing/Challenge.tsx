@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Trophy, Star, TrendingUp, Users, Gift } from "lucide-react";
 import { ScrollReveal } from "@/components/landing/ScrollReveal";
 import { AnimatedCounter } from "@/components/landing/AnimatedCounter";
+import { useNavigate } from "react-router-dom";
 import trainerGroupImage from "@/assets/group-training-class.jpg";
 import gradientBg from "@/assets/gradient-mesh-bg.svg";
 const topTrainers = [{
@@ -59,6 +60,8 @@ const prizes = [{
   icon: Star
 }];
 export default function Challenge() {
+  const navigate = useNavigate();
+  
   return <LandingLayout>
       {/* Hero */}
       <section className="relative overflow-hidden">
@@ -94,7 +97,7 @@ Challenge 2025</span>
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="shadow-glow">
+              <Button size="lg" className="shadow-glow" onClick={() => navigate("/challenge/rate")}>
                 <Star className="h-5 w-5 mr-2" />
                 Rate Your Trainer
               </Button>
@@ -216,7 +219,7 @@ Challenge 2025</span>
       </section>
 
       {/* Live Leaderboard */}
-      <section className="py-20">
+      <section id="leaderboard" className="py-20">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <ScrollReveal>
@@ -261,8 +264,8 @@ Challenge 2025</span>
             </div>
 
             <div className="text-center mt-8">
-              <Button variant="outline" size="lg">
-                View Full Leaderboard
+              <Button variant="outline" size="lg" onClick={() => navigate("/challenge/rate")}>
+                Submit Your Rating
               </Button>
             </div>
           </div>
@@ -398,7 +401,7 @@ Challenge 2025</span>
             <p className="text-xl text-muted-foreground mb-8">
               Help them win. Takes 2 minutes. Every verified rating counts.
             </p>
-            <Button size="lg" className="shadow-glow">
+            <Button size="lg" className="shadow-glow" onClick={() => navigate("/challenge/rate")}>
               <Star className="h-5 w-5 mr-2" />
               Submit Your Rating
             </Button>
