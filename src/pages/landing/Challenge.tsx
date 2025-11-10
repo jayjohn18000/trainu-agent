@@ -136,7 +136,14 @@ Challenge 2025</span>
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <ScrollReveal>
-              <h2 className="text-3xl font-bold text-center mb-12">How It Works</h2>
+              <div className="text-center mb-16">
+                <h2 className="text-5xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-blue-400 via-primary to-blue-600 bg-clip-text text-transparent">
+                  How It Works
+                </h2>
+                <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                  Four simple steps to rate your trainer and help them compete for prizes
+                </p>
+              </div>
             </ScrollReveal>
             
             <div className="grid md:grid-cols-2 gap-6">
