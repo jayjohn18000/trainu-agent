@@ -31,26 +31,15 @@ export const useAuthStore = create<AuthState>()(
         set({ user: null });
       },
       initialize: async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          // Fetch user role from server
-          const role = await fetchUserRole(session.user.id);
-          set({
-            user: {
-              id: session.user.id,
-              name: session.user.email?.split('@')[0] || 'User',
-              email: session.user.email || '',
-              role,
-              avatarUrl: session.user.user_metadata?.avatar_url,
-            },
-            loading: false,
-          });
-        } else {
-          set({ user: null, loading: false });
-        }
+        try {
+          const { data: { session }, error } = await supabase.auth.getSession();
+          
+          if (error) {
+            console.error('Auth session error:', error);
+            set({ user: null, loading: false });
+            return;
+          }
 
-        // Listen for auth changes
-        supabase.auth.onAuthStateChange(async (_event, session) => {
           if (session?.user) {
             // Fetch user role from server
             const role = await fetchUserRole(session.user.id);
@@ -67,7 +56,30 @@ export const useAuthStore = create<AuthState>()(
           } else {
             set({ user: null, loading: false });
           }
-        });
+
+          // Listen for auth changes
+          supabase.auth.onAuthStateChange(async (_event, session) => {
+            if (session?.user) {
+              // Fetch user role from server
+              const role = await fetchUserRole(session.user.id);
+              set({
+                user: {
+                  id: session.user.id,
+                  name: session.user.email?.split('@')[0] || 'User',
+                  email: session.user.email || '',
+                  role,
+                  avatarUrl: session.user.user_metadata?.avatar_url,
+                },
+                loading: false,
+              });
+            } else {
+              set({ user: null, loading: false });
+            }
+          });
+        } catch (error) {
+          console.error('Failed to initialize auth:', error);
+          set({ user: null, loading: false });
+        }
       },
     }),
     {
@@ -78,18 +90,35 @@ export const useAuthStore = create<AuthState>()(
 
 // Fetch user role from server-side user_roles table
 async function fetchUserRole(userId: string): Promise<UserRole> {
-  const { data, error } = await supabase
-    .from('user_roles')
-    .select('role')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .single();
+  try {
+    const { data, error } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-  if (error || !data) {
-    // Default to trainer if no role assigned yet
+    if (error) {
+      console.error('Error fetching user role:', error);
+      return 'trainer';
+    }
+
+    if (!data) {
+      // Create default trainer role if none exists
+      const { error: insertError } = await supabase
+        .from('user_roles')
+        .insert({ user_id: userId, role: 'trainer' });
+      
+      if (insertError) {
+        console.error('Error creating default role:', insertError);
+      }
+      return 'trainer';
+    }
+
+    return data.role as UserRole;
+  } catch (error) {
+    console.error('Failed to fetch user role:', error);
     return 'trainer';
   }
-
-  return data.role as UserRole;
 }

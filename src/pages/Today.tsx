@@ -100,21 +100,33 @@ export default function Today() {
   useEffect(() => {
     const checkOnboardingStatus = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        if (userError || !user) {
+          console.error('Error getting user:', userError);
+          return;
+        }
 
-        // Check database for onboarding completion
-        const { data: profile } = await supabase
+        // Check database for onboarding completion using maybeSingle
+        const { data: profile, error: profileError } = await supabase
           .from('user_profiles')
           .select('onboarding_completed')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
+
+        if (profileError) {
+          console.error('Error fetching profile:', profileError);
+          return;
+        }
 
         // If profile doesn't exist yet, create it
         if (!profile) {
-          await supabase
+          const { error: insertError } = await supabase
             .from('user_profiles')
             .insert({ id: user.id, onboarding_completed: false });
+          
+          if (insertError) {
+            console.error('Error creating profile:', insertError);
+          }
           setWelcomeOpen(true);
         } else if (!profile.onboarding_completed) {
           // Show welcome modal for users who haven't completed onboarding
