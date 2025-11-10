@@ -122,17 +122,40 @@ export default function Queue() {
     if (item) setEditingItem(item);
   };
 
-  const handleSaveEdit = async (id: string, updatedMessage: string, tone: string) => {
+  const handleSaveEdit = async (updatedMessage: string, tone: string) => {
     if (!editingItem) return;
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Classify the edit
+      const { classifyEdit } = await import('@/lib/utils/editClassification');
+      const classification = classifyEdit(editingItem.content, updatedMessage);
+
+      // Update message content
       await supabase
         .from("messages")
-        .update({ content: updatedMessage })
-        .eq("id", id);
+        .update({ 
+          content: updatedMessage,
+          edit_count: (editingItem.edit_count || 0) + 1
+        })
+        .eq("id", editingItem.id);
+
+      // Record the edit for learning
+      await supabase.from("trainer_edits").insert({
+        trainer_id: user.id,
+        message_id: editingItem.id,
+        original_content: editingItem.content,
+        edited_content: updatedMessage,
+        original_confidence: editingItem.confidence || 0.8,
+        edit_type: classification.editType,
+        change_percentage: classification.changePercentage,
+        edit_details: classification.details
+      });
       
       setMessages((prev) =>
         prev.map((item) =>
-          item.id === id
+          item.id === editingItem.id
             ? { ...item, content: updatedMessage }
             : item
         )

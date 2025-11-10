@@ -17,7 +17,7 @@ type Props = {
     confidence: number;
     why: string[];
   } | null;
-  onSave: (id: string, message: string, tone: string) => void;
+  onSave: (message: string, tone: string) => void;
 };
 
 export function MessageEditor({ open, onOpenChange, queueItem, onSave }: Props) {
@@ -51,7 +51,7 @@ export function MessageEditor({ open, onOpenChange, queueItem, onSave }: Props) 
 
   const handleSave = () => {
     if (!queueItem) return;
-    onSave(queueItem.id, message, tone);
+    onSave(message, tone);
     onOpenChange(false);
     
     toast({

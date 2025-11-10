@@ -28,36 +28,103 @@ function pickTemplate(
 ): { content: string; confidence: number; why: string[] } {
   const first = contact.first_name ?? "there";
   
-  // Learn from edit history to adjust confidence
+  // Enhanced learning algorithm
   let confidenceAdjustment = 0;
+  
   if (editHistory && editHistory.length > 0) {
-    const recentEdits = editHistory.filter(e => e.edit_type === 'content_change' && e.created_at);
-    if (recentEdits.length > 3) {
-      confidenceAdjustment = -0.05; // Lower confidence if trainer frequently edits
+    // Filter edits in the last 30 days
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const recentEdits = editHistory.filter(e => 
+      e.created_at && new Date(e.created_at) > thirtyDaysAgo
+    );
+    
+    // Calculate weighted confidence adjustment based on edit patterns
+    if (recentEdits.length > 0) {
+      // Count edits by type
+      const editCounts = recentEdits.reduce((acc: Record<string, number>, edit) => {
+        acc[edit.edit_type] = (acc[edit.edit_type] || 0) + 1;
+        return acc;
+      }, {});
+      
+      // Major content changes indicate AI is missing the mark
+      const contentChanges = editCounts['content_change'] || 0;
+      if (contentChanges > 3) {
+        confidenceAdjustment -= 0.08;
+      } else if (contentChanges > 1) {
+        confidenceAdjustment -= 0.04;
+      }
+      
+      // Tone changes indicate style mismatch
+      const toneChanges = editCounts['tone_change'] || 0;
+      if (toneChanges > 2) {
+        confidenceAdjustment -= 0.05;
+      }
+      
+      // Minor tweaks are okay - they show AI is close
+      const minorTweaks = editCounts['minor_tweak'] || 0;
+      if (minorTweaks > 5 && contentChanges === 0) {
+        confidenceAdjustment += 0.02; // AI is getting it mostly right
+      }
+      
+      // Apply recency weighting - recent edits matter more
+      const veryRecentEdits = recentEdits.filter(e => {
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        return new Date(e.created_at) > sevenDaysAgo;
+      });
+      
+      if (veryRecentEdits.length > 2) {
+        confidenceAdjustment -= 0.03; // Still learning
+      }
     }
   }
+  
+  // Cap confidence adjustments to prevent extreme values
+  confidenceAdjustment = Math.max(-0.15, Math.min(0.05, confidenceAdjustment));
   
   switch (trigger) {
     case "booking_confirmed": {
       const msg = `Hi ${first}! Your ${context.sessionType ?? "training"} is confirmed for ${context.dateStr ?? "the scheduled time"}. Reply Y to confirm.`;
-      return { content: msg, confidence: Math.min(0.95, 0.9 + confidenceAdjustment), why: ["booking confirmed", "clear details", "friendly tone"] };
+      return { 
+        content: msg, 
+        confidence: Math.max(0.7, Math.min(0.95, 0.9 + confidenceAdjustment)), 
+        why: ["booking confirmed", "clear details", "friendly tone"] 
+      };
     }
     case "booking_upcoming": {
       const msg = `Reminder: ${first}, your ${context.sessionType ?? "session"} is coming up on ${context.dateStr ?? "the scheduled time"}. Need to reschedule? Reply RES.`;
-      return { content: msg, confidence: Math.min(0.93, 0.88 + confidenceAdjustment), why: ["upcoming session", "actionable", "concise"] };
+      return { 
+        content: msg, 
+        confidence: Math.max(0.7, Math.min(0.93, 0.88 + confidenceAdjustment)), 
+        why: ["upcoming session", "actionable", "concise"] 
+      };
     }
     case "missed_session": {
       const msg = `${first}, we missed you last time. Want help finding a new time to get back on track?`;
-      return { content: msg, confidence: Math.max(0.65, 0.72 + confidenceAdjustment), why: ["empathetic", "re-engagement", "helpful"] };
+      return { 
+        content: msg, 
+        confidence: Math.max(0.6, Math.min(0.8, 0.72 + confidenceAdjustment)), 
+        why: ["empathetic", "re-engagement", "helpful"] 
+      };
     }
     case "no_activity": {
       const msg = `Hey ${first}, quick check-in—how are workouts going this week? I can adjust your plan if needed.`;
-      return { content: msg, confidence: Math.min(0.85, 0.8 + confidenceAdjustment), why: ["low recent activity", "supportive", "light nudge"] };
+      return { 
+        content: msg, 
+        confidence: Math.max(0.7, Math.min(0.85, 0.8 + confidenceAdjustment)), 
+        why: ["low recent activity", "supportive", "light nudge"] 
+      };
     }
     case "milestone": {
       const count = context.count ?? 1;
       const msg = `${first}, congrats on session #${count}! Want to set a new goal for next week?`;
-      return { content: msg, confidence: Math.min(0.91, 0.86 + confidenceAdjustment), why: ["milestone", "celebratory", "goal-oriented"] };
+      return { 
+        content: msg, 
+        confidence: Math.max(0.75, Math.min(0.91, 0.86 + confidenceAdjustment)), 
+        why: ["milestone", "celebratory", "goal-oriented"] 
+      };
     }
   }
 }

@@ -435,13 +435,33 @@ export default function Today() {
       });
     }
   };
-  const handleSaveEdit = async (updatedMessage: string, tone: string) => {
+  const handleSaveEdit = async (updatedMessage: string, tone: string, originalContent: string, originalConfidence: number) => {
     if (!editingItem) return;
     try {
-      // Update message content directly
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Classify the edit
+      const { classifyEdit } = await import('@/lib/utils/editClassification');
+      const classification = classifyEdit(originalContent, updatedMessage);
+
+      // Update message content
       await supabase.from("messages").update({
-        content: updatedMessage
+        content: updatedMessage,
+        edit_count: (editingItem.editCount || 0) + 1
       }).eq("id", editingItem.id);
+
+      // Record the edit for learning
+      await supabase.from("trainer_edits").insert({
+        trainer_id: user.id,
+        message_id: editingItem.id,
+        original_content: originalContent,
+        edited_content: updatedMessage,
+        original_confidence: originalConfidence,
+        edit_type: classification.editType,
+        change_percentage: classification.changePercentage,
+        edit_details: classification.details
+      });
 
       // Award XP and update stats
       await awardXP(50, "Edited message");
@@ -451,7 +471,9 @@ export default function Today() {
 
       // Track analytics
       analytics.track('queue_item_edited', {
-        id: editingItem.id
+        id: editingItem.id,
+        editType: classification.editType,
+        changePercentage: classification.changePercentage
       });
       analytics.track('xp_earned', {
         amount: 50,
@@ -682,7 +704,7 @@ export default function Today() {
       </main>
 
       {/* Message Editor */}
-      {editingItem && <MessageEditor open={!!editingItem} onOpenChange={open => !open && setEditingItem(null)} queueItem={editingItem} onSave={handleSaveEdit} />}
+      {editingItem && <MessageEditor open={!!editingItem} onOpenChange={open => !open && setEditingItem(null)} queueItem={editingItem} onSave={(message, tone) => handleSaveEdit(message, tone, editingItem.preview, editingItem.confidence)} />}
 
       {/* Modals */}
       <WelcomeModal open={welcomeOpen} onOpenChange={setWelcomeOpen} onStartTour={handleStartTour} />
