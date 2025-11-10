@@ -126,10 +126,13 @@ Challenge 2025</span>
             </div>
           </ScrollReveal>
         </div>
+        
+        {/* Gradient transition to next section */}
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-b from-transparent to-background z-20" />
       </section>
 
       {/* How It Works */}
-      <section className="py-20 bg-card/50">
+      <section className="py-20 bg-background relative -mt-1">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <ScrollReveal>
