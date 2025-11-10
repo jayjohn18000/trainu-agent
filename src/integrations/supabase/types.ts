@@ -1550,6 +1550,7 @@ export type Database = {
           frequency_cap_daily: number | null
           frequency_cap_weekly: number | null
           id: string
+          last_sync_at: string | null
           location_id: string | null
           provisioned_at: string | null
           provisioned_by: string | null
@@ -1573,6 +1574,7 @@ export type Database = {
           frequency_cap_daily?: number | null
           frequency_cap_weekly?: number | null
           id?: string
+          last_sync_at?: string | null
           location_id?: string | null
           provisioned_at?: string | null
           provisioned_by?: string | null
@@ -1596,6 +1598,7 @@ export type Database = {
           frequency_cap_daily?: number | null
           frequency_cap_weekly?: number | null
           id?: string
+          last_sync_at?: string | null
           location_id?: string | null
           provisioned_at?: string | null
           provisioned_by?: string | null

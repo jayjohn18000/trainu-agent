@@ -1,5 +1,8 @@
 project_id = "sakksoxuanyimicevljq"
 
+[functions.ghl-sync]
+verify_jwt = false
+
 [functions.ab-testing-framework]
 verify_jwt = true
 
