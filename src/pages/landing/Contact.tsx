@@ -127,10 +127,11 @@ export default function Contact() {
                   <p className="text-muted-foreground mb-4">
                     Schedule a 15-minute walkthrough with our team. We'll show you the platform live and answer your questions.
                   </p>
-                  <div className="aspect-video bg-gradient-to-br from-primary/20 to-primary/5 rounded-lg flex items-center justify-center mb-4">
-                    <p className="text-sm text-muted-foreground">[Calendly Embed]</p>
-                  </div>
-                  <Button variant="outline" className="w-full">
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => window.open('https://api.leadconnectorhq.com/widget/booking/PPgbXZSX9ehklDQVyd8Q', '_blank')}
+                  >
                     Schedule Demo
                   </Button>
                 </Card>
@@ -166,8 +167,8 @@ export default function Contact() {
                     <Phone className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="font-medium text-sm">Phone</p>
-                      <a href="tel:+1-555-TRAINU" className="text-sm text-muted-foreground hover:text-primary">
-                        +1 (555) TRAINU
+                      <a href="tel:+18474570782" className="text-sm text-muted-foreground hover:text-primary">
+                        +1 847-457-0782
                       </a>
                     </div>
                   </div>
@@ -190,15 +191,34 @@ export default function Contact() {
               <ScrollReveal delay={300}>
               <Card className="p-6 hover:shadow-glow transition-all">
                 <h3 className="font-semibold mb-4">Connect With Us</h3>
-                <div className="flex gap-3">
-                  <Button variant="outline" size="sm" className="flex-1">
-                    Twitter
+                <div className="grid grid-cols-2 gap-3">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => window.open('https://twitter.com/official_trainu', '_blank')}
+                  >
+                    X (Twitter)
                   </Button>
-                  <Button variant="outline" size="sm" className="flex-1">
-                    LinkedIn
-                  </Button>
-                  <Button variant="outline" size="sm" className="flex-1">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => window.open('https://instagram.com/official.trainu', '_blank')}
+                  >
                     Instagram
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => window.open('https://tiktok.com/@trainu8', '_blank')}
+                  >
+                    TikTok
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => window.open('https://facebook.com/TrainU', '_blank')}
+                  >
+                    Facebook
                   </Button>
                 </div>
               </Card>

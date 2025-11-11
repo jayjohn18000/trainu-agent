@@ -59,9 +59,10 @@ export function LandingFooter() {
             © {new Date().getFullYear()} TrainU. All rights reserved.
           </p>
           <div className="flex gap-4 text-sm text-muted-foreground">
-            <a href="https://twitter.com/trainu" className="hover:text-primary transition-colors">Twitter</a>
-            <a href="https://linkedin.com/company/trainu" className="hover:text-primary transition-colors">LinkedIn</a>
-            <a href="https://instagram.com/trainu" className="hover:text-primary transition-colors">Instagram</a>
+            <a href="https://twitter.com/official_trainu" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">X (Twitter)</a>
+            <a href="https://instagram.com/official.trainu" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Instagram</a>
+            <a href="https://tiktok.com/@trainu8" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">TikTok</a>
+            <a href="https://facebook.com/TrainU" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Facebook</a>
           </div>
         </div>
       </div>
