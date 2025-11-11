@@ -1,28 +1,131 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader2, Eye, EyeOff } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuthStore } from "@/lib/store/useAuthStore";
+import { toast } from "sonner";
+
+const signInSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(1, "Password is required"),
+});
+
+const signUpSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Invalid email address"),
+  password: z.string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(/[0-9]/, "Password must contain at least one number")
+    .regex(/[^a-zA-Z0-9]/, "Password must contain at least one special character"),
+  confirmPassword: z.string(),
+  terms: z.boolean().refine(val => val === true, "You must accept the terms"),
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
+type SignInForm = z.infer<typeof signInSchema>;
+type SignUpForm = z.infer<typeof signUpSchema>;
 
 const GHL_CLIENT_ID = import.meta.env.VITE_GHL_CLIENT_ID;
 const GHL_REDIRECT_URI = import.meta.env.VITE_GHL_REDIRECT_URI;
 
 export default function Login() {
+  const navigate = useNavigate();
+  const { user, initialize } = useAuthStore();
+  const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const signInForm = useForm<SignInForm>({
+    resolver: zodResolver(signInSchema),
+    defaultValues: { email: "", password: "" },
+  });
+
+  const signUpForm = useForm<SignUpForm>({
+    resolver: zodResolver(signUpSchema),
+    defaultValues: { name: "", email: "", password: "", confirmPassword: "", terms: false },
+  });
+
   useEffect(() => {
     // Check if already authenticated
-    const checkAuth = async () => {
-      const { supabase } = await import("@/integrations/supabase/client");
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session) {
-        window.location.href = '/today';
+    if (user) {
+      navigate('/today', { replace: true });
+    }
+  }, [user, navigate]);
+
+  const onSignIn = async (data: SignInForm) => {
+    setIsLoading(true);
+    try {
+      const { data: authData, error } = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      });
+
+      if (error) {
+        toast.error("Invalid credentials");
+        return;
       }
-    };
-    checkAuth();
-  }, []);
+
+      if (authData.session) {
+        await initialize();
+        toast.success("Welcome back!");
+        navigate('/today', { replace: true });
+      }
+    } catch (error) {
+      toast.error("An error occurred during sign in");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const onSignUp = async (data: SignUpForm) => {
+    setIsLoading(true);
+    try {
+      const { data: authData, error } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: {
+            name: data.name,
+          },
+          emailRedirectTo: `${window.location.origin}/today`,
+        },
+      });
+
+      if (error) {
+        if (error.message.includes("already registered")) {
+          toast.error("This email is already registered. Please sign in.");
+        } else {
+          toast.error(error.message);
+        }
+        return;
+      }
+
+      if (authData.session) {
+        await initialize();
+        toast.success("Account created successfully!");
+        navigate('/today', { replace: true });
+      }
+    } catch (error) {
+      toast.error("An error occurred during sign up");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleGHLLogin = () => {
     if (!GHL_CLIENT_ID || !GHL_REDIRECT_URI) {
-      console.error('GHL OAuth not configured');
+      toast.error("GHL OAuth not configured");
       return;
     }
 
@@ -36,51 +139,200 @@ export default function Login() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
+    <div className="flex items-center justify-center min-h-screen bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Welcome to TrainU Intelligence</CardTitle>
           <CardDescription>
-            Sign in with your GoHighLevel account to access AI-powered insights
+            Sign in or create an account to access AI-powered insights
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="space-y-4">
-            <Button
-              onClick={handleGHLLogin}
-              className="w-full h-12 text-base"
-              size="lg"
-            >
-              <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z" />
-              </svg>
-              Sign in with GoHighLevel
-            </Button>
-            
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">
-                  Secure OAuth Authentication
-                </span>
-              </div>
-            </div>
+          <Tabs defaultValue="signin" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="signin">Sign In</TabsTrigger>
+              <TabsTrigger value="signup">Sign Up</TabsTrigger>
+            </TabsList>
 
-            <div className="text-center space-y-2">
-              <p className="text-sm text-muted-foreground">
-                Don't have a GoHighLevel account?
-              </p>
-              <Button
-                variant="outline"
-                onClick={() => window.open('https://trainu.us', '_blank')}
-                className="w-full"
-              >
-                Sign up at trainu.us
-              </Button>
+            <TabsContent value="signin" className="space-y-4 mt-4">
+              <form onSubmit={signInForm.handleSubmit(onSignIn)} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="signin-email">Email</Label>
+                  <Input
+                    id="signin-email"
+                    type="email"
+                    placeholder="trainer@example.com"
+                    {...signInForm.register("email")}
+                  />
+                  {signInForm.formState.errors.email && (
+                    <p className="text-sm text-destructive">{signInForm.formState.errors.email.message}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="signin-password">Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="signin-password"
+                      type={showPassword ? "text" : "password"}
+                      {...signInForm.register("password")}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                  {signInForm.formState.errors.password && (
+                    <p className="text-sm text-destructive">{signInForm.formState.errors.password.message}</p>
+                  )}
+                </div>
+
+                <Button
+                  type="button"
+                  variant="link"
+                  className="px-0 text-sm"
+                  onClick={() => navigate('/forgot-password')}
+                >
+                  Forgot password?
+                </Button>
+
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign In"}
+                </Button>
+              </form>
+            </TabsContent>
+
+            <TabsContent value="signup" className="space-y-4 mt-4">
+              <form onSubmit={signUpForm.handleSubmit(onSignUp)} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="signup-name">Full Name</Label>
+                  <Input
+                    id="signup-name"
+                    placeholder="John Doe"
+                    {...signUpForm.register("name")}
+                  />
+                  {signUpForm.formState.errors.name && (
+                    <p className="text-sm text-destructive">{signUpForm.formState.errors.name.message}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="signup-email">Email</Label>
+                  <Input
+                    id="signup-email"
+                    type="email"
+                    placeholder="trainer@example.com"
+                    {...signUpForm.register("email")}
+                  />
+                  {signUpForm.formState.errors.email && (
+                    <p className="text-sm text-destructive">{signUpForm.formState.errors.email.message}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="signup-password">Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="signup-password"
+                      type={showPassword ? "text" : "password"}
+                      {...signUpForm.register("password")}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Min 8 characters, 1 number, 1 special character
+                  </p>
+                  {signUpForm.formState.errors.password && (
+                    <p className="text-sm text-destructive">{signUpForm.formState.errors.password.message}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="signup-confirm">Confirm Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="signup-confirm"
+                      type={showConfirmPassword ? "text" : "password"}
+                      {...signUpForm.register("confirmPassword")}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    >
+                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                  {signUpForm.formState.errors.confirmPassword && (
+                    <p className="text-sm text-destructive">{signUpForm.formState.errors.confirmPassword.message}</p>
+                  )}
+                </div>
+
+                <div className="flex items-start space-x-2">
+                  <Checkbox
+                    id="terms"
+                    checked={signUpForm.watch("terms")}
+                    onCheckedChange={(checked) => signUpForm.setValue("terms", checked as boolean)}
+                  />
+                  <label htmlFor="terms" className="text-sm text-muted-foreground leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                    I agree to the{" "}
+                    <a href="https://trainu.us/terms" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                      Terms of Service
+                    </a>{" "}
+                    and{" "}
+                    <a href="https://trainu.us/privacy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                      Privacy Policy
+                    </a>
+                  </label>
+                </div>
+                {signUpForm.formState.errors.terms && (
+                  <p className="text-sm text-destructive">{signUpForm.formState.errors.terms.message}</p>
+                )}
+
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create Account"}
+                </Button>
+              </form>
+            </TabsContent>
+          </Tabs>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                Or continue with
+              </span>
             </div>
           </div>
+
+          <Button
+            onClick={handleGHLLogin}
+            variant="outline"
+            className="w-full"
+            disabled={!GHL_CLIENT_ID}
+          >
+            <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z" />
+            </svg>
+            {GHL_CLIENT_ID ? "GoHighLevel (Coming Soon)" : "GoHighLevel (Not Configured)"}
+          </Button>
 
           <div className="bg-muted/50 rounded-lg p-4 space-y-2">
             <h4 className="text-sm font-medium">What you'll get:</h4>
@@ -88,16 +340,9 @@ export default function Login() {
               <li>• AI-powered client risk analysis</li>
               <li>• Automated message drafting</li>
               <li>• Real-time analytics and insights</li>
-              <li>• Seamless GHL integration</li>
+              <li>• Seamless integrations</li>
             </ul>
           </div>
-
-          {!GHL_CLIENT_ID && (
-            <div className="flex items-start gap-2 text-sm text-amber-600 dark:text-amber-500 bg-amber-50 dark:bg-amber-950/20 p-3 rounded-lg">
-              <Loader2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
-              <p>GHL OAuth is being configured. Please contact support if this persists.</p>
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>
