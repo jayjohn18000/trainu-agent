@@ -57,6 +57,12 @@ serve(async (req) => {
       throw new Error("Not authenticated");
     }
 
+    // Service role client for system table writes
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+    );
+
     const { action, testId, clientId, variantId, testData } = await req.json().catch(() => ({}));
 
     // Create new A/B test
@@ -171,7 +177,7 @@ serve(async (req) => {
         throw new Error("No assignment found");
       }
 
-      const { data: performance } = await supabase
+      const { data: performance } = await supabaseAdmin
         .from('ab_test_performance')
         .insert({
           test_id: testId,

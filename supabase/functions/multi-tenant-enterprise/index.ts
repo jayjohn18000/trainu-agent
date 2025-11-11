@@ -133,6 +133,12 @@ serve(async (req) => {
       return handleUnauthorizedError("Authentication required");
     }
 
+    // Service role client for system table writes
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+    );
+
     const body = await req.json();
     
     // Validate input
@@ -533,7 +539,7 @@ serve(async (req) => {
       const periodStart = new Date(today.getFullYear(), today.getMonth(), 1);
       const periodEnd = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
-      const { data, error } = await supabase
+      const { data, error } = await supabaseAdmin
         .from("subscription_usage")
         .upsert({
           organization_id,

@@ -28,6 +28,12 @@ serve(async (req) => {
       throw new Error("Not authenticated");
     }
 
+    // Service role client for system table writes
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+    );
+
     const { action, ...params } = await req.json();
 
     // Integration Management
@@ -61,8 +67,8 @@ serve(async (req) => {
 
       if (error) throw error;
 
-      // Log event
-      await supabase
+      // Log event (system table)
+      await supabaseAdmin
         .from("integration_events")
         .insert({
           integration_id: data.id,
@@ -140,7 +146,7 @@ serve(async (req) => {
     if (action === "receive_webhook") {
       const { integration_id, event_type, payload, headers: webhookHeaders } = params;
       
-      const { data, error } = await supabase
+      const { data, error } = await supabaseAdmin
         .from("webhook_events")
         .insert({
           integration_id,
@@ -197,7 +203,7 @@ serve(async (req) => {
     if (action === "create_sync_job") {
       const { integration_id, sync_type, direction = "bidirectional" } = params;
       
-      const { data, error } = await supabase
+      const { data, error } = await supabaseAdmin
         .from("sync_jobs")
         .insert({
           integration_id,
