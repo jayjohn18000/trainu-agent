@@ -869,6 +869,7 @@ export type Database = {
       }
       challenge_ratings: {
         Row: {
+          code_expires_at: string | null
           created_at: string | null
           device_fingerprint: string | null
           id: string
@@ -897,6 +898,7 @@ export type Database = {
           verification_status: string
         }
         Insert: {
+          code_expires_at?: string | null
           created_at?: string | null
           device_fingerprint?: string | null
           id?: string
@@ -925,6 +927,7 @@ export type Database = {
           verification_status?: string
         }
         Update: {
+          code_expires_at?: string | null
           created_at?: string | null
           device_fingerprint?: string | null
           id?: string
