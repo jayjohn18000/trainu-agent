@@ -1,6 +1,8 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { timingSafeEqual } from 'https://deno.land/std@0.224.0/crypto/timing_safe_equal.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.76.1';
 import { corsHeaders } from '../_shared/responses.ts';
+import { createLogger, getRequestCorrelationId } from '../_shared/logger.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -13,13 +15,24 @@ serve(async (req) => {
   }
 
   try {
+    const correlationId = getRequestCorrelationId(req);
+    const logger = createLogger('ghl-webhook', correlationId);
+
     // Verify webhook signature
     const signature = req.headers.get('x-ghl-signature');
-    if (GHL_WEBHOOK_SECRET && signature !== GHL_WEBHOOK_SECRET) {
-      console.error('Invalid webhook signature');
+    if (GHL_WEBHOOK_SECRET && (!signature || !secureCompare(signature, GHL_WEBHOOK_SECRET))) {
+      logger.warn('Invalid webhook signature', { correlationId, hasSignature: Boolean(signature) });
       return new Response(
         JSON.stringify({ error: 'Invalid signature' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        {
+          status: 401,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json',
+            'x-trainu-sync-status': 'sync_retry',
+            'x-correlation-id': correlationId,
+          },
+        }
       );
     }
 
@@ -27,20 +40,25 @@ serve(async (req) => {
     const event = payload.type || payload.event;
     const data = payload.data || payload;
 
-    console.log(`[ghl-webhook] Received event: ${event}`, {
-      timestamp: new Date().toISOString(),
-      locationId: data.locationId,
-    });
+    logger.info('Received event', { event, locationId: data.locationId });
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     // Extract location ID to find trainer
     const locationId = data.locationId || data.location_id || data.contact?.locationId;
     if (!locationId) {
-      console.warn('[ghl-webhook] No locationId found in payload');
+      logger.warn('No locationId found in payload', { event });
       return new Response(
         JSON.stringify({ success: true, message: 'No locationId to process' }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        {
+          status: 200,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json',
+            'x-trainu-sync-status': 'sync_ok',
+            'x-correlation-id': correlationId,
+          },
+        }
       );
     }
 
@@ -52,10 +70,18 @@ serve(async (req) => {
       .single();
 
     if (!ghlConfig) {
-      console.warn(`[ghl-webhook] No trainer found for locationId: ${locationId}`);
+      logger.warn('No trainer configured for location', { locationId });
       return new Response(
         JSON.stringify({ success: true, message: 'Location not configured' }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        {
+          status: 200,
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json',
+            'x-trainu-sync-status': 'sync_ok',
+            'x-correlation-id': correlationId,
+          },
+        }
       );
     }
 
@@ -69,14 +95,14 @@ serve(async (req) => {
       case 'message.received':
       case 'sms.received':
       case 'email.received':
-        await handleInboundMessage(supabase, trainerId, data);
+        await handleInboundMessage(supabase, trainerId, data, logger);
         break;
 
       case 'ContactCreate':
       case 'ContactUpdate':
       case 'contact.created':
       case 'contact.updated':
-        await handleContactSync(supabase, trainerId, data);
+        await handleContactSync(supabase, trainerId, data, logger);
         break;
 
       case 'AppointmentCreate':
@@ -85,7 +111,7 @@ serve(async (req) => {
       case 'appointment.created':
       case 'appointment.updated':
       case 'appointment.cancelled':
-        await handleAppointmentSync(supabase, trainerId, data);
+        await handleAppointmentSync(supabase, trainerId, data, logger);
         break;
 
       case 'MessageSent':
@@ -94,35 +120,61 @@ serve(async (req) => {
       case 'message.sent':
       case 'message.delivered':
       case 'message.read':
-        await handleMessageStatus(supabase, trainerId, data);
+        await handleMessageStatus(supabase, trainerId, data, logger);
         break;
 
       default:
-        console.log(`[ghl-webhook] Unhandled event type: ${event}`);
+        logger.debug('Unhandled GHL event', { event });
     }
 
     return new Response(
       JSON.stringify({ success: true }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      {
+        status: 200,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+          'x-trainu-sync-status': 'sync_ok',
+          'x-correlation-id': correlationId,
+        },
+      }
     );
   } catch (error) {
-    console.error('[ghl-webhook] Error processing webhook:', error);
+    const correlationId = getRequestCorrelationId(req);
+    const logger = createLogger('ghl-webhook', correlationId);
+    logger.error('Error processing webhook', {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         error: 'Internal server error',
         message: error instanceof Error ? error.message : 'Unknown error'
       }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      {
+        status: 500,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+          'x-trainu-sync-status': 'sync_retry',
+          'x-correlation-id': correlationId,
+        },
+      }
     );
   }
 });
 
-async function handleInboundMessage(supabase: any, trainerId: string, data: any) {
+async function handleInboundMessage(
+  supabase: any,
+  trainerId: string,
+  data: any,
+  logger: ReturnType<typeof createLogger>,
+) {
   const message = data.message || data;
   const contactId = message.contactId || message.contact_id || data.contactId;
-  
+
   if (!contactId) {
-    console.warn('[ghl-webhook] No contactId in inbound message');
+    logger.warn('No contactId in inbound message', { trainerId });
     return;
   }
 
@@ -135,7 +187,7 @@ async function handleInboundMessage(supabase: any, trainerId: string, data: any)
     .single();
 
   if (!contact) {
-    console.warn(`[ghl-webhook] Contact not found: ${contactId}`);
+    logger.warn('Contact not found during inbound message', { contactId });
     return;
   }
 
@@ -179,14 +231,19 @@ async function handleInboundMessage(supabase: any, trainerId: string, data: any)
     ghl_delivered_at: message.createdAt || message.created_at || new Date().toISOString(),
   });
 
-  console.log(`[ghl-webhook] Stored inbound ${channel} from ${clientName}`);
+  logger.info('Stored inbound message', { channel, clientName, trainerId });
 }
 
-async function handleContactSync(supabase: any, trainerId: string, data: any) {
+async function handleContactSync(
+  supabase: any,
+  trainerId: string,
+  data: any,
+  logger: ReturnType<typeof createLogger>,
+) {
   const contact = data.contact || data;
-  
+
   if (!contact?.id) {
-    console.warn('[ghl-webhook] No contact ID in sync payload');
+    logger.warn('No contact ID in sync payload', { trainerId });
     return;
   }
 
@@ -202,14 +259,19 @@ async function handleContactSync(supabase: any, trainerId: string, data: any) {
     last_synced_at: new Date().toISOString(),
   }, { onConflict: 'ghl_contact_id' });
 
-  console.log(`[ghl-webhook] Synced contact: ${contact.id}`);
+  logger.info('Synced contact', { contactId: contact.id, trainerId });
 }
 
-async function handleAppointmentSync(supabase: any, trainerId: string, data: any) {
+async function handleAppointmentSync(
+  supabase: any,
+  trainerId: string,
+  data: any,
+  logger: ReturnType<typeof createLogger>,
+) {
   const appointment = data.appointment || data;
-  
+
   if (!appointment?.id || !appointment?.contactId) {
-    console.warn('[ghl-webhook] Missing appointment or contact ID');
+    logger.warn('Appointment sync missing identifiers', { appointmentId: appointment?.id, trainerId });
     return;
   }
 
@@ -222,7 +284,10 @@ async function handleAppointmentSync(supabase: any, trainerId: string, data: any
     .single();
 
   if (!contact) {
-    console.warn(`[ghl-webhook] Contact not found for appointment: ${appointment.contactId}`);
+    logger.warn('Contact not found for appointment sync', {
+      appointmentId: appointment.id,
+      contactId: appointment.contactId,
+    });
     return;
   }
 
@@ -246,14 +311,19 @@ async function handleAppointmentSync(supabase: any, trainerId: string, data: any
     last_synced_at: new Date().toISOString(),
   }, { onConflict: 'ghl_appointment_id' });
 
-  console.log(`[ghl-webhook] Synced appointment: ${appointment.id} (${status})`);
+  logger.info('Synced appointment', { appointmentId: appointment.id, status, trainerId });
 }
 
-async function handleMessageStatus(supabase: any, trainerId: string, data: any) {
+async function handleMessageStatus(
+  supabase: any,
+  trainerId: string,
+  data: any,
+  logger: ReturnType<typeof createLogger>,
+) {
   const messageId = data.messageId || data.message_id || data.id;
-  
+
   if (!messageId) {
-    console.warn('[ghl-webhook] No messageId in status update');
+    logger.warn('No messageId in status update', { trainerId });
     return;
   }
 
@@ -277,5 +347,15 @@ async function handleMessageStatus(supabase: any, trainerId: string, data: any) 
     .eq('trainer_id', trainerId)
     .eq('ghl_message_id', String(messageId));
 
-  console.log(`[ghl-webhook] Updated message status: ${messageId} -> ${updates.status}`);
+  logger.info('Updated message status', { messageId, status: updates.status, trainerId });
+}
+
+function secureCompare(value: string, secret: string) {
+  const encoder = new TextEncoder();
+  const a = encoder.encode(value);
+  const b = encoder.encode(secret);
+  if (a.length !== b.length) {
+    return false;
+  }
+  return timingSafeEqual(a, b);
 }
