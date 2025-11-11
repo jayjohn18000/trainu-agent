@@ -13,7 +13,7 @@ verify_jwt = true
 verify_jwt = false
 
 [functions.ghl-periodic-sync]
-verify_jwt = false
+verify_jwt = true
 
 [functions.ghl-oauth-callback]
 verify_jwt = false
