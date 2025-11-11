@@ -8,6 +8,7 @@ import { AnimatedCounter } from "@/components/landing/AnimatedCounter";
 import { useNavigate } from "react-router-dom";
 import trainerGroupImage from "@/assets/group-training-class.jpg";
 import gradientBg from "@/assets/gradient-mesh-bg.svg";
+import { useChallengeLeaderboard, useChallengeStats } from "@/hooks/queries/useChallengeLeaderboard";
 const topTrainers = [{
   rank: 1,
   name: "Sarah Mitchell",
@@ -61,6 +62,18 @@ const prizes = [{
 }];
 export default function Challenge() {
   const navigate = useNavigate();
+  const { data: leaderboardData, isLoading: leaderboardLoading } = useChallengeLeaderboard(5);
+  const { data: stats } = useChallengeStats();
+
+  // Format leaderboard data with emojis for top 3
+  const displayTrainers = leaderboardData?.map((entry, index) => ({
+    rank: entry.rank || index + 1,
+    name: entry.trainer_name || "Unknown Trainer",
+    city: [entry.trainer_city, entry.trainer_state].filter(Boolean).join(", ") || "Unknown",
+    rating: entry.average_rating ? Number(entry.average_rating.toFixed(1)) : 0,
+    reviews: entry.total_ratings || 0,
+    badge: index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : undefined,
+  })) || topTrainers;
   
   return <LandingLayout>
       {/* Hero */}
@@ -110,13 +123,13 @@ Challenge 2025</span>
             <div className="mt-12 grid grid-cols-3 gap-6 max-w-2xl mx-auto">
               <div>
                 <p className="text-3xl font-bold text-primary">
-                  <AnimatedCounter end={8243} duration={1500} />
+                  <AnimatedCounter end={stats?.totalRatings || 0} duration={1500} />
                 </p>
                 <p className="text-sm text-muted-foreground">Ratings Submitted</p>
               </div>
               <div>
                 <p className="text-3xl font-bold text-success">
-                  <AnimatedCounter end={2156} duration={1500} />
+                  <AnimatedCounter end={stats?.uniqueTrainers || 0} duration={1500} />
                 </p>
                 <p className="text-sm text-muted-foreground">Trainers Rated</p>
               </div>
@@ -233,7 +246,17 @@ Challenge 2025</span>
             </ScrollReveal>
 
             <div className="space-y-4">
-              {topTrainers.map((trainer, index) => <ScrollReveal key={trainer.rank} delay={index * 100}>
+              {leaderboardLoading ? (
+                <div className="text-center py-8 text-muted-foreground">Loading leaderboard...</div>
+              ) : displayTrainers.length === 0 ? (
+                <Card className="p-8 text-center">
+                  <p className="text-muted-foreground mb-4">No ratings submitted yet. Be the first!</p>
+                  <Button onClick={() => navigate("/challenge/rate")}>
+                    Submit First Rating
+                  </Button>
+                </Card>
+              ) : (
+                displayTrainers.map((trainer, index) => <ScrollReveal key={trainer.rank} delay={index * 100}>
                 <Card className={`p-6 hover:border-primary/30 transition-all hover:scale-[1.01] ${trainer.rank <= 3 ? 'border-primary/20' : ''}`}>
                   <div className="flex items-center gap-6">
                     <div className="flex-shrink-0 text-center">
@@ -260,7 +283,8 @@ Challenge 2025</span>
                     </div>
                   </div>
                 </Card>
-                </ScrollReveal>)}
+                </ScrollReveal>)
+              )}
             </div>
 
             <div className="text-center mt-8">
