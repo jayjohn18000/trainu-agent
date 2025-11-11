@@ -68,12 +68,20 @@ export default function Challenge() {
   // Format leaderboard data with emojis for top 3
   const displayTrainers = leaderboardData?.map((entry, index) => ({
     rank: entry.rank || index + 1,
-    name: entry.trainer_name || "Unknown Trainer",
-    city: [entry.trainer_city, entry.trainer_state].filter(Boolean).join(", ") || "Unknown",
-    rating: entry.average_rating ? Number(entry.average_rating.toFixed(1)) : 0,
+    userId: entry.trainer_id || "",
+    userName: entry.trainer_name || "Unknown Trainer",
+    userAvatar: undefined,
+    city: entry.trainer_city || "",
+    state: entry.trainer_state || "",
+    score: entry.average_rating ? Number(entry.average_rating.toFixed(1)) : 0,
     reviews: entry.total_ratings || 0,
     badge: index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : undefined,
-  })) || topTrainers;
+  })) || topTrainers.map((t, idx) => ({
+    ...t,
+    userId: "",
+    userName: t.name,
+    userAvatar: undefined,
+  }));
   
   return <LandingLayout>
       {/* Hero */}
@@ -265,12 +273,16 @@ Challenge 2025</span>
                     </div>
 
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold mb-1">{trainer.name}</h3>
-                      <p className="text-sm text-muted-foreground mb-2">{trainer.city}</p>
+                      <h3 className="text-lg font-semibold mb-1">{trainer.userName}</h3>
+                      {(trainer.city || trainer.state) && (
+                        <p className="text-sm text-muted-foreground mb-2">
+                          {[trainer.city, trainer.state].filter(Boolean).join(", ")}
+                        </p>
+                      )}
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-1">
                           <Star className="h-4 w-4 fill-warning text-warning" />
-                          <span className="text-sm font-medium">{trainer.rating}</span>
+                          <span className="text-sm font-medium">{trainer.score}</span>
                         </div>
                         <span className="text-sm text-muted-foreground">{trainer.reviews} reviews</span>
                       </div>

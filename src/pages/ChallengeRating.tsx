@@ -7,15 +7,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, Star, CheckCircle, Share2 } from "lucide-react";
+import { ArrowLeft, Star, CheckCircle, Share2, Mail } from "lucide-react";
 import { MOCK_TRAINERS } from "@/fixtures/trainers";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
 type RatingData = {
   trainerId?: string;
   trainerName: string;
   trainerGym?: string;
-  trainerCity?: string;
-  trainerState?: string;
+  trainerCity: string;
+  trainerState: string;
   trainerSlug?: string;
   raterName: string;
   raterEmail: string;
@@ -37,9 +38,13 @@ export default function ChallengeRating() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [ratingId, setRatingId] = useState<string>("");
+  const [verificationCode, setVerificationCode] = useState("");
   
   const [data, setData] = useState<RatingData>({
     trainerName: "",
+    trainerCity: "",
+    trainerState: "",
     raterName: "",
     raterEmail: "",
     verificationMethod: "email",
@@ -61,8 +66,8 @@ export default function ChallengeRating() {
       ...data,
       trainerId: trainer.id,
       trainerName: trainer.name,
-      trainerCity: trainer.city,
-      trainerState: trainer.state,
+      trainerCity: trainer.city || "",
+      trainerState: trainer.state || "",
       trainerSlug: trainer.slug,
     });
     setStep(2);
@@ -71,6 +76,14 @@ export default function ChallengeRating() {
   const handleCustomTrainer = () => {
     if (!data.trainerName.trim()) {
       toast.error("Please enter your trainer's name");
+      return;
+    }
+    if (!data.trainerCity.trim()) {
+      toast.error("Please enter the trainer's city");
+      return;
+    }
+    if (!data.trainerState.trim()) {
+      toast.error("Please enter the trainer's state");
       return;
     }
     setStep(2);
@@ -94,16 +107,42 @@ export default function ChallengeRating() {
         body: {
           ...data,
           domain: "trainu.us",
-          skipVerification: true,
         },
       });
 
       if (error) throw error;
       
-      toast.success("Rating submitted successfully!");
+      setRatingId(result.ratingId);
+      toast.success("Verification code sent to your email!");
       setStep(3);
     } catch (error: any) {
       toast.error(error.message || "Failed to submit rating");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    if (verificationCode.length !== 6) {
+      toast.error("Please enter the 6-digit code");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await supabase.functions.invoke("verify-challenge-rating", {
+        body: {
+          ratingId,
+          verificationCode,
+        },
+      });
+
+      if (error) throw error;
+      
+      toast.success("Rating verified successfully!");
+      setStep(4);
+    } catch (error: any) {
+      toast.error(error.message || "Invalid or expired verification code");
     } finally {
       setLoading(false);
     }
@@ -127,7 +166,7 @@ export default function ChallengeRating() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Rate Your Trainer</h1>
           <div className="flex gap-2">
-            {[1, 2, 3].map(s => (
+            {[1, 2, 3, 4].map(s => (
               <div
                 key={s}
                 className={`h-2 flex-1 rounded-full ${
@@ -139,6 +178,7 @@ export default function ChallengeRating() {
         </div>
 
         <Card className="p-6">
+          {/* Step 1: Trainer Selection */}
           {step === 1 && (
             <div className="space-y-6">
               <div>
@@ -176,13 +216,24 @@ export default function ChallengeRating() {
               </div>
 
               <div className="pt-4 border-t">
-                <Label>Trainer not listed? Enter their name:</Label>
-                <Input
-                  value={data.trainerName}
-                  onChange={(e) => setData({ ...data, trainerName: e.target.value })}
-                  placeholder="Trainer name"
-                  className="mt-2"
-                />
+                <Label>Trainer not listed? Enter their information:</Label>
+                <div className="space-y-3 mt-2">
+                  <Input
+                    value={data.trainerName}
+                    onChange={(e) => setData({ ...data, trainerName: e.target.value })}
+                    placeholder="Trainer name *"
+                  />
+                  <Input
+                    value={data.trainerCity}
+                    onChange={(e) => setData({ ...data, trainerCity: e.target.value })}
+                    placeholder="City *"
+                  />
+                  <Input
+                    value={data.trainerState}
+                    onChange={(e) => setData({ ...data, trainerState: e.target.value })}
+                    placeholder="State *"
+                  />
+                </div>
                 <Button onClick={handleCustomTrainer} className="mt-4 w-full">
                   Continue with Custom Trainer
                 </Button>
@@ -190,9 +241,13 @@ export default function ChallengeRating() {
             </div>
           )}
 
+          {/* Step 2: Rating Form */}
           {step === 2 && (
             <div className="space-y-6">
               <h2 className="text-2xl font-bold">Rate {data.trainerName}</h2>
+              <p className="text-sm text-muted-foreground">
+                {data.trainerCity}, {data.trainerState}
+              </p>
               
               {[
                 { key: "ratingExpertise", label: "Expertise & Knowledge" },
@@ -261,10 +316,48 @@ export default function ChallengeRating() {
             </div>
           )}
 
+          {/* Step 3: Verify Email */}
           {step === 3 && (
             <div className="space-y-6 text-center">
+              <Mail className="h-16 w-16 text-primary mx-auto" />
+              <h2 className="text-2xl font-bold">Check Your Email</h2>
+              <p className="text-muted-foreground">
+                We've sent a 6-digit verification code to <strong>{data.raterEmail}</strong>
+              </p>
+
+              <div className="flex flex-col items-center gap-4">
+                <Label>Enter Verification Code</Label>
+                <InputOTP 
+                  maxLength={6} 
+                  value={verificationCode}
+                  onChange={setVerificationCode}
+                >
+                  <InputOTPGroup>
+                    <InputOTPSlot index={0} />
+                    <InputOTPSlot index={1} />
+                    <InputOTPSlot index={2} />
+                    <InputOTPSlot index={3} />
+                    <InputOTPSlot index={4} />
+                    <InputOTPSlot index={5} />
+                  </InputOTPGroup>
+                </InputOTP>
+              </div>
+
+              <Button onClick={handleVerifyCode} disabled={loading || verificationCode.length !== 6} className="w-full">
+                {loading ? "Verifying..." : "Verify Code"}
+              </Button>
+
+              <p className="text-xs text-muted-foreground">
+                Code expires in 15 minutes. Didn't receive it? Check your spam folder.
+              </p>
+            </div>
+          )}
+
+          {/* Step 4: Success */}
+          {step === 4 && (
+            <div className="space-y-6 text-center">
               <CheckCircle className="h-16 w-16 text-green-500 mx-auto" />
-              <h2 className="text-2xl font-bold">Rating Submitted!</h2>
+              <h2 className="text-2xl font-bold">Rating Verified!</h2>
               <p className="text-muted-foreground">
                 Thank you for rating {data.trainerName}. Your rating will help them in the challenge!
               </p>

@@ -3773,7 +3773,6 @@ export type Database = {
           trainer_key: string | null
           trainer_name: string | null
           trainer_state: string | null
-          verified_ratings: number | null
         }
         Relationships: []
       }
