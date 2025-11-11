@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Mail, MessageSquare, Phone, MapPin } from "lucide-react";
+import { Mail, MessageSquare, Phone, MapPin, Instagram, Facebook } from "lucide-react";
+import { FaXTwitter, FaTiktok } from "react-icons/fa6";
 import {
   Accordion,
   AccordionContent,
@@ -74,11 +75,58 @@ export default function Contact() {
       <section className="py-20">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-2 gap-12 max-w-6xl mx-auto">
-            {/* Form */}
-            <ScrollReveal>
-            <div>
-              <h2 className="text-2xl font-bold mb-6">Send Us a Message</h2>
-              <Card className="p-6 hover:shadow-glow transition-all">
+            {/* Left Column */}
+            <div className="space-y-8">
+              {/* Connect With Us */}
+              <ScrollReveal>
+                <Card className="p-6 hover:shadow-glow transition-all">
+                  <h3 className="font-semibold mb-4">Connect With Us</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => window.open('https://twitter.com/official_trainu', '_blank')}
+                      className="gap-2"
+                    >
+                      <FaXTwitter className="h-4 w-4" />
+                      X (Twitter)
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => window.open('https://instagram.com/official.trainu', '_blank')}
+                      className="gap-2"
+                    >
+                      <Instagram className="h-4 w-4" />
+                      Instagram
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => window.open('https://tiktok.com/@trainu8', '_blank')}
+                      className="gap-2"
+                    >
+                      <FaTiktok className="h-4 w-4" />
+                      TikTok
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => window.open('https://facebook.com/TrainU', '_blank')}
+                      className="gap-2"
+                    >
+                      <Facebook className="h-4 w-4" />
+                      Facebook
+                    </Button>
+                  </div>
+                </Card>
+              </ScrollReveal>
+
+              {/* Form */}
+              <ScrollReveal delay={100}>
+              <div>
+                <h2 className="text-2xl font-bold mb-6">Send Us a Message</h2>
+                <Card className="p-6 hover:shadow-glow transition-all">
                 <form className="space-y-4">
                   <div>
                     <Label htmlFor="name">Full Name</Label>
@@ -123,13 +171,14 @@ export default function Contact() {
                   </p>
                 </form>
               </Card>
+              </div>
+              </ScrollReveal>
             </div>
-            </ScrollReveal>
 
-            {/* Right Side */}
+            {/* Right Column */}
             <div className="space-y-8">
               {/* Calendly Embed */}
-              <ScrollReveal delay={100}>
+              <ScrollReveal>
               <div>
                 <h2 className="text-2xl font-bold mb-6">Book a Demo</h2>
                 <Card className="p-6 hover:shadow-glow transition-all">
@@ -148,7 +197,7 @@ export default function Contact() {
               </ScrollReveal>
 
               {/* Contact Info */}
-              <ScrollReveal delay={200}>
+              <ScrollReveal delay={100}>
               <Card className="p-6 hover:shadow-glow transition-all">
                 <h3 className="font-semibold mb-4">Other Ways to Reach Us</h3>
                 <div className="space-y-4">
@@ -192,43 +241,6 @@ export default function Contact() {
                       </p>
                     </div>
                   </div>
-                </div>
-              </Card>
-              </ScrollReveal>
-
-              {/* Social */}
-              <ScrollReveal delay={300}>
-              <Card className="p-6 hover:shadow-glow transition-all">
-                <h3 className="font-semibold mb-4">Connect With Us</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => window.open('https://twitter.com/official_trainu', '_blank')}
-                  >
-                    X (Twitter)
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => window.open('https://instagram.com/official.trainu', '_blank')}
-                  >
-                    Instagram
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => window.open('https://tiktok.com/@trainu8', '_blank')}
-                  >
-                    TikTok
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => window.open('https://facebook.com/TrainU', '_blank')}
-                  >
-                    Facebook
-                  </Button>
                 </div>
               </Card>
               </ScrollReveal>
