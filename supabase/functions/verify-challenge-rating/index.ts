@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { corsHeaders, jsonResponse, errorResponse, optionsResponse } from "../_shared/responses.ts";
 
 serve(async (req: Request) => {
@@ -11,11 +12,22 @@ serve(async (req: Request) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const { ratingId, verificationCode } = await req.json();
+    const body = await req.json();
 
-    if (!ratingId || !verificationCode) {
-      return errorResponse("Missing required fields", 400);
+    // Zod validation schema
+    const verifySchema = z.object({
+      ratingId: z.string().uuid("Invalid rating ID format"),
+      verificationCode: z.string().regex(/^\d{6}$/, "Verification code must be 6 digits"),
+    });
+
+    const validation = verifySchema.safeParse(body);
+    if (!validation.success) {
+      const firstError = validation.error.errors[0];
+      console.warn("Validation error:", firstError);
+      return errorResponse(`Validation failed: ${firstError.message}`, 400);
     }
+
+    const { ratingId, verificationCode } = validation.data;
 
     // Rate limiting: Check verification attempts (max 5 per rating)
     const { count: attemptCount } = await supabase

@@ -1,10 +1,10 @@
 project_id = "sakksoxuanyimicevljq"
 
 [functions.ghl-sync]
-verify_jwt = false
+verify_jwt = true
 
 [functions.ghl-push]
-verify_jwt = false
+verify_jwt = true
 
 [functions.ghl-webhook-register]
 verify_jwt = true

@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 import { corsHeaders, jsonResponse, errorResponse, optionsResponse } from "../_shared/responses.ts";
 
 serve(async (req: Request) => {
@@ -12,6 +13,35 @@ serve(async (req: Request) => {
     );
 
     const body = await req.json();
+
+    // Zod validation schema
+    const submitRatingSchema = z.object({
+      trainerId: z.string().uuid().optional(),
+      trainerName: z.string().trim().min(1, "Trainer name required").max(100, "Trainer name too long"),
+      trainerGym: z.string().max(200).optional(),
+      trainerCity: z.string().max(100).optional(),
+      trainerState: z.string().max(50).optional(),
+      trainerSlug: z.string().max(100).optional(),
+      raterName: z.string().trim().min(1, "Your name required").max(100, "Name too long"),
+      raterEmail: z.string().email("Invalid email format").max(255, "Email too long"),
+      raterPhone: z.string().regex(/^\+?[1-9]\d{1,14}$/, "Invalid phone format").optional().or(z.literal("")),
+      verificationMethod: z.enum(["email", "sms"], { errorMap: () => ({ message: "Must be email or sms" }) }),
+      ratingExpertise: z.number().int().min(1).max(5, "Rating must be 1-5"),
+      ratingCommunication: z.number().int().min(1).max(5, "Rating must be 1-5"),
+      ratingMotivation: z.number().int().min(1).max(5, "Rating must be 1-5"),
+      ratingResults: z.number().int().min(1).max(5, "Rating must be 1-5"),
+      ratingValue: z.number().int().min(1).max(5, "Rating must be 1-5"),
+      reviewText: z.string().max(1000, "Review too long (max 1000 chars)").optional(),
+      domain: z.string().max(255, "Domain too long"),
+    });
+
+    const validation = submitRatingSchema.safeParse(body);
+    if (!validation.success) {
+      const firstError = validation.error.errors[0];
+      console.warn("Validation error:", firstError);
+      return errorResponse(`Validation failed: ${firstError.message}`, 400);
+    }
+
     const {
       trainerId,
       trainerName,
@@ -30,14 +60,7 @@ serve(async (req: Request) => {
       ratingValue,
       reviewText,
       domain,
-    } = body;
-
-    // Validate required fields
-    if (!trainerName || !raterName || !raterEmail ||
-        !ratingExpertise || !ratingCommunication || !ratingMotivation ||
-        !ratingResults || !ratingValue) {
-      return errorResponse("Missing required fields", 400);
-    }
+    } = validation.data;
 
     // Generate verification code
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();

@@ -7,12 +7,25 @@ Deno.serve(async (req) => {
   const pushStartTime = Date.now();
   
   try {
+    // Authenticate user
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return errorResponse('Authorization required', 401);
+    }
+
+    const token = authHeader.replace('Bearer ', '');
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     );
 
-    console.log('Starting bidirectional GHL push...');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) {
+      console.error('Auth error:', authError);
+      return errorResponse('Unauthorized', 401);
+    }
+
+    console.log(`Starting GHL push for user ${user.id}...`);
 
     // Get GHL access token
     const ghlAccessToken = Deno.env.get('GHL_ACCESS_TOKEN');
@@ -21,10 +34,11 @@ Deno.serve(async (req) => {
       return errorResponse('GHL_ACCESS_TOKEN not configured', 500);
     }
 
-    // Get pending sync queue items (limit to 50 per run)
+    // Get pending sync queue items only for authenticated user (limit to 50 per run)
     const { data: queueItems, error: queueError } = await supabase
       .from('ghl_sync_queue')
       .select('*')
+      .eq('trainer_id', user.id)
       .eq('status', 'pending')
       .lt('attempts', 3) // Max 3 retry attempts
       .order('created_at', { ascending: true })
