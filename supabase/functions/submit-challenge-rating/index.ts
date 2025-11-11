@@ -46,6 +46,19 @@ serve(async (req: Request) => {
     const ip = req.headers.get("x-forwarded-for") || "unknown";
     const deviceFingerprint = req.headers.get("user-agent") || "unknown";
 
+    // Rate limiting: Check IP-based rate limit (5 submissions per hour)
+    const oneHourAgo = new Date(Date.now() - 3600000).toISOString();
+    const { count: ipRateCount } = await supabase
+      .from("challenge_ratings")
+      .select("id", { count: "exact", head: true })
+      .eq("ip_address", ip)
+      .gte("created_at", oneHourAgo);
+
+    if (ipRateCount && ipRateCount >= 5) {
+      console.warn(`Rate limit exceeded for IP: ${ip}`);
+      return errorResponse("Too many submissions. Please try again later.", 429);
+    }
+
     // Check for duplicate submissions (anti-fraud)
     const { data: existingRatings } = await supabase
       .from("challenge_ratings")

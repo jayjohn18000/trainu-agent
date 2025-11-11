@@ -5,6 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import { z } from "zod";
+
+const authSchema = z.object({
+  email: z.string().trim().email("Invalid email format").max(255, "Email too long"),
+  password: z.string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+    .regex(/[0-9]/, "Password must contain at least one number")
+});
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -18,13 +28,28 @@ export default function Login() {
     setLoading(true);
 
     try {
+      // Validate input with Zod
+      const validation = authSchema.safeParse({ email: email.trim(), password });
+      if (!validation.success) {
+        const firstError = validation.error.errors[0];
+        toast.error(firstError.message);
+        setLoading(false);
+        return;
+      }
+
       if (isSignUp) {
-        const { error } = await supabase.auth.signUp({ email, password });
+        const { error } = await supabase.auth.signUp({ 
+          email: validation.data.email, 
+          password: validation.data.password 
+        });
         if (error) throw error;
         toast.success("Account created! Logging you in...");
         navigate("/today");
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error } = await supabase.auth.signInWithPassword({ 
+          email: validation.data.email, 
+          password: validation.data.password 
+        });
         if (error) throw error;
         toast.success("Welcome back!");
         navigate("/today");
@@ -82,8 +107,12 @@ export default function Login() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
-                minLength={6}
               />
+              {isSignUp && password.length > 0 && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Password must be 8+ characters with uppercase, lowercase, and number
+                </p>
+              )}
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Loading..." : isSignUp ? "Sign Up" : "Log In"}

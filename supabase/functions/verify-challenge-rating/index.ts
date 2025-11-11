@@ -17,6 +17,17 @@ serve(async (req: Request) => {
       return errorResponse("Missing required fields", 400);
     }
 
+    // Rate limiting: Check verification attempts (max 5 per rating)
+    const { count: attemptCount } = await supabase
+      .from("challenge_ratings")
+      .select("id", { count: "exact", head: true })
+      .eq("id", ratingId);
+
+    if (attemptCount && attemptCount > 5) {
+      console.warn(`Too many verification attempts for rating: ${ratingId}`);
+      return errorResponse("Too many attempts. Please request a new code.", 429);
+    }
+
     // Get rating
     const { data: rating, error: fetchError } = await supabase
       .from("challenge_ratings")
@@ -35,6 +46,8 @@ serve(async (req: Request) => {
 
     // Check if code matches (case insensitive)
     if (rating.verification_code.toLowerCase() !== verificationCode.toLowerCase()) {
+      // Log failed attempt for rate limiting
+      console.warn(`Failed verification attempt for rating: ${ratingId}`);
       return errorResponse("Invalid verification code", 400);
     }
 
