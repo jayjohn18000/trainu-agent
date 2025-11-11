@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { ArrowLeft, Star, CheckCircle, Share2, Mail } from "lucide-react";
+import { ArrowLeft, Star, CheckCircle, Share2, Mail, Circle, ThumbsUp } from "lucide-react";
 import { MOCK_TRAINERS } from "@/fixtures/trainers";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
@@ -250,30 +250,54 @@ export default function ChallengeRating() {
               </p>
               
               {[
-                { key: "ratingExpertise", label: "Expertise & Knowledge" },
-                { key: "ratingCommunication", label: "Communication & Responsiveness" },
-                { key: "ratingMotivation", label: "Motivation & Encouragement" },
+                { key: "ratingExpertise", label: "Knowledge" },
+                { key: "ratingCommunication", label: "Communication" },
+                { key: "ratingMotivation", label: "Encouragement" },
                 { key: "ratingResults", label: "Results Achieved" },
-                { key: "ratingValue", label: "Value for Money" },
+                { key: "ratingValue", label: "Recommend a Friend" },
               ].map(({ key, label }) => (
                 <div key={key}>
                   <Label className="mb-2 block">{label}</Label>
-                  <div className="flex gap-2">
-                    {[1, 2, 3, 4, 5].map(rating => (
-                      <button
-                        key={rating}
-                        onClick={() => setData({ ...data, [key]: rating })}
-                        className="transition-transform hover:scale-110"
-                      >
-                        <Star
-                          className={`h-8 w-8 ${
-                            rating <= (data[key as keyof RatingData] as number)
-                              ? "fill-yellow-400 text-yellow-400"
-                              : "text-muted-foreground"
-                          }`}
-                        />
-                      </button>
-                    ))}
+                  <div className="flex gap-4 justify-center">
+                    <button
+                      onClick={() => setData({ ...data, [key]: 1 })}
+                      className="transition-transform hover:scale-110 flex flex-col items-center gap-1"
+                    >
+                      <Circle
+                        className={`h-12 w-12 ${
+                          (data[key as keyof RatingData] as number) === 1
+                            ? "fill-red-500 text-red-500"
+                            : "text-muted-foreground"
+                        }`}
+                      />
+                      <span className="text-xs text-muted-foreground">Needs Work</span>
+                    </button>
+                    <button
+                      onClick={() => setData({ ...data, [key]: 2 })}
+                      className="transition-transform hover:scale-110 flex flex-col items-center gap-1"
+                    >
+                      <ThumbsUp
+                        className={`h-12 w-12 ${
+                          (data[key as keyof RatingData] as number) === 2
+                            ? "fill-green-500 text-green-500"
+                            : "text-muted-foreground"
+                        }`}
+                      />
+                      <span className="text-xs text-muted-foreground">Good</span>
+                    </button>
+                    <button
+                      onClick={() => setData({ ...data, [key]: 3 })}
+                      className="transition-transform hover:scale-110 flex flex-col items-center gap-1"
+                    >
+                      <Star
+                        className={`h-12 w-12 ${
+                          (data[key as keyof RatingData] as number) === 3
+                            ? "fill-yellow-400 text-yellow-400"
+                            : "text-muted-foreground"
+                        }`}
+                      />
+                      <span className="text-xs text-muted-foreground">Excellent</span>
+                    </button>
                   </div>
                 </div>
               ))}
