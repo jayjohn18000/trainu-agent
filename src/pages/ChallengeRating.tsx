@@ -36,8 +36,6 @@ export default function ChallengeRating() {
   
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [verificationCode, setVerificationCode] = useState("");
-  const [ratingId, setRatingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   
   const [data, setData] = useState<RatingData>({
@@ -84,12 +82,9 @@ export default function ChallengeRating() {
       toast.error("Please rate all categories");
       return;
     }
-    setStep(3);
-  };
-
-  const handleVerificationRequest = async () => {
+    
     if (!data.raterName || !data.raterEmail) {
-      toast.error("Please fill in all fields");
+      toast.error("Please provide your name and email");
       return;
     }
 
@@ -99,39 +94,16 @@ export default function ChallengeRating() {
         body: {
           ...data,
           domain: "trainu.us",
+          skipVerification: true,
         },
       });
 
       if (error) throw error;
       
-      setRatingId(result.ratingId);
-      toast.success(`Verification code sent to your ${data.verificationMethod}`);
-      setStep(4);
+      toast.success("Rating submitted successfully!");
+      setStep(3);
     } catch (error: any) {
       toast.error(error.message || "Failed to submit rating");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerificationSubmit = async () => {
-    if (!verificationCode || !ratingId) return;
-
-    setLoading(true);
-    try {
-      const { error } = await supabase.functions.invoke("verify-challenge-rating", {
-        body: {
-          ratingId,
-          verificationCode,
-        },
-      });
-
-      if (error) throw error;
-      
-      toast.success("Rating verified successfully!");
-      setStep(5);
-    } catch (error: any) {
-      toast.error(error.message || "Invalid verification code");
     } finally {
       setLoading(false);
     }
@@ -155,7 +127,7 @@ export default function ChallengeRating() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Rate Your Trainer</h1>
           <div className="flex gap-2">
-            {[1, 2, 3, 4, 5].map(s => (
+            {[1, 2, 3].map(s => (
               <div
                 key={s}
                 className={`h-2 flex-1 rounded-full ${
@@ -262,16 +234,6 @@ export default function ChallengeRating() {
                 />
               </div>
 
-              <Button onClick={handleRatingSubmit} className="w-full">
-                Continue <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </div>
-          )}
-
-          {step === 3 && (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold">Verify Your Identity</h2>
-              
               <div>
                 <Label>Your Name</Label>
                 <Input
@@ -293,34 +255,13 @@ export default function ChallengeRating() {
                 />
               </div>
 
-              <Button onClick={handleVerificationRequest} disabled={loading} className="w-full">
-                {loading ? "Sending..." : "Send Verification Code"}
+              <Button onClick={handleRatingSubmit} disabled={loading} className="w-full">
+                {loading ? "Submitting..." : "Submit Rating"}
               </Button>
             </div>
           )}
 
-          {step === 4 && (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold">Enter Verification Code</h2>
-              <p className="text-muted-foreground">
-                We sent a 6-digit code to {data.raterEmail}
-              </p>
-              
-              <Input
-                value={verificationCode}
-                onChange={(e) => setVerificationCode(e.target.value)}
-                placeholder="000000"
-                maxLength={6}
-                className="text-center text-2xl tracking-widest"
-              />
-
-              <Button onClick={handleVerificationSubmit} disabled={loading} className="w-full">
-                {loading ? "Verifying..." : "Verify & Submit"}
-              </Button>
-            </div>
-          )}
-
-          {step === 5 && (
+          {step === 3 && (
             <div className="space-y-6 text-center">
               <CheckCircle className="h-16 w-16 text-green-500 mx-auto" />
               <h2 className="text-2xl font-bold">Rating Submitted!</h2>

@@ -62,8 +62,7 @@ serve(async (req: Request) => {
       domain,
     } = validation.data;
 
-    // Generate verification code
-    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const skipVerification = body.skipVerification === true;
 
     // Get IP and device fingerprint
     const ip = req.headers.get("x-forwarded-for") || "unknown";
@@ -101,6 +100,11 @@ serve(async (req: Request) => {
       return errorResponse("You've already rated this trainer recently", 429);
     }
 
+    // Calculate overall rating
+    const ratingOverall = (
+      (ratingExpertise + ratingCommunication + ratingMotivation + ratingResults + ratingValue) / 5
+    ).toFixed(2);
+
     // Insert rating
     const { data: rating, error: ratingError } = await supabase
       .from("challenge_ratings")
@@ -115,12 +119,14 @@ serve(async (req: Request) => {
         rater_email: raterEmail,
         rater_phone: raterPhone,
         verification_method: verificationMethod,
-        verification_code: verificationCode,
+        verification_code: skipVerification ? null : Math.floor(100000 + Math.random() * 900000).toString(),
+        verification_status: skipVerification ? "verified" : "pending",
         rating_expertise: ratingExpertise,
         rating_communication: ratingCommunication,
         rating_motivation: ratingMotivation,
         rating_results: ratingResults,
         rating_value: ratingValue,
+        rating_overall: ratingOverall,
         review_text: reviewText,
         device_fingerprint: deviceFingerprint,
         ip_address: ip,
@@ -133,57 +139,19 @@ serve(async (req: Request) => {
       return errorResponse("Failed to submit rating", 500);
     }
 
-    // Send verification email
-    try {
-      const emailHtml = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #3b82f6;">TrainU Challenge - Verify Your Rating</h1>
-          <p>Hi ${raterName},</p>
-          <p>Thank you for rating <strong>${trainerName}</strong>!</p>
-          <p>Your verification code is:</p>
-          <div style="background: #f3f4f6; padding: 20px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 8px; margin: 20px 0;">
-            ${verificationCode}
-          </div>
-          <p>This code will expire in 15 minutes.</p>
-          <p>If you didn't request this, please ignore this email.</p>
-          <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;">
-          <p style="color: #6b7280; font-size: 14px;">
-            This is an automated message from the TrainU Challenge.<br>
-            Visit <a href="https://${domain}/challenge">https://${domain}/challenge</a> to view the leaderboard.
-          </p>
-        </div>
-      `;
-
-      // Send email via Resend API
-      const emailResponse = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${Deno.env.get("RESEND_API_KEY")}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          from: "TrainU Challenge <challenge@trainu.us>",
-          to: [raterEmail],
-          subject: "Verify Your Trainer Rating - TrainU Challenge",
-          html: emailHtml,
-        }),
-      });
-
-      if (!emailResponse.ok) {
-        const errorData = await emailResponse.text();
-        throw new Error(`Resend API error: ${errorData}`);
+    // Refresh leaderboard if verified
+    if (skipVerification) {
+      const { error: refreshError } = await supabase.rpc("refresh_challenge_leaderboard");
+      if (refreshError) {
+        console.error("Leaderboard refresh error:", refreshError);
+        // Don't fail the request if refresh fails
       }
-
-      console.log("Verification email sent to:", raterEmail);
-    } catch (emailError) {
-      console.error("Email send error:", emailError);
-      // Don't fail the request if email fails
     }
 
     return jsonResponse({
       success: true,
       ratingId: rating.id,
-      message: "Verification code sent",
+      message: skipVerification ? "Rating submitted successfully" : "Verification code sent",
     });
   } catch (error: any) {
     console.error("Submit rating error:", error);

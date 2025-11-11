@@ -43,14 +43,12 @@ export function useChallengeStats() {
       // Get total ratings count
       const { count: totalRatings } = await supabase
         .from("challenge_ratings")
-        .select("*", { count: "exact", head: true })
-        .eq("verification_status", "verified");
+        .select("*", { count: "exact", head: true });
 
       // Get unique trainers count
       const { data: uniqueTrainers } = await supabase
         .from("challenge_ratings")
-        .select("trainer_name")
-        .eq("verification_status", "verified");
+        .select("trainer_name");
 
       const uniqueTrainersCount = new Set(
         uniqueTrainers?.map((r) => r.trainer_name)
