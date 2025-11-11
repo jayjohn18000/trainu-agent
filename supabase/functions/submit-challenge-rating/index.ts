@@ -156,7 +156,7 @@ serve(async (req: Request) => {
     // Send verification email
     try {
       const emailResult = await resend.emails.send({
-        from: "TrainU Challenge <hello@trainu.us>",
+        from: "TrainU Challenge <hello@notifications.trainu.us>",
         to: [raterEmail],
         subject: `Verify Your Trainer Rating - Code: ${verificationCode}`,
         html: `
