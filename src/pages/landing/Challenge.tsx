@@ -9,6 +9,9 @@ import { useNavigate } from "react-router-dom";
 import trainerGroupImage from "@/assets/group-training-class.jpg";
 import gradientBg from "@/assets/gradient-mesh-bg.svg";
 import { useChallengeLeaderboard, useChallengeStats } from "@/hooks/queries/useChallengeLeaderboard";
+import { TrainerClaimButton } from "@/components/challenge/TrainerClaimButton";
+import { TrainerClaimModal } from "@/components/challenge/TrainerClaimModal";
+import { useState } from "react";
 const topTrainers = [{
   rank: 1,
   name: "Sarah Mitchell",
@@ -64,6 +67,8 @@ export default function Challenge() {
   const navigate = useNavigate();
   const { data: leaderboardData, isLoading: leaderboardLoading } = useChallengeLeaderboard(5);
   const { data: stats } = useChallengeStats();
+  const [claimModalOpen, setClaimModalOpen] = useState(false);
+  const [selectedTrainer, setSelectedTrainer] = useState<any>(null);
 
   // Format leaderboard data with emojis for top 3
   const displayTrainers = leaderboardData?.map((entry, index) => ({
@@ -288,10 +293,19 @@ Challenge 2025</span>
                       </div>
                     </div>
 
-                    <div className="flex-shrink-0">
-                      <Button size="sm" variant="outline">
-                        View Profile
+                    <div className="flex-shrink-0 flex flex-col gap-2">
+                      <Button size="sm" variant="outline" onClick={() => navigate(`/challenge/rate?trainerId=${leaderboardData?.[index]?.trainer_key}`)}>
+                        Rate Trainer
                       </Button>
+                      <TrainerClaimButton
+                        trainerKey={leaderboardData?.[index]?.trainer_key || ''}
+                        trainerName={trainer.userName}
+                        isVerified={!!trainer.userId}
+                        onClaim={() => {
+                          setSelectedTrainer(leaderboardData?.[index]);
+                          setClaimModalOpen(true);
+                        }}
+                      />
                     </div>
                   </div>
                 </Card>
@@ -448,5 +462,16 @@ Challenge 2025</span>
           </ScrollReveal>
         </div>
       </section>
+      
+      {selectedTrainer && (
+        <TrainerClaimModal
+          open={claimModalOpen}
+          onOpenChange={setClaimModalOpen}
+          trainerKey={selectedTrainer.trainer_key}
+          trainerName={selectedTrainer.trainer_name}
+          trainerCity={selectedTrainer.trainer_city}
+          trainerState={selectedTrainer.trainer_state}
+        />
+      )}
     </LandingLayout>;
 }

@@ -53,6 +53,7 @@ const CommunityGroups = lazyWithRetry(() => import("@/pages/community/Groups"));
 const Store = lazyWithRetry(() => import("@/pages/Store"));
 const Creators = lazyWithRetry(() => import("@/pages/Creators"));
 const Admin = lazyWithRetry(() => import("@/pages/Admin"));
+const AdminVerifications = lazyWithRetry(() => import("@/pages/AdminVerifications"));
 const DevFlags = lazyWithRetry(() => import("@/pages/DevFlags"));
 const Gone410 = lazyWithRetry(() => import("@/pages/Gone410"));
 const NotFound = lazyWithRetry(() => import("@/pages/NotFound"));
@@ -146,6 +147,7 @@ export default function App() {
               <Route path="/admin" element={<Admin />} />
               <Route path="/admin/trainers" element={<Admin />} />
               <Route path="/admin/classes" element={<Admin />} />
+              <Route path="/admin/verifications" element={<AdminVerifications />} />
               <Route path="/dev/flags" element={<DevFlags />} />
             </Route>
 

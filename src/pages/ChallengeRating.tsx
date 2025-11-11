@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ArrowLeft, Star, CheckCircle, Share2, Mail, Circle, ThumbsUp } from "lucide-react";
-import { MOCK_TRAINERS } from "@/fixtures/trainers";
+import { useChallengeLeaderboard } from "@/hooks/queries/useChallengeLeaderboard";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
 type RatingData = {
@@ -34,6 +34,7 @@ export default function ChallengeRating() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const prefilledTrainerId = searchParams.get("trainerId");
+  const { data: leaderboardData = [], isLoading: loadingLeaderboard } = useChallengeLeaderboard();
   
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -55,13 +56,29 @@ export default function ChallengeRating() {
     ratingValue: 0,
   });
 
-  const filteredTrainers = MOCK_TRAINERS.filter(t =>
-    t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    t.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    t.state?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Convert leaderboard data to trainer format
+  const trainers = useMemo(() => {
+    return leaderboardData.map((entry) => ({
+      id: entry.trainer_key || '',
+      name: entry.trainer_name || '',
+      slug: entry.trainer_key || '',
+      city: entry.trainer_city || undefined,
+      state: entry.trainer_state || undefined,
+      verified: !!entry.trainer_id,
+      avatarUrl: `https://i.pravatar.cc/150?u=${entry.trainer_key}`,
+    }));
+  }, [leaderboardData]);
 
-  const selectTrainer = (trainer: typeof MOCK_TRAINERS[0]) => {
+  const filteredTrainers = useMemo(() => {
+    const query = searchQuery.toLowerCase();
+    return trainers.filter(t =>
+      t.name.toLowerCase().includes(query) ||
+      t.city?.toLowerCase().includes(query) ||
+      t.state?.toLowerCase().includes(query)
+    );
+  }, [trainers, searchQuery]);
+
+  const selectTrainer = (trainer: typeof trainers[0]) => {
     setData({
       ...data,
       trainerId: trainer.id,
@@ -191,53 +208,73 @@ export default function ChallengeRating() {
                 />
               </div>
 
-              <div className="space-y-2 max-h-96 overflow-y-auto">
-                {filteredTrainers.slice(0, 10).map(trainer => (
-                  <button
-                    key={trainer.id}
-                    onClick={() => selectTrainer(trainer)}
-                    className="w-full p-4 rounded-lg border hover:border-primary hover:bg-accent transition-colors text-left"
-                  >
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={trainer.avatarUrl || "https://i.pravatar.cc/150"}
-                        alt={trainer.name}
-                        className="w-12 h-12 rounded-full object-cover"
-                      />
-                      <div>
-                        <p className="font-semibold">{trainer.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {[trainer.city, trainer.state].filter(Boolean).join(", ")}
-                        </p>
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-
-              <div className="pt-4 border-t">
-                <Label>Trainer not listed? Enter their information:</Label>
-                <div className="space-y-3 mt-2">
-                  <Input
-                    value={data.trainerName}
-                    onChange={(e) => setData({ ...data, trainerName: e.target.value })}
-                    placeholder="Trainer name *"
-                  />
-                  <Input
-                    value={data.trainerCity}
-                    onChange={(e) => setData({ ...data, trainerCity: e.target.value })}
-                    placeholder="City *"
-                  />
-                  <Input
-                    value={data.trainerState}
-                    onChange={(e) => setData({ ...data, trainerState: e.target.value })}
-                    placeholder="State *"
-                  />
+              {loadingLeaderboard ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  Loading trainers...
                 </div>
-                <Button onClick={handleCustomTrainer} className="mt-4 w-full">
-                  Continue with Custom Trainer
-                </Button>
-              </div>
+              ) : (
+                <>
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                    {filteredTrainers.slice(0, 10).map(trainer => (
+                      <button
+                        key={trainer.id}
+                        onClick={() => selectTrainer(trainer)}
+                        className="w-full p-4 rounded-lg border hover:border-primary hover:bg-accent transition-colors text-left"
+                      >
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={trainer.avatarUrl || "https://i.pravatar.cc/150"}
+                            alt={trainer.name}
+                            className="w-12 h-12 rounded-full object-cover"
+                          />
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <p className="font-semibold">{trainer.name}</p>
+                              {trainer.verified && (
+                                <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                                  ✓ Verified
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              {[trainer.city, trainer.state].filter(Boolean).join(", ")}
+                            </p>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                    {filteredTrainers.length === 0 && (
+                      <div className="text-center py-8 text-muted-foreground">
+                        No trainers found. Try searching or add custom trainer below.
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="pt-4 border-t">
+                    <Label>Trainer not listed? Enter their information:</Label>
+                    <div className="space-y-3 mt-2">
+                      <Input
+                        value={data.trainerName}
+                        onChange={(e) => setData({ ...data, trainerName: e.target.value })}
+                        placeholder="Trainer name *"
+                      />
+                      <Input
+                        value={data.trainerCity}
+                        onChange={(e) => setData({ ...data, trainerCity: e.target.value })}
+                        placeholder="City *"
+                      />
+                      <Input
+                        value={data.trainerState}
+                        onChange={(e) => setData({ ...data, trainerState: e.target.value })}
+                        placeholder="State *"
+                      />
+                    </div>
+                    <Button onClick={handleCustomTrainer} className="mt-4 w-full">
+                      Continue with Custom Trainer
+                    </Button>
+                  </div>
+                </>
+              )}
             </div>
           )}
 

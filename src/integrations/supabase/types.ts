@@ -3610,6 +3610,69 @@ export type Database = {
         }
         Relationships: []
       }
+      trainer_verification_requests: {
+        Row: {
+          challenge_trainer_key: string
+          claimed_by_email: string
+          created_at: string
+          device_fingerprint: string | null
+          id: string
+          ip_address: string | null
+          proof_description: string | null
+          proof_media_urls: string[] | null
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: Database["public"]["Enums"]["verification_status"]
+          trainer_city: string | null
+          trainer_id: string | null
+          trainer_name: string
+          trainer_state: string | null
+          updated_at: string
+          verification_method: Database["public"]["Enums"]["verification_method"]
+        }
+        Insert: {
+          challenge_trainer_key: string
+          claimed_by_email: string
+          created_at?: string
+          device_fingerprint?: string | null
+          id?: string
+          ip_address?: string | null
+          proof_description?: string | null
+          proof_media_urls?: string[] | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["verification_status"]
+          trainer_city?: string | null
+          trainer_id?: string | null
+          trainer_name: string
+          trainer_state?: string | null
+          updated_at?: string
+          verification_method: Database["public"]["Enums"]["verification_method"]
+        }
+        Update: {
+          challenge_trainer_key?: string
+          claimed_by_email?: string
+          created_at?: string
+          device_fingerprint?: string | null
+          id?: string
+          ip_address?: string | null
+          proof_description?: string | null
+          proof_media_urls?: string[] | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["verification_status"]
+          trainer_city?: string | null
+          trainer_id?: string | null
+          trainer_name?: string
+          trainer_state?: string | null
+          updated_at?: string
+          verification_method?: Database["public"]["Enums"]["verification_method"]
+        }
+        Relationships: []
+      }
       user_experience_metrics: {
         Row: {
           bounce_rate: number | null
@@ -3820,6 +3883,10 @@ export type Database = {
       }
     }
     Functions: {
+      check_duplicate_claim: {
+        Args: { p_email: string; p_trainer_key: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -3868,6 +3935,8 @@ export type Database = {
         | "delivered"
         | "read"
         | "failed"
+      verification_method: "email" | "ghl_oauth" | "social_proof"
+      verification_status: "pending" | "approved" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -4013,6 +4082,8 @@ export const Constants = {
         "read",
         "failed",
       ],
+      verification_method: ["email", "ghl_oauth", "social_proof"],
+      verification_status: ["pending", "approved", "rejected"],
     },
   },
 } as const
