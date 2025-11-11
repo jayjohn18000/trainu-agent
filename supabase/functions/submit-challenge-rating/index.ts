@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { Resend } from "npm:resend@2.0.0";
 import { corsHeaders, jsonResponse, errorResponse, optionsResponse } from "../_shared/responses.ts";
 
 serve(async (req: Request) => {
@@ -118,19 +119,16 @@ serve(async (req: Request) => {
         </div>
       `;
 
-      // For now, just log (in production, use Resend or similar)
-      console.log("Verification email would be sent to:", raterEmail);
-      console.log("Verification code:", verificationCode);
-      console.log("Email HTML:", emailHtml);
+      // Send email via Resend
+      const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+      await resend.emails.send({
+        from: "TrainU Challenge <challenge@trainu.us>",
+        to: raterEmail,
+        subject: "Verify Your Trainer Rating - TrainU Challenge",
+        html: emailHtml,
+      });
 
-      // TODO: Integrate with Resend when email service is configured
-      // const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
-      // await resend.emails.send({
-      //   from: "TrainU Challenge <challenge@trainu.us>",
-      //   to: raterEmail,
-      //   subject: "Verify Your Trainer Rating - TrainU Challenge",
-      //   html: emailHtml,
-      // });
+      console.log("Verification email sent to:", raterEmail);
     } catch (emailError) {
       console.error("Email send error:", emailError);
       // Don't fail the request if email fails
