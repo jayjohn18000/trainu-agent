@@ -43,8 +43,17 @@ export default function Contact() {
     <LandingLayout>
       {/* Hero */}
       <section className="relative overflow-hidden py-20">
-        <div className="absolute inset-0 opacity-30">
-          <img src={gradientBg} alt="" className="w-full h-full object-cover" />
+        <div className="absolute inset-0">
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full h-full object-cover"
+          >
+            <source src="/contact-hero-video.mp4" type="video/mp4" />
+          </video>
+          <div className="absolute inset-0 bg-black/80" />
         </div>
         <div className="container mx-auto px-4 relative z-10">
           <ScrollReveal className="max-w-3xl mx-auto text-center">
