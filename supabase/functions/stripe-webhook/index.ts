@@ -82,7 +82,7 @@ Deno.serve(async (req) => {
 
 async function routeStripeEvent(
   event: any,
-  supabase: ReturnType<typeof createClient>,
+  supabase: any,
   logger: ReturnType<typeof createLogger>,
   correlationId: string,
 ) {
@@ -116,7 +116,7 @@ async function routeStripeEvent(
 
 async function triggerProvisioningFromSubscription(
   subscription: any,
-  _supabase: ReturnType<typeof createClient>,
+  _supabase: any,
   logger: ReturnType<typeof createLogger>,
   correlationId: string,
 ) {
@@ -339,7 +339,7 @@ function extractLastName(fullName?: string | null): string | undefined {
   return parts.slice(1).join(' ') || undefined;
 }
 
-async function hasProcessedEvent(supabase: ReturnType<typeof createClient>, eventId: string) {
+async function hasProcessedEvent(supabase: any, eventId: string) {
   const { data } = await supabase
     .from('stripe_events')
     .select('event_id')
@@ -348,12 +348,12 @@ async function hasProcessedEvent(supabase: ReturnType<typeof createClient>, even
   return Boolean(data);
 }
 
-async function recordStripeEvent(supabase: ReturnType<typeof createClient>, event: any, bodyText: string) {
+async function recordStripeEvent(supabase: any, event: any, bodyText: string) {
   await supabase.from('stripe_events').insert({
     event_id: event.id,
     type: event.type,
     payload: JSON.parse(bodyText),
-  });
+  } as any);
 }
 
 async function verifyStripeSignature(payload: Uint8Array, signature: string, secret: string): Promise<boolean> {

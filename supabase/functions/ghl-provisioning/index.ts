@@ -70,8 +70,6 @@ const ProvisioningPayloadSchema = z.object({
 
 type ProvisioningPayload = z.infer<typeof ProvisioningPayloadSchema>;
 
-type SupabaseClient = ReturnType<typeof createClient>;
-
 type GHLConfigRecord = {
   trainer_id: string;
   location_id: string | null;
@@ -281,7 +279,7 @@ Deno.serve(async (req) => {
   }
 });
 
-async function getExistingGHLConfig(supabase: SupabaseClient, trainerId: string): Promise<GHLConfigRecord | null> {
+async function getExistingGHLConfig(supabase: any, trainerId: string): Promise<GHLConfigRecord | null> {
   const { data } = await supabase
     .from('ghl_config')
     .select('trainer_id, location_id, provisioning_status, status, primary_user_id, default_channel, quiet_hours_start, quiet_hours_end')
@@ -292,7 +290,7 @@ async function getExistingGHLConfig(supabase: SupabaseClient, trainerId: string)
 }
 
 async function markProvisioningStatus(
-  supabase: SupabaseClient,
+  supabase: any,
   trainerId: string,
   status: 'provisioning' | 'active' | 'failed',
   metadata: Record<string, unknown>,
@@ -311,13 +309,13 @@ async function markProvisioningStatus(
           ? `Provisioned via automation (${metadata.correlationId})`
           : 'Provisioned via automation',
         updated_at: new Date().toISOString(),
-      },
+      } as any,
       { onConflict: 'trainer_id' },
     );
 }
 
 async function ensureTrainerProfile(
-  supabase: SupabaseClient,
+  supabase: any,
   trainerId: string,
   payload: ProvisioningPayload,
   dfyRequest: any,
@@ -342,7 +340,7 @@ async function ensureTrainerProfile(
     profileUpdate.location = inferredLocation;
   }
 
-  const { error } = await supabase.from('trainer_profiles').upsert(profileUpdate, { onConflict: 'id' });
+  const { error } = await supabase.from('trainer_profiles').upsert(profileUpdate as any, { onConflict: 'id' });
 
   if (error) {
     logger.error('Failed to upsert trainer profile', { error });
@@ -633,7 +631,7 @@ async function ensurePrimaryUser(
 }
 
 async function persistProvisioningSuccess(
-  supabase: SupabaseClient,
+  supabase: any,
   trainerId: string,
   data: {
     locationId: string;
