@@ -22,9 +22,8 @@ import {
   Mail,
   Phone,
   Target,
+  ExternalLink,
 } from "lucide-react";
-import { TagPicker } from "./TagPicker";
-import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect, useCallback } from "react";
 import { useDraftsStore } from "@/lib/store/useDraftsStore";
 import { useToast } from "@/hooks/use-toast";
@@ -36,14 +35,13 @@ import { createNote, listNotes, type Note } from "@/lib/api/notes";
 import { supabase } from "@/integrations/supabase/client";
 import { Plus, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { resolveGhlLink } from "@/lib/ghl/links";
 
 interface ClientInspectorProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   client: ClientDetail | null;
   loading?: boolean;
-  onUpdateTags: (tags: string[]) => Promise<void>;
-  onAddNote: (note: string) => Promise<void>;
 }
 
 export function ClientInspector({
@@ -51,12 +49,7 @@ export function ClientInspector({
   onOpenChange,
   client,
   loading,
-  onUpdateTags,
-  onAddNote,
 }: ClientInspectorProps) {
-  const [isEditingTags, setIsEditingTags] = useState(false);
-  const [newNote, setNewNote] = useState("");
-  const [savingNote, setSavingNote] = useState(false);
   const [templateEditorOpen, setTemplateEditorOpen] = useState(false);
   const [dbMessages, setDbMessages] = useState<Message[]>([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
@@ -202,25 +195,25 @@ export function ClientInspector({
       ? "text-amber-600"
       : "text-red-600";
 
-  const handleSaveNote = async () => {
-    if (!newNote.trim() || newNote.length > 500 || !client) return;
-    setSavingNote(true);
-    try {
-      const note = await createNote(client.id, newNote);
-      setNotes((prev) => [note, ...prev]);
-      setNewNote("");
+  const handleEditInGHL = async () => {
+    if (!client) return;
+    
+    const result = await resolveGhlLink({
+      type: 'conversations',
+      ids: { contactId: client.id },
+    });
+    
+    if (result.disabled) {
       toast({
-        title: "Note saved",
-        description: "Note added successfully",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to save note",
+        title: "Cannot open GHL",
+        description: result.reason || "Missing GHL configuration",
         variant: "destructive",
       });
-    } finally {
-      setSavingNote(false);
+      return;
+    }
+    
+    if (result.url) {
+      window.open(result.url, '_blank');
     }
   };
 
@@ -259,6 +252,16 @@ export function ClientInspector({
               </SheetDescription>
             </div>
           </div>
+          
+          {/* Edit in GHL Button */}
+          <Button 
+            onClick={handleEditInGHL} 
+            className="w-full mt-4 gap-2"
+            variant="default"
+          >
+            <ExternalLink className="h-4 w-4" />
+            Edit Contact in GHL
+          </Button>
         </SheetHeader>
 
         <div className="mt-6 space-y-6">
@@ -482,36 +485,26 @@ export function ClientInspector({
                 </Card>
               )}
 
-              {/* Tags */}
+              {/* Tags - Read Only */}
               <Card className="p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-semibold flex items-center gap-2">
-                    <Tag className="h-4 w-4" />
-                    Tags
-                  </h3>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setIsEditingTags(!isEditingTags)}
-                  >
-                    {isEditingTags ? "Done" : "Edit"}
-                  </Button>
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <Tag className="h-4 w-4" />
+                  Tags
+                </h3>
+                <div className="flex gap-1 flex-wrap">
+                  {client.tags.length > 0 ? (
+                    client.tags.map((tag) => (
+                      <Badge key={tag} variant="secondary">
+                        {tag}
+                      </Badge>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground">No tags assigned</p>
+                  )}
                 </div>
-                {isEditingTags ? (
-                  <TagPicker tags={client.tags} onChange={onUpdateTags} />
-                ) : (
-                  <div className="flex gap-1 flex-wrap">
-                    {client.tags.length > 0 ? (
-                      client.tags.map((tag) => (
-                        <Badge key={tag} variant="secondary">
-                          {tag}
-                        </Badge>
-                      ))
-                    ) : (
-                      <p className="text-sm text-muted-foreground">No tags yet</p>
-                    )}
-                  </div>
-                )}
+                <p className="text-xs text-muted-foreground mt-2">
+                  Edit tags in GHL to sync changes
+                </p>
               </Card>
             </TabsContent>
 
@@ -548,14 +541,11 @@ export function ClientInspector({
             </TabsContent>
 
             <TabsContent value="messages" className="space-y-3 mt-4">
-              <Button
-                variant="outline"
-                onClick={() => setTemplateEditorOpen(true)}
-                className="w-full"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                New Template
-              </Button>
+              <div className="bg-muted/50 rounded-lg p-4 mb-4">
+                <p className="text-sm text-muted-foreground">
+                  Message history synced from GHL. To send new messages, use the quick actions above to create drafts.
+                </p>
+              </div>
 
               {messagesLoading ? (
                 <div className="flex items-center justify-center py-8">
@@ -607,41 +597,11 @@ export function ClientInspector({
             </TabsContent>
 
             <TabsContent value="notes" className="space-y-4 mt-4">
-              <Card className="p-4">
-                <h3 className="font-semibold mb-3 flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
-                  Add Note
-                </h3>
-                <div className="space-y-2">
-                  <Textarea
-                    placeholder="Write a note about this client..."
-                    value={newNote}
-                    onChange={(e) => setNewNote(e.target.value)}
-                    rows={4}
-                    className="resize-none"
-                  />
-                  <div className="flex items-center justify-between">
-                    <span
-                      className={`text-xs ${
-                        newNote.length > 500
-                          ? "text-red-600"
-                          : newNote.length >= 450
-                          ? "text-yellow-600"
-                          : "text-muted-foreground"
-                      }`}
-                    >
-                      {newNote.length}/500
-                    </span>
-                  </div>
-                  <Button
-                    className="w-full"
-                    onClick={handleSaveNote}
-                    disabled={!newNote.trim() || newNote.length > 500 || savingNote}
-                  >
-                    {savingNote ? "Saving..." : "Save Note"}
-                  </Button>
-                </div>
-              </Card>
+              <div className="bg-muted/50 rounded-lg p-4">
+                <p className="text-sm text-muted-foreground">
+                  Notes are read-only in TrainU Intelligence. To add or edit notes, open this contact in GHL.
+                </p>
+              </div>
 
               {notesLoading ? (
                 <div className="flex items-center justify-center py-8">
@@ -672,15 +632,6 @@ export function ClientInspector({
           </Tabs>
         </div>
       </SheetContent>
-
-      {/* Template Editor */}
-      <TemplateEditor
-        clientId={client.id}
-        clientName={client.name}
-        open={templateEditorOpen}
-        onOpenChange={setTemplateEditorOpen}
-        onSave={handleSaveTemplate}
-      />
     </Sheet>
   );
 }

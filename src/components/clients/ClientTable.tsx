@@ -23,7 +23,9 @@ import {
 } from "@/components/ui/tooltip";
 import { Client } from "@/lib/data/clients/types";
 import { formatDistanceToNow } from "date-fns";
-import { ArrowUpDown, Eye, MessageSquare, MoreVertical, Copy } from "lucide-react";
+import { ArrowUpDown, Eye, MoreVertical, Copy, ExternalLink } from "lucide-react";
+import { resolveGhlLink } from "@/lib/ghl/links";
+import { useToast } from "@/hooks/use-toast";
 import { Card } from "@/components/ui/card";
 import { getRiskVariant, statusBadgeVariants } from "@/lib/design-system/colors";
 import { useQueryClient } from "@tanstack/react-query";
@@ -35,7 +37,6 @@ interface ClientTableProps {
   clients: Client[];
   selectedId?: string;
   onSelect: (client: Client) => void;
-  onNudge: (client: Client) => void;
   sortBy?: string;
   sortDir?: "asc" | "desc";
   onSort: (field: string) => void;
@@ -69,12 +70,12 @@ export function ClientTable({
   clients,
   selectedId,
   onSelect,
-  onNudge,
   sortBy,
   sortDir,
   onSort,
 }: ClientTableProps) {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const handleRowHover = useCallback((clientId: string) => {
     queryClient.prefetchQuery({
@@ -99,6 +100,27 @@ export function ClientTable({
   const handleCopyLink = (clientId: string) => {
     const url = `${window.location.origin}/clients?id=${clientId}`;
     navigator.clipboard.writeText(url);
+    toast({ title: "Link copied", description: "Client link copied to clipboard" });
+  };
+
+  const handleEditInGHL = async (client: Client) => {
+    const result = await resolveGhlLink({
+      type: 'conversations',
+      ids: { contactId: client.id },
+    });
+    
+    if (result.disabled) {
+      toast({
+        title: "Cannot open GHL",
+        description: result.reason || "Missing GHL configuration",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (result.url) {
+      window.open(result.url, '_blank');
+    }
   };
 
   // Desktop table view
@@ -197,6 +219,10 @@ export function ClientTable({
                       <Eye className="h-4 w-4 mr-2" />
                       View Details
                     </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleEditInGHL(client)}>
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Edit in GHL
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleCopyLink(client.id)}>
                       <Copy className="h-4 w-4 mr-2" />
                       Copy Link
@@ -251,6 +277,10 @@ export function ClientTable({
                   <DropdownMenuItem onClick={() => onSelect(client)}>
                     <Eye className="h-4 w-4 mr-2" />
                     View Details
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleEditInGHL(client)}>
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Edit in GHL
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => handleCopyLink(client.id)}>
                     <Copy className="h-4 w-4 mr-2" />

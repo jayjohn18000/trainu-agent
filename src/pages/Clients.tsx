@@ -9,14 +9,12 @@ import { ClientInspector } from "@/components/clients/ClientInspector";
 import { NudgeDialog } from "@/components/clients/NudgeDialog";
 import { ClientsHeader } from "@/components/clients/ClientsHeader";
 import { ClientsStats } from "@/components/clients/ClientsStats";
-import { ClientCSVImport } from "@/components/clients/ClientCSVImport";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Client, ClientDetail } from "@/lib/data/clients/types";
 import { useClients } from "@/hooks/queries/useClients";
 import { useClient } from "@/hooks/queries/useClient";
-import { useNudgeClient, useUpdateClientTags, useAddClientNote } from "@/hooks/mutations/useClientMutations";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
-import { Users, Loader2, Upload } from "lucide-react";
+import { Users, Loader2 } from "lucide-react";
 import { analytics } from "@/lib/analytics";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query/keys";
@@ -27,9 +25,7 @@ export default function Clients() {
   const queryClient = useQueryClient();
   const [clients, setClients] = useState<Client[]>([]);
   const [selectedClient, setSelectedClient] = useState<ClientDetail | null>(null);
-  const [nudgeClient, setNudgeClient] = useState<Client | null>(null);
   const [total, setTotal] = useState(0);
-  const [showCSVImport, setShowCSVImport] = useState(false);
 
   const query = searchParams.get("q") || "";
   const selectedId = searchParams.get("id") || undefined;
@@ -96,24 +92,6 @@ export default function Clients() {
     updateURL({ sort: field, dir: newDir });
   }, [sortBy, sortDir, updateURL]);
 
-  const nudgeMutation = useNudgeClient();
-  const handleNudge = useCallback(async (templateId: string, preview: string) => {
-    if (!nudgeClient) return;
-    await nudgeMutation.mutateAsync({ id: nudgeClient.id, templateId, preview });
-    analytics.track('client_nudged', { clientId: nudgeClient.id, templateId });
-  }, [nudgeClient, nudgeMutation]);
-
-  const updateTagsMutation = useUpdateClientTags();
-  const handleUpdateTags = useCallback(async (tags: string[]) => {
-    if (!selectedClient) return;
-    await updateTagsMutation.mutateAsync({ id: selectedClient.id, tags });
-  }, [selectedClient, updateTagsMutation]);
-
-  const addNoteMutation = useAddClientNote();
-  const handleAddNote = useCallback(async (note: string) => {
-    if (!selectedClient) return;
-    await addNoteMutation.mutateAsync({ id: selectedClient.id, note });
-  }, [selectedClient, addNoteMutation]);
 
   useKeyboardShortcuts([
     {
@@ -126,33 +104,14 @@ export default function Clients() {
       description: "Close inspector",
       callback: () => {
         if (selectedId) handleCloseInspector();
-        if (nudgeClient) setNudgeClient(null);
-      },
-    },
-    {
-      key: "n",
-      description: "Nudge selected client",
-      callback: () => {
-        if (selectedClient) {
-          setNudgeClient(selectedClient);
-        }
       },
     },
   ]);
 
-  const handleCSVImportSuccess = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: queryKeys.clients.all });
-  }, [queryClient]);
 
   return (
     <div className="space-y-4 md:space-y-6 p-4 md:p-6 animate-fade-in" role="main" aria-label="Clients page">
-      <div className="flex items-center justify-between">
-        <ClientsHeader />
-        <Button onClick={() => setShowCSVImport(true)} className="gap-2">
-          <Upload className="h-4 w-4" />
-          Import CSV
-        </Button>
-      </div>
+      <ClientsHeader />
 
       <div className="flex flex-col md:flex-row gap-3">
         <div className="flex-1">
@@ -172,7 +131,6 @@ export default function Clients() {
           clients={clients}
           selectedId={selectedId}
           onSelect={handleSelectClient}
-          onNudge={(client) => setNudgeClient(client)}
           sortBy={sortBy}
           sortDir={sortDir}
           onSort={handleSort}
@@ -211,22 +169,6 @@ export default function Clients() {
         onOpenChange={(open) => !open && handleCloseInspector()}
         client={selectedClient}
         loading={inspectorLoading}
-        onUpdateTags={handleUpdateTags}
-        onAddNote={handleAddNote}
-      />
-
-      <NudgeDialog
-        open={!!nudgeClient}
-        onOpenChange={(open) => !open && setNudgeClient(null)}
-        client={nudgeClient}
-        onSend={handleNudge}
-        onSuccess={() => navigate('/queue')}
-      />
-
-      <ClientCSVImport
-        open={showCSVImport}
-        onOpenChange={setShowCSVImport}
-        onSuccess={handleCSVImportSuccess}
       />
     </div>
   );

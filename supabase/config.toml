@@ -9,6 +9,15 @@ verify_jwt = true
 [functions.ghl-webhook-register]
 verify_jwt = true
 
+[functions.ghl-webhook]
+verify_jwt = false
+
+[functions.ghl-periodic-sync]
+verify_jwt = false
+
+[functions.ghl-oauth-callback]
+verify_jwt = false
+
 [functions.ab-testing-framework]
 verify_jwt = true
 

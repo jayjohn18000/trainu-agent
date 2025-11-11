@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
     const webhookSecret = crypto.randomUUID();
     
     // Register webhook with GHL for contact updates, messages, and appointments
-    const webhookUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/ghl-integration`;
+    const webhookUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/ghl-webhook`;
     const events = [
       'contact.created',
       'contact.updated',
