@@ -1,131 +1,103 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "sonner";
-import { z } from "zod";
+import { Loader2 } from "lucide-react";
 
-const authSchema = z.object({
-  email: z.string().trim().email("Invalid email format").max(255, "Email too long"),
-  password: z.string()
-    .min(8, "Password must be at least 8 characters")
-    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
-    .regex(/[0-9]/, "Password must contain at least one number")
-});
+const GHL_CLIENT_ID = import.meta.env.VITE_GHL_CLIENT_ID;
+const GHL_REDIRECT_URI = import.meta.env.VITE_GHL_REDIRECT_URI;
 
 export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isSignUp, setIsSignUp] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
-
-  const handleAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      // Validate input with Zod
-      const validation = authSchema.safeParse({ email: email.trim(), password });
-      if (!validation.success) {
-        const firstError = validation.error.errors[0];
-        toast.error(firstError.message);
-        setLoading(false);
-        return;
+  useEffect(() => {
+    // Check if already authenticated
+    const checkAuth = async () => {
+      const { supabase } = await import("@/integrations/supabase/client");
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session) {
+        window.location.href = '/today';
       }
+    };
+    checkAuth();
+  }, []);
 
-      if (isSignUp) {
-        const { error } = await supabase.auth.signUp({ 
-          email: validation.data.email, 
-          password: validation.data.password 
-        });
-        if (error) throw error;
-        toast.success("Account created! Logging you in...");
-        navigate("/today");
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ 
-          email: validation.data.email, 
-          password: validation.data.password 
-        });
-        if (error) throw error;
-        toast.success("Welcome back!");
-        navigate("/today");
-      }
-    } catch (error: any) {
-      toast.error(error.message);
-    } finally {
-      setLoading(false);
+  const handleGHLLogin = () => {
+    if (!GHL_CLIENT_ID || !GHL_REDIRECT_URI) {
+      console.error('GHL OAuth not configured');
+      return;
     }
+
+    const authUrl = new URL('https://marketplace.gohighlevel.com/oauth/chooselocation');
+    authUrl.searchParams.set('response_type', 'code');
+    authUrl.searchParams.set('client_id', GHL_CLIENT_ID);
+    authUrl.searchParams.set('redirect_uri', GHL_REDIRECT_URI);
+    authUrl.searchParams.set('scope', 'contacts.readonly calendars.readonly locations.readonly users.readonly');
+
+    window.location.href = authUrl.toString();
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="flex items-center justify-center min-h-screen bg-background">
       <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>{isSignUp ? "Create Account" : "Welcome Back"}</CardTitle>
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl">Welcome to TrainU Intelligence</CardTitle>
           <CardDescription>
-            {isSignUp ? "Sign up to start using TrainU" : "Log in to your account"}
+            Sign in with your GoHighLevel account to access AI-powered insights
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleAuth} className="space-y-4">
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
-                Email
-              </label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label htmlFor="password" className="text-sm font-medium">
-                  Password
-                </label>
-                {!isSignUp && (
-                  <button
-                    type="button"
-                    onClick={() => navigate("/forgot-password")}
-                    className="text-sm text-primary hover:underline"
-                  >
-                    Forgot password?
-                  </button>
-                )}
-              </div>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-              />
-              {isSignUp && password.length > 0 && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  Password must be 8+ characters with uppercase, lowercase, and number
-                </p>
-              )}
-            </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Loading..." : isSignUp ? "Sign Up" : "Log In"}
-            </Button>
+        <CardContent className="space-y-6">
+          <div className="space-y-4">
             <Button
-              type="button"
-              variant="ghost"
-              className="w-full"
-              onClick={() => setIsSignUp(!isSignUp)}
+              onClick={handleGHLLogin}
+              className="w-full h-12 text-base"
+              size="lg"
             >
-              {isSignUp ? "Already have an account? Log in" : "Need an account? Sign up"}
+              <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z" />
+              </svg>
+              Sign in with GoHighLevel
             </Button>
-          </form>
+            
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Secure OAuth Authentication
+                </span>
+              </div>
+            </div>
+
+            <div className="text-center space-y-2">
+              <p className="text-sm text-muted-foreground">
+                Don't have a GoHighLevel account?
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => window.open('https://trainu.us', '_blank')}
+                className="w-full"
+              >
+                Sign up at trainu.us
+              </Button>
+            </div>
+          </div>
+
+          <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+            <h4 className="text-sm font-medium">What you'll get:</h4>
+            <ul className="text-sm text-muted-foreground space-y-1">
+              <li>• AI-powered client risk analysis</li>
+              <li>• Automated message drafting</li>
+              <li>• Real-time analytics and insights</li>
+              <li>• Seamless GHL integration</li>
+            </ul>
+          </div>
+
+          {!GHL_CLIENT_ID && (
+            <div className="flex items-start gap-2 text-sm text-amber-600 dark:text-amber-500 bg-amber-50 dark:bg-amber-950/20 p-3 rounded-lg">
+              <Loader2 className="h-4 w-4 mt-0.5 flex-shrink-0" />
+              <p>GHL OAuth is being configured. Please contact support if this persists.</p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
