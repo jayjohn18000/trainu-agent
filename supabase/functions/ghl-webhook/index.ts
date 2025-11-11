@@ -1,8 +1,50 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { timingSafeEqual } from 'https://deno.land/std@0.224.0/crypto/timing_safe_equal.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.76.1';
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 import { corsHeaders } from '../_shared/responses.ts';
 import { createLogger, getRequestCorrelationId } from '../_shared/logger.ts';
+
+// Validation schemas
+const messageSchema = z.object({
+  body: z.string().max(1600).optional(),
+  content: z.string().max(1600).optional(),
+  text: z.string().max(1600).optional(),
+  contactId: z.string().max(100).optional(),
+  contact_id: z.string().max(100).optional(),
+  type: z.string().max(50).optional(),
+  channel: z.string().max(50).optional(),
+  id: z.string().max(100).optional(),
+  messageId: z.string().max(100).optional(),
+  createdAt: z.string().optional(),
+  created_at: z.string().optional(),
+  deliveredAt: z.string().optional(),
+  delivered_at: z.string().optional(),
+  readAt: z.string().optional(),
+  read_at: z.string().optional(),
+}).passthrough();
+
+const contactSchema = z.object({
+  id: z.string().max(100),
+  firstName: z.string().max(100).optional(),
+  first_name: z.string().max(100).optional(),
+  lastName: z.string().max(100).optional(),
+  last_name: z.string().max(100).optional(),
+  email: z.string().email().max(255).optional().or(z.literal('')),
+  phone: z.string().regex(/^[\+]?[0-9\s\-\(\)]{0,20}$/).max(20).optional().or(z.literal('')),
+  tags: z.array(z.string().max(50)).max(20).optional(),
+}).passthrough();
+
+const appointmentSchema = z.object({
+  id: z.string().max(100),
+  contactId: z.string().max(100),
+  startTime: z.string().optional(),
+  start_time: z.string().optional(),
+  status: z.string().max(50).optional(),
+  title: z.string().max(200).optional(),
+  name: z.string().max(200).optional(),
+  notes: z.string().max(1000).optional().or(z.literal('')),
+}).passthrough();
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -170,7 +212,19 @@ async function handleInboundMessage(
   data: any,
   logger: ReturnType<typeof createLogger>,
 ) {
-  const message = data.message || data;
+  const rawMessage = data.message || data;
+  
+  // Validate message data
+  const validation = messageSchema.safeParse(rawMessage);
+  if (!validation.success) {
+    logger.warn('Invalid message data', { 
+      errors: validation.error.errors,
+      trainerId 
+    });
+    return;
+  }
+  
+  const message = validation.data;
   const contactId = message.contactId || message.contact_id || data.contactId;
 
   if (!contactId) {
@@ -240,12 +294,24 @@ async function handleContactSync(
   data: any,
   logger: ReturnType<typeof createLogger>,
 ) {
-  const contact = data.contact || data;
+  const rawContact = data.contact || data;
 
-  if (!contact?.id) {
+  if (!rawContact?.id) {
     logger.warn('No contact ID in sync payload', { trainerId });
     return;
   }
+
+  // Validate contact data
+  const validation = contactSchema.safeParse(rawContact);
+  if (!validation.success) {
+    logger.warn('Invalid contact data', { 
+      errors: validation.error.errors,
+      trainerId 
+    });
+    return;
+  }
+  
+  const contact = validation.data;
 
   await supabase.from('contacts').upsert({
     trainer_id: trainerId,
@@ -268,12 +334,24 @@ async function handleAppointmentSync(
   data: any,
   logger: ReturnType<typeof createLogger>,
 ) {
-  const appointment = data.appointment || data;
+  const rawAppointment = data.appointment || data;
 
-  if (!appointment?.id || !appointment?.contactId) {
-    logger.warn('Appointment sync missing identifiers', { appointmentId: appointment?.id, trainerId });
+  if (!rawAppointment?.id || !rawAppointment?.contactId) {
+    logger.warn('Appointment sync missing identifiers', { appointmentId: rawAppointment?.id, trainerId });
     return;
   }
+
+  // Validate appointment data
+  const validation = appointmentSchema.safeParse(rawAppointment);
+  if (!validation.success) {
+    logger.warn('Invalid appointment data', { 
+      errors: validation.error.errors,
+      trainerId 
+    });
+    return;
+  }
+  
+  const appointment = validation.data;
 
   // Find contact
   const { data: contact } = await supabase
