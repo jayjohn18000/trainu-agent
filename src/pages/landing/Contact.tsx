@@ -49,11 +49,11 @@ export default function Contact() {
             loop
             muted
             playsInline
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover object-[center_35%]"
           >
             <source src="/contact-hero-video.mp4" type="video/mp4" />
           </video>
-          <div className="absolute inset-0 bg-black/80" />
+          <div className="absolute inset-0 bg-black/90" />
         </div>
         <div className="container mx-auto px-4 relative z-10">
           <ScrollReveal className="max-w-3xl mx-auto text-center">
