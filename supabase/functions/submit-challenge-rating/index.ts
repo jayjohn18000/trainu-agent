@@ -113,16 +113,11 @@ serve(async (req: Request) => {
       return errorResponse(`You've already rated ${trainerName} from ${trainerCity}, ${trainerState} in the last 24 hours`, 429);
     }
 
-    // Calculate overall rating
-    const ratingOverall = (
-      (ratingExpertise + ratingCommunication + ratingMotivation + ratingResults + ratingValue) / 5
-    ).toFixed(2);
-
     // Generate 6-digit verification code
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
     const codeExpiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
-    // Insert rating
+    // Insert rating (rating_overall is auto-calculated by database)
     const { data: rating, error: ratingError } = await supabase
       .from("challenge_ratings")
       .insert({
@@ -144,7 +139,6 @@ serve(async (req: Request) => {
         rating_motivation: ratingMotivation,
         rating_results: ratingResults,
         rating_value: ratingValue,
-        rating_overall: ratingOverall,
         review_text: reviewText,
         device_fingerprint: deviceFingerprint,
         ip_address: ip,
