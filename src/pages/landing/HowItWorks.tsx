@@ -35,7 +35,6 @@ const onboardingSteps = [{
   duration: "Instant",
   icon: Rocket
 }];
-
 const crmIntegrationSteps = [{
   number: 1,
   title: "OAuth Connection",
@@ -133,35 +132,7 @@ Active Use in 10 Minutes</span>
       </section>
 
       {/* CRM Integration Section */}
-      <section className="py-20">
-        <div className="container mx-auto px-4">
-          <ScrollReveal>
-            <h2 className="text-3xl font-bold text-center mb-4">
-              CRM Integration That Just Works
-            </h2>
-            <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
-              Connect your GHL account in 2 minutes. Bi-directional sync keeps everything unified. No data migration, no complex configuration.
-            </p>
-          </ScrollReveal>
-
-          <div className="max-w-4xl mx-auto">
-            <OnboardingTimeline steps={crmIntegrationSteps} />
-          </div>
-
-          <ScrollReveal className="mt-12">
-            <CRMIntegrationFlow 
-              features={[
-                "Contacts, messages, and tags sync automatically between platforms",
-                "Complete message history from GHL appears in TrainU",
-                "Send messages from either platform - they stay synced",
-                "AI-generated tags automatically sync back to GHL for workflows",
-                "No data migration or manual imports required",
-                "Real-time updates ensure data consistency everywhere"
-              ]}
-            />
-          </ScrollReveal>
-        </div>
-      </section>
+      
 
       {/* Custom App/Layers Section */}
       <section className="py-20 bg-card/50">
@@ -316,8 +287,7 @@ Active Use in 10 Minutes</span>
 
           <div className="max-w-4xl mx-auto">
             <div className="grid md:grid-cols-2 gap-6">
-              {dailyWorkflow.map((item, index) => (
-                <ScrollReveal key={index} delay={index * 100}>
+              {dailyWorkflow.map((item, index) => <ScrollReveal key={index} delay={index * 100}>
                   <Card className="p-6">
                     <div className="flex items-start justify-between mb-3">
                       <div className="text-sm font-mono text-primary">{item.time}</div>
@@ -332,8 +302,7 @@ Active Use in 10 Minutes</span>
                       </div>
                     </div>
                   </Card>
-                </ScrollReveal>
-              ))}
+                </ScrollReveal>)}
             </div>
 
             <ScrollReveal delay={200}>
