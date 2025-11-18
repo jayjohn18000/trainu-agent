@@ -75,26 +75,29 @@ export default function Onboarding() {
         .single();
 
       if (profile?.location) {
-        // Already provisioned
+        // Already provisioned - redirect to app.trainu.us
         setStep('complete');
-        setTimeout(() => navigate('/today'), 2000);
+        setTimeout(() => {
+          window.location.href = 'https://app.trainu.us';
+        }, 2000);
         return;
       }
 
       // Trigger provisioning
+      const userMeta = (user as any).user_metadata || {};
       const { data, error: provError } = await supabase.functions.invoke('ghl-provisioning', {
         body: {
           trainerId: user!.id,
           planTier: tier,
           trainer: {
-            firstName: user!.user_metadata?.first_name || 'Trainer',
-            lastName: user!.user_metadata?.last_name || '',
+            firstName: userMeta.first_name || 'Trainer',
+            lastName: userMeta.last_name || '',
             email: user!.email!,
-            phone: user!.user_metadata?.phone || '',
+            phone: userMeta.phone || '',
           },
           business: {
-            brandName: `${user!.user_metadata?.first_name || 'Trainer'}'s Training`,
-            legalName: `${user!.user_metadata?.first_name || 'Trainer'}'s Training`,
+            brandName: `${userMeta.first_name || 'Trainer'}'s Training`,
+            legalName: `${userMeta.first_name || 'Trainer'}'s Training`,
             supportEmail: user!.email!,
           },
         },
@@ -108,9 +111,11 @@ export default function Onboarding() {
       }
 
       console.log('Provisioning successful:', data);
-      toast.success('Account provisioned successfully!');
+      toast.success('Account provisioned! Redirecting to your GHL dashboard...');
       setStep('complete');
-      setTimeout(() => navigate('/today'), 2000);
+      setTimeout(() => {
+        window.location.href = 'https://app.trainu.us';
+      }, 2000);
     } catch (err) {
       console.error('Provisioning error:', err);
       setError('An unexpected error occurred. Please contact support.');
@@ -169,13 +174,41 @@ export default function Onboarding() {
           {step === 'oauth_required' && (
             <>
               <ExternalLink className="h-12 w-12 mx-auto text-primary" />
-              <h2 className="text-2xl font-bold">Connect GoHighLevel</h2>
-              <p className="text-muted-foreground">
-                To complete your setup, we need to connect your GoHighLevel location.
-                This allows TrainU to manage your clients, messages, and automations.
+              <h2 className="text-2xl font-bold">Connect Your GHL Account</h2>
+              <p className="text-muted-foreground mb-4">
+                We'll set up your white-labeled GHL instance at app.trainu.us
               </p>
+              <div className="space-y-4 mb-6 text-left">
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium">Instant Provisioning</p>
+                    <p className="text-sm text-muted-foreground">
+                      Sub-account created with pre-configured automations
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium">Snapshots Applied</p>
+                    <p className="text-sm text-muted-foreground">
+                      Tags, pipelines, and calendars set up automatically
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium">TrainU Access</p>
+                    <p className="text-sm text-muted-foreground">
+                      Access TrainU features via custom menu links in GHL
+                    </p>
+                  </div>
+                </div>
+              </div>
               <Button onClick={handleConnectGHL} size="lg" className="w-full">
-                Connect GoHighLevel
+                Connect GHL Account
               </Button>
             </>
           )}
@@ -203,10 +236,28 @@ export default function Onboarding() {
           {step === 'complete' && (
             <>
               <CheckCircle2 className="h-12 w-12 mx-auto text-success" />
-              <h2 className="text-2xl font-bold">All Set!</h2>
-              <p className="text-muted-foreground">
-                Your account is ready. Redirecting to dashboard...
+              <h2 className="text-2xl font-bold">Account Ready!</h2>
+              <p className="text-muted-foreground mb-6">
+                Redirecting you to your white-labeled GHL dashboard at app.trainu.us
               </p>
+              <div className="space-y-2 text-sm text-muted-foreground text-left">
+                <p className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-green-500" />
+                  OAuth connected
+                </p>
+                <p className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-green-500" />
+                  Sub-account provisioned
+                </p>
+                <p className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-green-500" />
+                  Snapshots applied
+                </p>
+                <p className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-green-500" />
+                  Automations configured
+                </p>
+              </div>
             </>
           )}
 

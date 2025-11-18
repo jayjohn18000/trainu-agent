@@ -1705,10 +1705,12 @@ export type Database = {
       }
       ghl_config: {
         Row: {
+          access_token: string | null
           admin_notes: string | null
           appointments_synced: number | null
           avg_sync_duration_ms: number | null
           booking_widget_id: string | null
+          company_id: string | null
           conflict_count: number | null
           contact_field_mapping: Json | null
           contacts_synced: number | null
@@ -1723,15 +1725,18 @@ export type Database = {
           last_sync_error: string | null
           last_sync_status: string | null
           location_id: string | null
+          primary_user_id: string | null
           provisioned_at: string | null
           provisioned_by: string | null
           provisioning_status: string | null
           quiet_hours_end: string | null
           quiet_hours_start: string | null
+          refresh_token: string | null
           setup_type: string | null
           sms_enabled: boolean | null
           sync_throughput_per_min: number | null
           templates: Json | null
+          token_expires_at: string | null
           total_sync_count: number | null
           trainer_id: string
           updated_at: string | null
@@ -1740,10 +1745,12 @@ export type Database = {
           webhook_url: string | null
         }
         Insert: {
+          access_token?: string | null
           admin_notes?: string | null
           appointments_synced?: number | null
           avg_sync_duration_ms?: number | null
           booking_widget_id?: string | null
+          company_id?: string | null
           conflict_count?: number | null
           contact_field_mapping?: Json | null
           contacts_synced?: number | null
@@ -1758,15 +1765,18 @@ export type Database = {
           last_sync_error?: string | null
           last_sync_status?: string | null
           location_id?: string | null
+          primary_user_id?: string | null
           provisioned_at?: string | null
           provisioned_by?: string | null
           provisioning_status?: string | null
           quiet_hours_end?: string | null
           quiet_hours_start?: string | null
+          refresh_token?: string | null
           setup_type?: string | null
           sms_enabled?: boolean | null
           sync_throughput_per_min?: number | null
           templates?: Json | null
+          token_expires_at?: string | null
           total_sync_count?: number | null
           trainer_id: string
           updated_at?: string | null
@@ -1775,10 +1785,12 @@ export type Database = {
           webhook_url?: string | null
         }
         Update: {
+          access_token?: string | null
           admin_notes?: string | null
           appointments_synced?: number | null
           avg_sync_duration_ms?: number | null
           booking_widget_id?: string | null
+          company_id?: string | null
           conflict_count?: number | null
           contact_field_mapping?: Json | null
           contacts_synced?: number | null
@@ -1793,15 +1805,18 @@ export type Database = {
           last_sync_error?: string | null
           last_sync_status?: string | null
           location_id?: string | null
+          primary_user_id?: string | null
           provisioned_at?: string | null
           provisioned_by?: string | null
           provisioning_status?: string | null
           quiet_hours_end?: string | null
           quiet_hours_start?: string | null
+          refresh_token?: string | null
           setup_type?: string | null
           sms_enabled?: boolean | null
           sync_throughput_per_min?: number | null
           templates?: Json | null
+          token_expires_at?: string | null
           total_sync_count?: number | null
           trainer_id?: string
           updated_at?: string | null
@@ -3558,6 +3573,7 @@ export type Database = {
           notification_marketing: boolean | null
           notification_progress_updates: boolean | null
           notification_session_reminders: boolean | null
+          plan_tier: string | null
           total_clients_nudged: number | null
           total_messages_approved: number | null
           total_messages_edited: number | null
@@ -3580,6 +3596,7 @@ export type Database = {
           notification_marketing?: boolean | null
           notification_progress_updates?: boolean | null
           notification_session_reminders?: boolean | null
+          plan_tier?: string | null
           total_clients_nudged?: number | null
           total_messages_approved?: number | null
           total_messages_edited?: number | null
@@ -3602,6 +3619,7 @@ export type Database = {
           notification_marketing?: boolean | null
           notification_progress_updates?: boolean | null
           notification_session_reminders?: boolean | null
+          plan_tier?: string | null
           total_clients_nudged?: number | null
           total_messages_approved?: number | null
           total_messages_edited?: number | null

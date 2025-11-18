@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -41,6 +41,8 @@ const GHL_REDIRECT_URI = import.meta.env.VITE_GHL_REDIRECT_URI;
 
 export default function Login() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const tier = searchParams.get('tier') || 'starter';
   const { user, initialize } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -116,8 +118,8 @@ export default function Login() {
       if (authData.session) {
         await initialize();
         toast.success("Account created successfully!");
-        // Redirect to onboarding to complete GHL setup
-        navigate('/onboarding', { replace: true });
+        // Redirect to onboarding with tier to complete GHL setup
+        navigate(`/onboarding?tier=${tier}`, { replace: true });
       } else {
         // If no session (email confirmation required), show message
         toast.info("Please check your email to confirm your account");
@@ -150,6 +152,13 @@ export default function Login() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          {tier && (
+            <div className="mb-4 p-3 bg-primary/10 rounded-lg">
+              <p className="text-sm text-center">
+                Starting your <strong className="capitalize">{tier}</strong> plan setup
+              </p>
+            </div>
+          )}
           <Tabs defaultValue="signin" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="signin">Sign In</TabsTrigger>
