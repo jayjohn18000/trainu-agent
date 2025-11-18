@@ -18,8 +18,12 @@ import {
   Shield,
   BarChart3,
   Check,
-  Sparkles
+  Sparkles,
+  ArrowLeftRight,
+  Tag,
+  Menu
 } from "lucide-react";
+import { PricingPreviewCard } from "@/components/landing/PricingPreviewCard";
 import trainerClientGym from "@/assets/trainer-client-gym.jpg";
 import trainerOverhead from "@/assets/trainer-client-overhead.jpg";
 import trainerHomeYoga from "@/assets/trainer-home-yoga.jpg";
@@ -52,7 +56,7 @@ export default function Home() {
                 </h1>
                 
                 <p className="text-2xl text-foreground/80 mb-10 leading-relaxed font-light">
-                  AI retention automation that catches at-risk clients before they churn.
+                  AI-powered CRM with unified client management, automated engagement, and zero setup time.
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-4 mb-8">
@@ -178,6 +182,92 @@ export default function Home() {
         </div>
       </section>
 
+      {/* CRM Section */}
+      <section className="py-24 bg-gradient-to-b from-card/30 to-transparent">
+        <div className="container mx-auto px-4">
+          <ScrollReveal>
+            <div className="text-center mb-16">
+              <h2 className="text-5xl font-bold mb-6">
+                Your CRM, Unified & Automated
+              </h2>
+              <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+                Manage SMS, email, and social media in one place. No data migration needed.
+              </p>
+            </div>
+          </ScrollReveal>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+            <ScrollReveal delay={100}>
+              <div className="p-6 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all">
+                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                  <ArrowLeftRight className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-lg font-bold mb-2">Bi-Directional Sync</h3>
+                <p className="text-sm text-muted-foreground">
+                  Contacts and messages sync automatically. Real-time updates across platforms.
+                </p>
+              </div>
+            </ScrollReveal>
+
+            <ScrollReveal delay={200}>
+              <div className="p-6 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all">
+                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                  <MessageSquare className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-lg font-bold mb-2">Unified Inbox</h3>
+                <p className="text-sm text-muted-foreground">
+                  SMS, email, and social messages in one place. Complete conversation history.
+                </p>
+              </div>
+            </ScrollReveal>
+
+            <ScrollReveal delay={300}>
+              <div className="p-6 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all">
+                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                  <Tag className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-lg font-bold mb-2">Automated Tagging</h3>
+                <p className="text-sm text-muted-foreground">
+                  AI applies engagement tags automatically. Sync tags back for workflows.
+                </p>
+              </div>
+            </ScrollReveal>
+
+            <ScrollReveal delay={400}>
+              <div className="p-6 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all">
+                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                  <Users className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-lg font-bold mb-2">Contact Management</h3>
+                <p className="text-sm text-muted-foreground">
+                  Import existing contacts instantly. Update fields in either platform.
+                </p>
+              </div>
+            </ScrollReveal>
+          </div>
+
+          <ScrollReveal delay={500}>
+            <div className="flex items-center justify-center gap-8 p-8 rounded-2xl bg-gradient-to-r from-card/80 to-card/50 border border-primary/20">
+              <div className="text-center">
+                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg mb-2 mx-auto">
+                  <span className="text-2xl font-black text-white">GHL</span>
+                </div>
+                <p className="text-sm font-medium text-muted-foreground">GoHighLevel</p>
+              </div>
+              
+              <ArrowLeftRight className="h-10 w-10 text-primary animate-pulse" />
+              
+              <div className="text-center">
+                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary-hover flex items-center justify-center shadow-glow mb-2 mx-auto">
+                  <span className="text-2xl font-black text-primary-foreground">TU</span>
+                </div>
+                <p className="text-sm font-medium text-muted-foreground">TrainU</p>
+              </div>
+            </div>
+          </ScrollReveal>
+        </div>
+      </section>
+
       {/* Pain Points Section */}
       <section className="relative py-24 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-card/50 to-transparent" />
@@ -249,15 +339,15 @@ export default function Home() {
                     <Brain className="h-5 w-5" />
                     <span>AI-Powered Retention</span>
                   </div>
-                  <h3 className="text-4xl font-bold mb-6 leading-tight">Smart AI Inbox</h3>
+                  <h3 className="text-4xl font-bold mb-6 leading-tight">Save 10+ Hours Per Week</h3>
                   <p className="text-lg text-foreground/80 mb-8 leading-relaxed">
-                    Your AI assistant analyzes client behavior, drafts personalized messages, and surfaces the ones that need your attention most.
+                    AI drafts personalized check-ins so you spend time training, not typing. Review and send in 30 seconds.
                   </p>
                   <ul className="space-y-4">
                     {[
                       "Predictive at-risk alerts 7 days before churn",
                       "Context-aware message drafts using client history",
-                      "5-stage approval workflow for full control"
+                      "Trainers report 90% less time on client messaging"
                     ].map((item, i) => (
                       <li key={i} className="flex items-start gap-4">
                         <div className="h-8 w-8 rounded-full bg-success/10 flex items-center justify-center flex-shrink-0 mt-1">
@@ -327,15 +417,15 @@ export default function Home() {
                     <Target className="h-5 w-5" />
                     <span>Client Engagement</span>
                   </div>
-                  <h3 className="text-4xl font-bold mb-6 leading-tight">Gamified Client Experience</h3>
+                  <h3 className="text-4xl font-bold mb-6 leading-tight">Keep Clients Engaged Longer</h3>
                   <p className="text-lg text-foreground/80 mb-8 leading-relaxed">
-                    Turn fitness into a social game. Clients earn XP, compete on leaderboards, and unlock achievements.
+                    Clients stay motivated with streaks, challenges, and leaderboards. They compete, you retain.
                   </p>
                   <ul className="space-y-4">
                     {[
-                      "Streak tracking drives 3x more consistency",
+                      "43% longer average client tenure",
                       "Community challenges create accountability",
-                      "Badges reward milestone behaviors"
+                      "85% of clients hit milestones faster"
                     ].map((item, i) => (
                       <li key={i} className="flex items-start gap-4">
                         <div className="h-8 w-8 rounded-full bg-success/10 flex items-center justify-center flex-shrink-0 mt-1">
@@ -357,15 +447,15 @@ export default function Home() {
                     <BarChart3 className="h-5 w-5" />
                     <span>Data-Driven Insights</span>
                   </div>
-                  <h3 className="text-4xl font-bold mb-6 leading-tight">Predictive Analytics Dashboard</h3>
+                  <h3 className="text-4xl font-bold mb-6 leading-tight">Know Before They Churn</h3>
                   <p className="text-lg text-foreground/80 mb-8 leading-relaxed">
-                    See exactly what's working. Track engagement trends, identify risk patterns, and optimize with real-time insights.
+                    See at-risk clients before they cancel. Get AI recommendations to re-engage them automatically.
                   </p>
                   <ul className="space-y-4">
                     {[
-                      "Risk scores updated daily for every client",
+                      "70% reduction in surprise cancellations",
                       "Response rate tracking across all channels",
-                      "Cohort analysis to refine onboarding"
+                      "Real-time insights optimize your approach"
                     ].map((item, i) => (
                       <li key={i} className="flex items-start gap-4">
                         <div className="h-8 w-8 rounded-full bg-success/10 flex items-center justify-center flex-shrink-0 mt-1">
@@ -412,6 +502,71 @@ export default function Home() {
                     </div>
                   </div>
                 </div>
+              </div>
+            </ScrollReveal>
+          </div>
+        </div>
+      </section>
+
+      {/* Custom App Integration Section */}
+      <section className="py-24 bg-gradient-to-b from-transparent to-card/30">
+        <div className="container mx-auto px-4">
+          <ScrollReveal>
+            <div className="text-center mb-16">
+              <h2 className="text-5xl font-bold mb-6">
+                Add Your Custom TrainU App Layers
+              </h2>
+              <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+                Brand your client experience with custom menu links accessible from each sub-account.
+              </p>
+            </div>
+          </ScrollReveal>
+
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <ScrollReveal delay={100}>
+              <div>
+                <h3 className="text-2xl font-bold mb-6">Customize Your Client Portal</h3>
+                <ul className="space-y-4">
+                  {[
+                    "Custom menu links in SaaS Configurator",
+                    "Link to training videos and support resources",
+                    "Open proprietary features and analytics",
+                    "Maintain your brand while using TrainU power"
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-start gap-4">
+                      <div className="h-8 w-8 rounded-full bg-success/10 flex items-center justify-center flex-shrink-0 mt-1">
+                        <Check className="h-5 w-5 text-success" />
+                      </div>
+                      <span className="text-foreground/80 text-lg">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </ScrollReveal>
+
+            <ScrollReveal delay={200}>
+              <div className="p-8 rounded-2xl bg-card border border-border">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors cursor-pointer">
+                    <Menu className="h-5 w-5 text-primary" />
+                    <span className="font-medium">Training Library</span>
+                  </div>
+                  <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors cursor-pointer">
+                    <Menu className="h-5 w-5 text-primary" />
+                    <span className="font-medium">Support Chat</span>
+                  </div>
+                  <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors cursor-pointer">
+                    <Menu className="h-5 w-5 text-primary" />
+                    <span className="font-medium">Usage Analytics</span>
+                  </div>
+                  <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors cursor-pointer">
+                    <Menu className="h-5 w-5 text-primary" />
+                    <span className="font-medium">Your Custom App</span>
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground mt-4 text-center">
+                  Custom links accessible from left menu
+                </p>
               </div>
             </ScrollReveal>
           </div>
@@ -521,6 +676,89 @@ export default function Home() {
           </ScrollReveal>
           <ScrollReveal delay={100}>
             <CompetitorTable />
+          </ScrollReveal>
+        </div>
+      </section>
+
+      {/* Pricing Preview Section */}
+      <section className="py-24">
+        <div className="container mx-auto px-4">
+          <ScrollReveal>
+            <div className="text-center mb-16">
+              <h2 className="text-5xl font-bold mb-6">
+                Pricing That Pays for Itself
+              </h2>
+              <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-4">
+                Choose the plan that fits your business. All plans include automated onboarding and CRM integration.
+              </p>
+              <p className="text-lg font-semibold text-primary">
+                Average trainer saves $2,400/month in retained revenue
+              </p>
+            </div>
+          </ScrollReveal>
+
+          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <ScrollReveal delay={100}>
+              <PricingPreviewCard
+                tier={{
+                  name: "Starter",
+                  price: 79,
+                  description: "Core CRM & Communication Hub",
+                  roi: "Pays for itself in 3 clients saved",
+                  highlights: [
+                    "Up to 2 calendars",
+                    "Basic automations",
+                    "$10/mo messaging credit",
+                    "GHL CRM integration"
+                  ]
+                }}
+              />
+            </ScrollReveal>
+
+            <ScrollReveal delay={200}>
+              <PricingPreviewCard
+                tier={{
+                  name: "Professional",
+                  price: 99,
+                  description: "Unlimited scale + SaaS access",
+                  popular: true,
+                  roi: "Pays for itself in 2 clients saved",
+                  highlights: [
+                    "Unlimited contacts & users",
+                    "Advanced automations",
+                    "$25/mo messaging credit",
+                    "Full SaaS dashboard"
+                  ]
+                }}
+              />
+            </ScrollReveal>
+
+            <ScrollReveal delay={300}>
+              <PricingPreviewCard
+                tier={{
+                  name: "Growth+",
+                  price: 497,
+                  description: "Full GHL power + white-glove support",
+                  roi: "ROI-positive from day 1",
+                  highlights: [
+                    "Full GHL features suite",
+                    "$100/mo messaging credit",
+                    "1:1 demo & onboarding",
+                    "Campaign management support"
+                  ]
+                }}
+              />
+            </ScrollReveal>
+          </div>
+
+          <ScrollReveal delay={400}>
+            <div className="text-center mt-12">
+              <Link to="/pricing">
+                <Button size="lg" variant="outline" className="text-lg px-8 py-6">
+                  View Full Pricing Details
+                </Button>
+              </Link>
+            </div>
           </ScrollReveal>
         </div>
       </section>
