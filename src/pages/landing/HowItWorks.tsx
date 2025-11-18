@@ -3,35 +3,63 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
-import { Zap, Settings, Brain, MessageSquare, TrendingUp, Play } from "lucide-react";
+import { Zap, Settings, Brain, MessageSquare, TrendingUp, Play, Mail, Layout, Rocket, ArrowLeftRight, Tag, Users } from "lucide-react";
+import { OnboardingTimeline } from "@/components/landing/OnboardingTimeline";
+import { CRMIntegrationFlow } from "@/components/landing/CRMIntegrationFlow";
 import { ScrollReveal } from "@/components/landing/ScrollReveal";
 import { AnimatedCounter } from "@/components/landing/AnimatedCounter";
 import trainerGroupImage from "@/assets/group-training-class.jpg";
 import gradientBg from "@/assets/gradient-mesh-bg.svg";
 const onboardingSteps = [{
   number: 1,
-  title: "Connect Your GHL Account",
-  description: "OAuth setup in under 2 minutes. We sync your existing contacts and message history automatically.",
-  duration: "2 min",
+  title: "Subscribe & Automated Provisioning",
+  description: "Select your plan, complete GHL checkout, and our system instantly creates your sub-account with pre-configured automations, tags, pipelines, and calendar setups via snapshots.",
+  duration: "1-2 min",
   icon: Zap
 }, {
   number: 2,
-  title: "Customize AI Tone & Rules",
-  description: "Tell our AI how you communicate. Set quiet hours, preferred channels, and approval thresholds.",
-  duration: "5 min",
-  icon: Settings
+  title: "Welcome Message with Login Credentials",
+  description: "Receive a welcome email/SMS with your login link (app.trainu.us), credentials, and first-login setup checklist. No manual setup required.",
+  duration: "Instant",
+  icon: Mail
 }, {
   number: 3,
-  title: "AI Learns Your Clients",
-  description: "TrainU analyzes existing engagement patterns, session history, and communication to build client profiles.",
-  duration: "Auto",
-  icon: Brain
+  title: "Dashboard Walkthrough & Setup Checklist",
+  description: "Log in for the first time and see an interactive walkthrough highlighting key features. Follow the optional setup checklist to customize your preferences.",
+  duration: "5 min",
+  icon: Layout
 }, {
   number: 4,
-  title: "Go Live",
-  description: "Start receiving AI-drafted messages in your queue. Review, approve, and send with one tap.",
+  title: "Start Using All Features Immediately",
+  description: "All SaaS features, CRM automations, and AI capabilities are ready to use. Connect your GHL account if desired, or start managing clients right away.",
   duration: "Instant",
-  icon: Play
+  icon: Rocket
+}];
+
+const crmIntegrationSteps = [{
+  number: 1,
+  title: "OAuth Connection",
+  description: "Click 'Connect GHL' in settings, authorize TrainU in GHL, system verifies permissions.",
+  duration: "1 min",
+  icon: Zap
+}, {
+  number: 2,
+  title: "Automatic Contact Sync",
+  description: "Existing contacts imported instantly. Tags, notes, and history preserved. Real-time sync begins.",
+  duration: "Auto",
+  icon: Users
+}, {
+  number: 3,
+  title: "Unified Messaging",
+  description: "All GHL message history appears in TrainU. Send from either platform - stays synced. Complete conversation context.",
+  duration: "Instant",
+  icon: MessageSquare
+}, {
+  number: 4,
+  title: "Automated Tagging",
+  description: "AI applies engagement tags (at-risk, high-engagement). Tags sync back to GHL for workflows. No manual categorization needed.",
+  duration: "Ongoing",
+  icon: Tag
 }];
 const dailyWorkflow = [{
   time: "8:00 AM",
@@ -64,12 +92,12 @@ export default function HowItWorks() {
         <div className="container mx-auto px-4 relative z-10">
           <ScrollReveal className="max-w-3xl mx-auto text-center">
             <h1 className="text-5xl font-bold mb-6">
-            From Setup to{" "}
+            From Signup to{" "}
             <span className="bg-gradient-to-r from-primary to-primary-hover bg-clip-text text-transparent">
-Results in 30 Minutes</span>
+Active Use in 10 Minutes</span>
           </h1>
           <p className="text-xl text-muted-foreground mb-8">
-            No data migration. No complex config. Just connect, customize, and start retaining clients.
+            Automated onboarding eliminates setup time. Our system handles account creation, configuration, and provisioning so you can start retaining clients immediately.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/login">
@@ -86,45 +114,192 @@ Results in 30 Minutes</span>
         </div>
       </section>
 
-      {/* Onboarding Timeline */}
+      {/* Automated Onboarding Flow */}
       <section className="py-20 bg-card/50">
         <div className="container mx-auto px-4">
           <ScrollReveal>
-            <h2 className="text-3xl font-bold text-center mb-12">
-              4 Steps to Go Live
+            <h2 className="text-3xl font-bold text-center mb-4">
+              Automated Onboarding - How It Works
             </h2>
+            <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
+              Every step is automated. No manual configuration. No waiting.
+            </p>
           </ScrollReveal>
 
-          <div className="max-w-4xl mx-auto space-y-6">
-            {onboardingSteps.map((step, index) => <ScrollReveal key={index} delay={index * 150}>
-              <Card className="p-6 hover:border-primary/30 transition-all hover:scale-[1.02]">
-                <div className="flex items-start gap-6">
-                  <div className="flex-shrink-0">
-                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg">
-                      {step.number}
-                    </div>
-                  </div>
+          <div className="max-w-4xl mx-auto">
+            <OnboardingTimeline steps={onboardingSteps} />
+          </div>
+        </div>
+      </section>
 
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-xl font-semibold">{step.title}</h3>
-                      <Badge variant="outline" className="text-xs">
-                        {step.duration}
-                      </Badge>
-                    </div>
-                    <p className="text-muted-foreground">{step.description}</p>
-                  </div>
+      {/* CRM Integration Section */}
+      <section className="py-20">
+        <div className="container mx-auto px-4">
+          <ScrollReveal>
+            <h2 className="text-3xl font-bold text-center mb-4">
+              CRM Integration That Just Works
+            </h2>
+            <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
+              Connect your GHL account in 2 minutes. Bi-directional sync keeps everything unified. No data migration, no complex configuration.
+            </p>
+          </ScrollReveal>
 
-                  <div className="flex-shrink-0">
-                    <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <step.icon className="h-6 w-6 text-primary" />
-                    </div>
+          <div className="max-w-4xl mx-auto">
+            <OnboardingTimeline steps={crmIntegrationSteps} />
+          </div>
+
+          <ScrollReveal className="mt-12">
+            <CRMIntegrationFlow 
+              features={[
+                "Contacts, messages, and tags sync automatically between platforms",
+                "Complete message history from GHL appears in TrainU",
+                "Send messages from either platform - they stay synced",
+                "AI-generated tags automatically sync back to GHL for workflows",
+                "No data migration or manual imports required",
+                "Real-time updates ensure data consistency everywhere"
+              ]}
+            />
+          </ScrollReveal>
+        </div>
+      </section>
+
+      {/* Custom App/Layers Section */}
+      <section className="py-20 bg-card/50">
+        <div className="container mx-auto px-4">
+          <ScrollReveal>
+            <h2 className="text-3xl font-bold text-center mb-4">
+              Add Your Custom TrainU App Layers
+            </h2>
+            <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
+              Brand your client experience with custom menu links via GHL's SaaS Configurator
+            </p>
+          </ScrollReveal>
+
+          <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-8">
+            <ScrollReveal>
+              <Card className="p-8">
+                <h3 className="text-xl font-bold mb-4">Features</h3>
+                <ul className="space-y-3">
+                  <li className="flex items-start gap-3">
+                    <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0" />
+                    <span className="text-sm">Custom menu links in left sidebar</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0" />
+                    <span className="text-sm">Link to training videos, support, analytics</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0" />
+                    <span className="text-sm">Open your proprietary features</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0" />
+                    <span className="text-sm">Maintain brand consistency</span>
+                  </li>
+                </ul>
+              </Card>
+            </ScrollReveal>
+
+            <ScrollReveal delay={100}>
+              <Card className="p-8">
+                <h3 className="text-xl font-bold mb-4">Use Cases</h3>
+                <ul className="space-y-3">
+                  <li className="flex items-start gap-3">
+                    <div className="w-2 h-2 rounded-full bg-success mt-2 flex-shrink-0" />
+                    <span className="text-sm">Training video libraries</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <div className="w-2 h-2 rounded-full bg-success mt-2 flex-shrink-0" />
+                    <span className="text-sm">Custom analytics dashboards</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <div className="w-2 h-2 rounded-full bg-success mt-2 flex-shrink-0" />
+                    <span className="text-sm">Support chat integrations</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <div className="w-2 h-2 rounded-full bg-success mt-2 flex-shrink-0" />
+                    <span className="text-sm">Booking widgets</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <div className="w-2 h-2 rounded-full bg-success mt-2 flex-shrink-0" />
+                    <span className="text-sm">Your own app features</span>
+                  </li>
+                </ul>
+              </Card>
+            </ScrollReveal>
+          </div>
+        </div>
+      </section>
+
+      {/* Visual Reference Flow */}
+      <section className="py-20">
+        <div className="container mx-auto px-4">
+          <ScrollReveal>
+            <h2 className="text-3xl font-bold text-center mb-4">
+              The Complete Customer Journey
+            </h2>
+            <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
+              From landing page to active use - every step is automated
+            </p>
+          </ScrollReveal>
+
+          <div className="max-w-3xl mx-auto">
+            <Card className="p-8">
+              <div className="space-y-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold flex-shrink-0">1</div>
+                  <div>
+                    <h3 className="font-bold mb-1">Landing Page (trainu.us)</h3>
+                    <p className="text-sm text-muted-foreground">User browses pricing, features. Clicks "Start Free Trial" or "Subscribe"</p>
                   </div>
                 </div>
-
-                {index < onboardingSteps.length - 1 && <div className="ml-6 mt-4 mb-0 h-8 w-0.5 bg-gradient-to-b from-primary/50 to-transparent"></div>}
-              </Card>
-              </ScrollReveal>)}
+                <div className="flex items-start gap-4">
+                  <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold flex-shrink-0">2</div>
+                  <div>
+                    <h3 className="font-bold mb-1">GHL Order Form / Checkout</h3>
+                    <p className="text-sm text-muted-foreground">Redirected to secure GHL funnel. Stripe processes payment. GHL receives order confirmation.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold flex-shrink-0">3</div>
+                  <div>
+                    <h3 className="font-bold mb-1">Automated Provisioning (GHL SaaS Mode)</h3>
+                    <p className="text-sm text-muted-foreground">New sub-account created automatically. Snapshots install best-practice automations. Tags, pipelines, calendars configured. Billing automation activated.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold flex-shrink-0">4</div>
+                  <div>
+                    <h3 className="font-bold mb-1">Welcome Messages</h3>
+                    <p className="text-sm text-muted-foreground">Email: Login link + credentials. SMS: Quick start guide. Both include app.trainu.us login URL.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold flex-shrink-0">5</div>
+                  <div>
+                    <h3 className="font-bold mb-1">First Login at app.trainu.us</h3>
+                    <p className="text-sm text-muted-foreground">Dashboard walkthrough appears. Setup checklist highlights key features. Optional GHL connection prompt.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-8 h-8 rounded-full bg-success text-success-foreground flex items-center justify-center font-bold flex-shrink-0">✓</div>
+                  <div>
+                    <h3 className="font-bold mb-1">Ready to Use</h3>
+                    <p className="text-sm text-muted-foreground">All SaaS features active. CRM automations running. AI learning client patterns. Support accessible via menu.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-8 h-8 rounded-full bg-muted text-muted-foreground flex items-center justify-center font-bold flex-shrink-0">∞</div>
+                  <div>
+                    <h3 className="font-bold mb-1">Ongoing Operations</h3>
+                    <p className="text-sm text-muted-foreground">Billing automation handles renewals. Failed payment recovery (native to SaaS Mode). Account lockouts if needed. Custom menu links always accessible.</p>
+                  </div>
+                </div>
+              </div>
+              <p className="text-xs text-center text-muted-foreground mt-8">
+                Powered by GHL SaaS Mode and TrainU's automated onboarding system
+              </p>
+            </Card>
           </div>
         </div>
       </section>
@@ -132,23 +307,33 @@ Results in 30 Minutes</span>
       {/* Daily Workflow */}
       <section className="py-20">
         <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-3xl font-bold text-center mb-4">
-              A Day in the Life with TrainU
-            </h2>
+          <ScrollReveal>
+            <h2 className="text-3xl font-bold text-center mb-4">Your Daily Workflow</h2>
             <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
-              See how TrainU fits into your daily routine without adding more work.
+              See how TrainU fits seamlessly into your day - saving time while keeping clients engaged
             </p>
+          </ScrollReveal>
 
+          <div className="max-w-4xl mx-auto">
             <div className="grid md:grid-cols-2 gap-6">
-              {dailyWorkflow.map((item, index) => <Card key={index} className="p-6">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="text-sm font-mono text-primary">{item.time}</div>
-                    <Badge variant="outline" className="text-xs">{item.action}</Badge>
-                  </div>
-                  <h3 className="text-lg font-semibold mb-2">{item.event}</h3>
-                  <p className="text-sm text-muted-foreground">{item.description}</p>
-                </Card>)}
+              {dailyWorkflow.map((item, index) => (
+                <ScrollReveal key={index} delay={index * 100}>
+                  <Card className="p-6">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="text-sm font-mono text-primary">{item.time}</div>
+                      <Badge variant="outline" className="text-xs">{item.action}</Badge>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-bold mb-2">{item.event}</h3>
+                      <p className="text-sm text-muted-foreground mb-2">{item.description}</p>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-semibold text-primary">{item.action}</span>
+                        <Badge variant="outline" className="text-xs">All plans</Badge>
+                      </div>
+                    </div>
+                  </Card>
+                </ScrollReveal>
+              ))}
             </div>
 
             <ScrollReveal delay={200}>
@@ -174,173 +359,98 @@ Results in 30 Minutes</span>
       {/* Feature Walkthrough */}
       <section className="py-20 bg-card/50">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">
-            How Each Feature Works
-          </h2>
+          <ScrollReveal>
+            <h2 className="text-3xl font-bold text-center mb-12">
+              How Each Feature Works
+            </h2>
+          </ScrollReveal>
 
           <div className="max-w-4xl mx-auto space-y-12">
             {/* AI Inbox */}
-            <div className="grid md:grid-cols-2 gap-8 items-center">
-              <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium mb-4">
-                  <MessageSquare className="h-4 w-4" />
-                  <span>AI Inbox</span>
+            <ScrollReveal>
+              <div className="grid md:grid-cols-2 gap-8 items-center">
+                <div>
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-3">
+                      <MessageSquare className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
+                      <div>
+                        <h4 className="font-semibold mb-1">AI Inbox</h4>
+                        <p className="text-sm text-muted-foreground mb-2">Review AI-drafted check-ins, approve with one tap, edit tone if needed.</p>
+                        <div className="flex flex-wrap gap-2 text-xs">
+                          <Badge variant="secondary">⏱️ Saves 10 hours/week</Badge>
+                          <Badge variant="secondary">💰 Worth $800/month</Badge>
+                          <Badge variant="secondary">📈 90% faster communication</Badge>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-3">
+                      <TrendingUp className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
+                      <div>
+                        <h4 className="font-semibold mb-1">Gamification</h4>
+                        <p className="text-sm text-muted-foreground mb-2">Clients see streaks, milestones, leaderboards. Friendly competition drives consistency.</p>
+                        <div className="flex flex-wrap gap-2 text-xs">
+                          <Badge variant="secondary">📊 43% longer tenure</Badge>
+                          <Badge variant="secondary">🎯 67% higher completion</Badge>
+                          <Badge variant="secondary">🏆 85% faster milestones</Badge>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-3">
+                      <Brain className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
+                      <div>
+                        <h4 className="font-semibold mb-1">Analytics</h4>
+                        <p className="text-sm text-muted-foreground mb-2">See at-risk clients before they cancel. Get AI recommendations to re-engage.</p>
+                        <div className="flex flex-wrap gap-2 text-xs">
+                          <Badge variant="secondary">⚠️ 70% fewer surprise cancellations</Badge>
+                          <Badge variant="secondary">📉 Proactive risk detection</Badge>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <h3 className="text-2xl font-semibold mb-4">Smart Message Queue</h3>
-                <div className="space-y-3 text-muted-foreground">
-                  <p className="flex items-start gap-2">
-                    <span className="text-primary font-bold">1.</span>
-                    AI detects Ben hasn't responded in 5 days (risk score jumps to 72)
-                  </p>
-                  <p className="flex items-start gap-2">
-                    <span className="text-primary font-bold">2.</span>
-                    Drafts personalized check-in referencing his last strength workout
-                  </p>
-                  <p className="flex items-start gap-2">
-                    <span className="text-primary font-bold">3.</span>
-                    Surfaces draft in your queue with priority label
-                  </p>
-                  <p className="flex items-start gap-2">
-                    <span className="text-primary font-bold">4.</span>
-                    You approve, AI schedules for optimal send time (2:30 PM per Ben's history)
-                  </p>
-                  <p className="flex items-start gap-2">
-                    <span className="text-primary font-bold">5.</span>
-                    Ben responds! Risk score drops to 35, AI suggests booking his next session
-                  </p>
-                </div>
+                <Card className="p-6 bg-card border-border">
+                  <h4 className="text-lg font-semibold mb-6 text-center">Feature Highlights</h4>
+                  <div className="space-y-6">
+                    <div className="p-4 rounded-lg bg-primary/5 border border-primary/10">
+                      <div className="flex items-center gap-3 mb-3">
+                        <MessageSquare className="h-5 w-5 text-primary" />
+                        <span className="font-semibold">AI Inbox</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-3">AI drafts personalized messages, you approve in seconds</p>
+                      <div className="flex flex-wrap gap-2">
+                        <Badge variant="secondary" className="text-xs">10 hrs saved/week</Badge>
+                        <Badge variant="secondary" className="text-xs">90% faster</Badge>
+                      </div>
+                    </div>
+
+                    <div className="p-4 rounded-lg bg-warning/5 border border-warning/10">
+                      <div className="flex items-center gap-3 mb-3">
+                        <TrendingUp className="h-5 w-5 text-warning" />
+                        <span className="font-semibold">Gamification</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-3">Streaks, badges, and leaderboards keep clients engaged</p>
+                      <div className="flex flex-wrap gap-2">
+                        <Badge variant="secondary" className="text-xs">43% longer tenure</Badge>
+                        <Badge variant="secondary" className="text-xs">67% completion</Badge>
+                      </div>
+                    </div>
+
+                    <div className="p-4 rounded-lg bg-info/5 border border-info/10">
+                      <div className="flex items-center gap-3 mb-3">
+                        <Brain className="h-5 w-5 text-info" />
+                        <span className="font-semibold">Analytics</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-3">Identify at-risk clients before they cancel</p>
+                      <div className="flex flex-wrap gap-2">
+                        <Badge variant="secondary" className="text-xs">70% fewer cancellations</Badge>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
               </div>
-              <Card className="p-6 bg-gradient-to-br from-card to-background">
-                <div className="space-y-3">
-                  <div className="p-3 rounded-lg bg-danger/10 border border-danger/20">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="h-2 w-2 rounded-full bg-danger animate-pulse"></div>
-                      <span className="text-sm font-semibold text-danger">High Priority</span>
-                    </div>
-                    <p className="text-sm text-foreground font-medium">Ben Lopez - No response in 5 days</p>
-                    <p className="text-xs text-muted-foreground mt-1">Risk Score: 72 → 35 after engagement</p>
-                  </div>
-                  
-                  <div className="p-3 rounded-lg bg-background border border-border">
-                    <p className="text-xs text-muted-foreground mb-2">AI Draft Ready:</p>
-                    <p className="text-sm italic">"Hey Ben! Noticed you crushed those deadlifts last week. Want to keep that momentum going? I've got spots open Tuesday/Thursday."</p>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Button size="sm" className="flex-1">Approve & Send</Button>
-                    <Button size="sm" variant="outline">Edit</Button>
-                    <Button size="sm" variant="ghost">Skip</Button>
-                  </div>
-                </div>
-              </Card>
-            </div>
-
-            {/* Gamification */}
-            <div className="grid md:grid-cols-2 gap-8 items-center">
-              <Card className="p-6 bg-gradient-to-br from-card to-background order-2 md:order-1">
-                <div className="text-center space-y-4">
-                  <div className="text-6xl">🔥</div>
-                  <div>
-                    <p className="text-4xl font-bold text-primary">7 Week Streak</p>
-                    <p className="text-muted-foreground mt-2">3 more weeks to Gold Badge!</p>
-                  </div>
-                  <div className="pt-4 border-t border-border">
-                    <p className="text-sm text-muted-foreground mb-2">Leaderboard Rank</p>
-                    <p className="text-2xl font-bold">#3 of 24</p>
-                  </div>
-                </div>
-              </Card>
-              <div className="order-1 md:order-2">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-warning/10 border border-warning/20 text-warning text-sm font-medium mb-4">
-                  <TrendingUp className="h-4 w-4" />
-                  <span>Client Engagement</span>
-                </div>
-                <h3 className="text-2xl font-semibold mb-4">Gamification That Works</h3>
-                <div className="space-y-3 text-muted-foreground">
-                  <p className="flex items-start gap-2">
-                    <span className="text-primary font-bold">1.</span>
-                    Client completes workout, earns 25 XP + streak extends
-                  </p>
-                  <p className="flex items-start gap-2">
-                    <span className="text-primary font-bold">2.</span>
-                    Push notification: "🔥 7 weeks! Keep going to unlock Gold Badge"
-                  </p>
-                  <p className="flex items-start gap-2">
-                    <span className="text-primary font-bold">3.</span>
-                    Leaderboard updates in real-time, climbs to #3 in your community
-                  </p>
-                  <p className="flex items-start gap-2">
-                    <span className="text-primary font-bold">4.</span>
-                    Social feed shows achievement, other clients comment and react
-                  </p>
-                  <p className="flex items-start gap-2">
-                    <span className="text-primary font-bold">5.</span>
-                    Engagement drives 3x more session bookings and 40% higher retention
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Analytics */}
-            <div className="grid md:grid-cols-2 gap-8 items-center">
-              <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-info/10 border border-info/20 text-info text-sm font-medium mb-4">
-                  <TrendingUp className="h-4 w-4" />
-                  <span>Predictive Analytics</span>
-                </div>
-                <h3 className="text-2xl font-semibold mb-4">Data-Driven Decisions</h3>
-                <div className="space-y-3 text-muted-foreground">
-                  <p className="flex items-start gap-2">
-                    <span className="text-primary font-bold">1.</span>
-                    Dashboard shows 3 clients trending at-risk this week
-                  </p>
-                  <p className="flex items-start gap-2">
-                    <span className="text-primary font-bold">2.</span>
-                    Click into Ben's profile: missed 2 sessions, response rate dropped 40%
-                  </p>
-                  <p className="flex items-start gap-2">
-                    <span className="text-primary font-bold">3.</span>
-                    AI suggests intervention strategy: personal check-in + session discount offer
-                  </p>
-                  <p className="flex items-start gap-2">
-                    <span className="text-primary font-bold">4.</span>
-                    Track outcome: Ben re-engaged, booked 3 sessions, risk score normalized
-                  </p>
-                  <p className="flex items-start gap-2">
-                    <span className="text-primary font-bold">5.</span>
-                    Learn what works: replicate strategy for similar at-risk patterns
-                  </p>
-                </div>
-              </div>
-              <Card className="p-6 bg-gradient-to-br from-card to-background">
-                <h4 className="font-semibold mb-4">This Week's Insights</h4>
-                <div className="space-y-4">
-                  <div className="p-3 rounded-lg bg-danger/10 border border-danger/20">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm font-medium text-danger">At-Risk Clients</span>
-                      <span className="text-2xl font-bold text-danger">3</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">↑ 1 from last week</p>
-                  </div>
-
-                  <div className="p-3 rounded-lg bg-success/10 border border-success/20">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm font-medium text-success">Retention Rate</span>
-                      <span className="text-2xl font-bold text-success">94%</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">↑ 2% from last month</p>
-                  </div>
-
-                  <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm font-medium text-primary">Response Rate</span>
-                      <span className="text-2xl font-bold text-primary">87%</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">↑ 5% vs. manual messages</p>
-                  </div>
-                </div>
-              </Card>
-            </div>
+            </ScrollReveal>
           </div>
         </div>
       </section>
