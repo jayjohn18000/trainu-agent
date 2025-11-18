@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/accordion";
 import { ScrollReveal } from "@/components/landing/ScrollReveal";
 import { AnimatedCounter } from "@/components/landing/AnimatedCounter";
+import { ComparisonTable } from "@/components/landing/ComparisonTable";
 import trainerClientImage from "@/assets/trainer-client-gym.jpg";
 import gradientBg from "@/assets/gradient-mesh-bg.svg";
 
@@ -101,6 +102,22 @@ const faqs = [
   {
     question: "What if I need more than 15,000 SMS messages per month?",
     answer: "Pro plan users can purchase additional SMS bundles at discounted rates. Contact sales for custom enterprise pricing if you regularly exceed 50,000 messages/month.",
+  },
+  {
+    question: "How does automated onboarding work?",
+    answer: "After you select your plan and complete payment through our secure GHL checkout, our system automatically creates your sub-account, installs snapshots with pre-built automations and tags, sends you a welcome email/SMS with login credentials, and provisions all SaaS features. When you log in for the first time at app.trainu.us, you'll see an interactive walkthrough and setup checklist. Most trainers are fully operational in under 10 minutes with zero manual configuration required.",
+  },
+  {
+    question: "Is the GHL integration included in all plans?",
+    answer: "Yes! All plans include bi-directional sync with GoHighLevel. Your contacts, messages, and engagement data sync automatically. Professional and Growth+ plans unlock additional GHL features like advanced workflows and (Growth+ only) full GHL suite access including funnels, pipelines, and websites.",
+  },
+  {
+    question: "What's included in the messaging credits?",
+    answer: "Each plan includes monthly messaging credits that roll over for up to 3 months: Starter gets $10, Professional gets $25, and Growth+ gets $100. These credits cover SMS, MMS, email, and automations. Standard SMS costs ~$0.01-0.015 per message. Unused credits roll over, so you never lose value.",
+  },
+  {
+    question: "How does the GHL checkout work?",
+    answer: "When you click 'Get Started,' you'll be redirected to our secure GHL order form where Stripe processes your payment. GHL automatically handles billing automation, failed payment recovery, and account lockouts if needed. After payment, our system provisions your account instantly and sends you login credentials.",
   },
 ];
 
@@ -205,6 +222,107 @@ export default function Pricing() {
             ))}
           </div>
 
+          {/* Feature Comparison Table */}
+          <ScrollReveal className="mt-20">
+            <h2 className="text-3xl font-bold text-center mb-12">Compare Plans</h2>
+            <ComparisonTable 
+              tiers={[
+                { name: "Starter", popular: false },
+                { name: "Professional", popular: true },
+                { name: "Growth+", popular: false }
+              ]}
+              features={[
+                {
+                  category: "Core Features",
+                  items: [
+                    { name: "GHL CRM Integration", tiers: [true, true, true] },
+                    { name: "Unified Inbox (SMS, Email, Social)", tiers: [true, true, true] },
+                    { name: "Automated Onboarding", tiers: [true, true, true] },
+                    { name: "Document & Media Vault", tiers: [true, true, true] },
+                  ]
+                },
+                {
+                  category: "Scale & Capacity",
+                  items: [
+                    { name: "Contacts", tiers: [true, true, true] },
+                    { name: "Users/Trainers", tiers: [false, true, true] },
+                    { name: "Calendars", tiers: [false, true, true] },
+                  ]
+                },
+                {
+                  category: "Messaging",
+                  items: [
+                    { name: "Monthly Credit", tiers: [true, true, true] },
+                    { name: "Credit Rollover (3 months)", tiers: [true, true, true] },
+                  ]
+                },
+                {
+                  category: "Automations",
+                  items: [
+                    { name: "Basic Workflows", tiers: [true, true, true] },
+                    { name: "Advanced Campaigns", tiers: [false, true, true] },
+                    { name: "Full GHL Automation Suite", tiers: [false, false, true] },
+                  ]
+                },
+                {
+                  category: "Platform Access",
+                  items: [
+                    { name: "SaaS Dashboard", tiers: [false, true, true] },
+                    { name: "Full GHL Features", tiers: [false, false, true] },
+                    { name: "Funnels & Websites", tiers: [false, false, true] },
+                    { name: "Pipelines & Opportunities", tiers: [false, false, true] },
+                  ]
+                },
+                {
+                  category: "Support",
+                  items: [
+                    { name: "Email Support", tiers: [true, true, true] },
+                    { name: "Priority Support", tiers: [false, true, true] },
+                    { name: "1:1 Onboarding Session", tiers: [false, false, true] },
+                    { name: "Campaign Management Support", tiers: [false, false, true] },
+                  ]
+                },
+              ]}
+            />
+          </ScrollReveal>
+
+          {/* Automated Onboarding Info Box */}
+          <ScrollReveal className="mt-20 max-w-4xl mx-auto">
+            <Card className="p-8 bg-primary/5 border-primary/20">
+              <div className="flex items-start gap-4">
+                <Zap className="h-8 w-8 text-primary flex-shrink-0 mt-1" />
+                <div>
+                  <h3 className="text-2xl font-bold mb-3">All Plans Include Automated Onboarding</h3>
+                  <p className="text-muted-foreground mb-4">
+                    From the moment you subscribe, our system handles everything: sub-account creation, snapshot installation, welcome messages, and dashboard setup. You'll be retaining clients in under 10 minutes with zero manual configuration.
+                  </p>
+                  <ul className="space-y-2">
+                    <li className="flex items-center gap-2 text-sm">
+                      <Check className="h-4 w-4 text-success" />
+                      <span>Instant account provisioning via GHL</span>
+                    </li>
+                    <li className="flex items-center gap-2 text-sm">
+                      <Check className="h-4 w-4 text-success" />
+                      <span>Welcome email/SMS with login credentials</span>
+                    </li>
+                    <li className="flex items-center gap-2 text-sm">
+                      <Check className="h-4 w-4 text-success" />
+                      <span>First-login walkthrough & setup checklist</span>
+                    </li>
+                    <li className="flex items-center gap-2 text-sm">
+                      <Check className="h-4 w-4 text-success" />
+                      <span>Pre-configured automations, tags, and calendars</span>
+                    </li>
+                    <li className="flex items-center gap-2 text-sm">
+                      <Check className="h-4 w-4 text-success" />
+                      <span>Ready to use immediately - no waiting</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </Card>
+          </ScrollReveal>
+
           {/* Trust Badges */}
           <div className="mt-16 flex flex-wrap justify-center gap-6 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
@@ -247,6 +365,64 @@ export default function Pricing() {
               ))}
             </Accordion>
           </div>
+        </div>
+      </section>
+
+      {/* Checkout Flow Visual */}
+      <section className="py-20">
+        <div className="container mx-auto px-4">
+          <ScrollReveal>
+            <h2 className="text-3xl font-bold text-center mb-12">How the Complete Flow Works</h2>
+            <Card className="max-w-3xl mx-auto p-8">
+              <div className="space-y-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold flex-shrink-0">1</div>
+                  <div>
+                    <h3 className="font-bold mb-1">Select Your Plan on trainu.us</h3>
+                    <p className="text-sm text-muted-foreground">Browse features and choose the plan that fits your needs</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold flex-shrink-0">2</div>
+                  <div>
+                    <h3 className="font-bold mb-1">Secure GHL Checkout (Stripe Payment)</h3>
+                    <p className="text-sm text-muted-foreground">Redirected to secure checkout, Stripe processes payment</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold flex-shrink-0">3</div>
+                  <div>
+                    <h3 className="font-bold mb-1">Automated Provisioning</h3>
+                    <p className="text-sm text-muted-foreground">Sub-account created, snapshots installed, welcome messages sent</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold flex-shrink-0">4</div>
+                  <div>
+                    <h3 className="font-bold mb-1">Log In at app.trainu.us</h3>
+                    <p className="text-sm text-muted-foreground">Access your credentials and login to your new account</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold flex-shrink-0">5</div>
+                  <div>
+                    <h3 className="font-bold mb-1">Dashboard Walkthrough & Setup Checklist</h3>
+                    <p className="text-sm text-muted-foreground">Interactive tour shows you key features on first login</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-8 h-8 rounded-full bg-success text-success-foreground flex items-center justify-center font-bold flex-shrink-0">✓</div>
+                  <div>
+                    <h3 className="font-bold mb-1">Start Retaining Clients</h3>
+                    <p className="text-sm text-muted-foreground">All features ready, CRM automations active, AI learning begins</p>
+                  </div>
+                </div>
+              </div>
+              <p className="text-xs text-center text-muted-foreground mt-8">
+                From signup to active use in under 10 minutes. No manual setup required.
+              </p>
+            </Card>
+          </ScrollReveal>
         </div>
       </section>
 
