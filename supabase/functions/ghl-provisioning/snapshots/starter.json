@@ -1,0 +1,202 @@
+{
+  "tier": "starter",
+  "description": "Essential CRM and communication features powered by GHL",
+  "snapshotId": "ZyDyVPypdONMcyasVKMR",
+  "tags": {
+    "additional": [
+      "new_lead",
+      "follow_up_needed",
+      "birthday_this_month",
+      "welcome_sent",
+      "onboarding_started"
+    ],
+    "workflowTags": [
+      "workflow:missed_call",
+      "workflow:appointment_reminder",
+      "workflow:birthday_greeting"
+    ]
+  },
+  "customFields": {
+    "additional": [
+      {
+        "name": "Referral Source",
+        "key": "referral_source",
+        "fieldType": "select",
+        "options": ["Social Media", "Word of Mouth", "Website", "Google Search", "Other"]
+      },
+      {
+        "name": "Client Status",
+        "key": "client_status",
+        "fieldType": "select",
+        "options": ["Prospect", "Active", "Paused", "Inactive"]
+      }
+    ]
+  },
+  "workflows": {
+    "definitions": [
+      {
+        "name": "Missed Call Follow-up",
+        "trigger": "missed_call",
+        "conditions": [],
+        "actions": [
+          {
+            "type": "send_sms",
+            "template": "missed_call_followup",
+            "delay": 300,
+            "message": "Hi {{contact.firstName}}, I noticed you called. How can I help you today?"
+          },
+          {
+            "type": "add_tag",
+            "value": "follow_up_needed"
+          },
+          {
+            "type": "log_activity",
+            "note": "Missed call - follow-up sent"
+          }
+        ]
+      },
+      {
+        "name": "Appointment Reminder - 24h Before",
+        "trigger": "appointment_scheduled",
+        "conditions": [
+          {
+            "field": "appointment.startTime",
+            "operator": "hours_until",
+            "value": 24
+          }
+        ],
+        "actions": [
+          {
+            "type": "send_sms",
+            "template": "appointment_reminder_24h",
+            "delay": 0,
+            "message": "Hi {{contact.firstName}}, reminder: You have an appointment tomorrow at {{appointment.startTime}}. See you then!"
+          }
+        ]
+      },
+      {
+        "name": "Appointment Reminder - 2h Before",
+        "trigger": "appointment_scheduled",
+        "conditions": [
+          {
+            "field": "appointment.startTime",
+            "operator": "hours_until",
+            "value": 2
+          }
+        ],
+        "actions": [
+          {
+            "type": "send_sms",
+            "template": "appointment_reminder_2h",
+            "delay": 0,
+            "message": "Hi {{contact.firstName}}, your appointment is in 2 hours. Looking forward to seeing you!"
+          }
+        ]
+      },
+      {
+        "name": "Birthday Greeting",
+        "trigger": "contact_birthday",
+        "conditions": [],
+        "actions": [
+          {
+            "type": "send_sms",
+            "template": "birthday_greeting",
+            "delay": 0,
+            "message": "Happy Birthday {{contact.firstName}}! 🎉 Wishing you an amazing day!"
+          },
+          {
+            "type": "add_tag",
+            "value": "birthday_this_month"
+          }
+        ]
+      }
+    ],
+    "references": []
+  },
+  "automations": {
+    "definitions": [
+      {
+        "name": "New Lead Welcome Sequence",
+        "type": "drip_campaign",
+        "trigger": "contact_created",
+        "conditions": [
+          {
+            "field": "tag",
+            "operator": "equals",
+            "value": "new_lead"
+          }
+        ],
+        "steps": [
+          {
+            "step": 1,
+            "action": "send_email",
+            "template": "welcome_email",
+            "delay": 0,
+            "subject": "Welcome to {{business.name}}!",
+            "body": "Hi {{contact.firstName}}, welcome! We're excited to help you reach your fitness goals."
+          },
+          {
+            "step": 2,
+            "action": "add_tag",
+            "value": "welcome_sent",
+            "delay": 0
+          },
+          {
+            "step": 3,
+            "action": "create_task",
+            "title": "Follow up with {{contact.firstName}}",
+            "dueDate": "+1 day",
+            "delay": 86400
+          }
+        ]
+      },
+      {
+        "name": "Simple Follow-up After No Response",
+        "type": "lead_nurture",
+        "trigger": "tag_added",
+        "conditions": [
+          {
+            "field": "tag",
+            "operator": "equals",
+            "value": "follow_up_needed"
+          }
+        ],
+        "steps": [
+          {
+            "step": 1,
+            "action": "send_sms",
+            "template": "follow_up_checkin",
+            "delay": 86400,
+            "message": "Hi {{contact.firstName}}, just checking in. Still interested in learning more?"
+          }
+        ]
+      }
+    ],
+    "references": []
+  },
+  "calendars": {
+    "additional": []
+  },
+  "pipelines": {
+    "definitions": []
+  },
+  "funnels": {
+    "definitions": []
+  },
+  "features": {
+    "unlimitedContacts": false,
+    "unlimitedUsers": false,
+    "advancedAutomations": false,
+    "pipelines": false,
+    "funnels": false,
+    "websites": false,
+    "reviewManagement": false,
+    "socialPlanner": false,
+    "affiliatePortal": false,
+    "whitelabel": false,
+    "campaignManagement": false,
+    "monthlyCredits": 10,
+    "creditRolloverMonths": 3
+  }
+}
+

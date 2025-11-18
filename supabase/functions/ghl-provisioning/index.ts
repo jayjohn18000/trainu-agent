@@ -5,11 +5,14 @@ import { corsHeaders } from '../_shared/responses.ts';
 import { handleError, handleValidationError } from '../_shared/error-handler.ts';
 import { createLogger, getRequestCorrelationId } from '../_shared/logger.ts';
 import { fetchWithRetry } from '../_shared/request-helper.ts';
+import { refreshGHLToken as sharedRefreshGHLToken } from '../_shared/ghl-token.ts';
 
 const FUNCTION_NAME = 'ghl-provisioning';
-const GHL_API_BASE = Deno.env.get('GHL_API_BASE') ?? 'https://rest.gohighlevel.com';
+const GHL_API_BASE = Deno.env.get('GHL_API_BASE') ?? 'https://services.leadconnectorhq.com';
 const GHL_API_VERSION = Deno.env.get('GHL_API_VERSION') ?? '2021-07-28';
 const GHL_ACCESS_TOKEN = Deno.env.get('GHL_ACCESS_TOKEN');
+const GHL_CLIENT_ID = Deno.env.get('GHL_CLIENT_ID');
+const GHL_CLIENT_SECRET = Deno.env.get('GHL_CLIENT_SECRET');
 
 if (!GHL_ACCESS_TOKEN) {
   console.warn(`[${FUNCTION_NAME}] GHL_ACCESS_TOKEN environment variable is not configured`);
@@ -79,6 +82,9 @@ type GHLConfigRecord = {
   default_channel?: string | null;
   quiet_hours_start?: string | null;
   quiet_hours_end?: string | null;
+  access_token?: string | null;
+  refresh_token?: string | null;
+  token_expires_at?: string | null;
 };
 
 const TAGS_TO_SEED = ['plan:entry', 'plan:core', 'plan:elite', 'at_risk', 'no_show', 'paused', 'high_engagement', 'nurture_active'];
@@ -197,6 +203,28 @@ Deno.serve(async (req) => {
 
     const existingConfig = await getExistingGHLConfig(supabase, resolvedTrainerId);
 
+    // OAuth check - require access token for provisioning
+    if (!existingConfig?.access_token) {
+      logger.warn('No OAuth access token found - provisioning requires OAuth', { trainerId: resolvedTrainerId });
+      return new Response(
+        JSON.stringify({
+          error: 'OAuth required',
+          message: 'Please connect your GoHighLevel account first via OAuth',
+          requiresOAuth: true,
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json', 'x-correlation-id': correlationId },
+        },
+      );
+    }
+
+    logger.info('OAuth token validated', {
+      trainerId: resolvedTrainerId,
+      locationId: existingConfig.location_id,
+      hasRefreshToken: !!existingConfig.refresh_token,
+    });
+
     await markProvisioningStatus(supabase, resolvedTrainerId, 'provisioning', {
       correlationId,
       dfyRequestId: input.dfyRequestId ?? null,
@@ -205,14 +233,28 @@ Deno.serve(async (req) => {
 
     const trainerProfile = await ensureTrainerProfile(supabase, resolvedTrainerId, input, dfyRequest, logger);
 
-    const location = await ensureLocation(input, trainerProfile, existingConfig, logger, correlationId);
-    const primaryUser = await ensurePrimaryUser(location.id, input, existingConfig, logger, correlationId);
-    const tags = await ensureTags(location.id, logger, correlationId);
-    const customFields = await ensureCustomFields(location.id, logger, correlationId);
-    await ensureLocationCustomValues(location.id, input, trainerProfile, logger, correlationId);
+    const location = await ensureLocation(input, trainerProfile, existingConfig, supabase, resolvedTrainerId, logger, correlationId);
+    
+    // Refresh token after location creation to ensure we have valid token for subsequent calls
+    const accessToken = await refreshGHLToken(supabase, resolvedTrainerId, logger) || existingConfig?.access_token || GHL_ACCESS_TOKEN;
+    
+    const primaryUser = await ensurePrimaryUser(location.id, input, existingConfig, accessToken, logger, correlationId);
+    const tags = await ensureTags(location.id, accessToken, logger, correlationId);
+    const customFields = await ensureCustomFields(location.id, accessToken, logger, correlationId);
+    await ensureLocationCustomValues(location.id, input, trainerProfile, accessToken, logger, correlationId);
     const calendars = await ensureCalendars(
       location.id,
       primaryUser?.id ?? existingConfig?.primary_user_id ?? null,
+      accessToken,
+      logger,
+      correlationId,
+    );
+
+    // Apply snapshot based on plan tier
+    const snapshotResult = await applySnapshotAssets(
+      location.id,
+      input.planTier,
+      accessToken,
       logger,
       correlationId,
     );
@@ -252,7 +294,8 @@ Deno.serve(async (req) => {
         seededTags: tags,
         customFields,
         calendars,
-        nextStep: 'Apply snapshot and enable automations',
+        snapshotApplied: snapshotResult.success,
+        snapshotDetails: snapshotResult,
         correlationId,
       }),
       {
@@ -282,11 +325,19 @@ Deno.serve(async (req) => {
 async function getExistingGHLConfig(supabase: any, trainerId: string): Promise<GHLConfigRecord | null> {
   const { data } = await supabase
     .from('ghl_config')
-    .select('trainer_id, location_id, provisioning_status, status, primary_user_id, default_channel, quiet_hours_start, quiet_hours_end')
+    .select('trainer_id, location_id, provisioning_status, status, primary_user_id, default_channel, quiet_hours_start, quiet_hours_end, access_token, refresh_token, token_expires_at')
     .eq('trainer_id', trainerId)
     .maybeSingle();
 
   return data ?? null;
+}
+
+async function refreshGHLToken(
+  supabase: any,
+  trainerId: string,
+  logger: ReturnType<typeof createLogger>,
+): Promise<string | null> {
+  return await sharedRefreshGHLToken(supabase, trainerId, logger);
 }
 
 async function markProvisioningStatus(
@@ -360,10 +411,20 @@ async function ensureLocation(
   payload: ProvisioningPayload,
   trainerProfile: Record<string, unknown>,
   existingConfig: GHLConfigRecord | null,
+  supabase: any,
+  trainerId: string,
   logger: ReturnType<typeof createLogger>,
   correlationId: string,
 ) {
-  if (!GHL_ACCESS_TOKEN) {
+  // Get access token - prefer per-location token, fallback to global
+  let accessToken = existingConfig?.access_token;
+  if (!accessToken && existingConfig) {
+    accessToken = await refreshGHLToken(supabase, trainerId, logger);
+  }
+  if (!accessToken) {
+    accessToken = GHL_ACCESS_TOKEN;
+  }
+  if (!accessToken) {
     throw new Error('GHL access token is not configured');
   }
 
@@ -392,7 +453,7 @@ async function ensureLocation(
   const response = await ghlRequest('/v1/locations', {
     method: 'POST',
     body: JSON.stringify(locationPayload),
-  }, logger, correlationId);
+  }, accessToken, logger, correlationId);
 
   if (!response.ok) {
     const body = await response.text();
@@ -411,8 +472,8 @@ function dfyPhoneFallback(payload: ProvisioningPayload): string {
   return payload.trainer.phone ?? '+10000000000';
 }
 
-async function ensureTags(locationId: string, logger: ReturnType<typeof createLogger>, correlationId: string) {
-  const response = await ghlRequest(`/v1/locations/${locationId}/tags`, { method: 'GET' }, logger, correlationId);
+async function ensureTags(locationId: string, accessToken: string, logger: ReturnType<typeof createLogger>, correlationId: string) {
+  const response = await ghlRequest(`/v1/locations/${locationId}/tags`, { method: 'GET' }, accessToken, logger, correlationId);
   const json = response.ok ? await response.json() : { tags: [] };
   const existing = new Set<string>((json.tags ?? json.data ?? []).map((tag: any) => String(tag.name).toLowerCase()));
 
@@ -425,6 +486,7 @@ async function ensureTags(locationId: string, logger: ReturnType<typeof createLo
         method: 'POST',
         body: JSON.stringify({ name: tag }),
       },
+      accessToken,
       logger,
       correlationId,
     );
@@ -441,8 +503,8 @@ async function ensureTags(locationId: string, logger: ReturnType<typeof createLo
   return { created, existing: [...existing] };
 }
 
-async function ensureCustomFields(locationId: string, logger: ReturnType<typeof createLogger>, correlationId: string) {
-  const response = await ghlRequest(`/v1/locations/${locationId}/customFields`, { method: 'GET' }, logger, correlationId);
+async function ensureCustomFields(locationId: string, accessToken: string, logger: ReturnType<typeof createLogger>, correlationId: string) {
+  const response = await ghlRequest(`/v1/locations/${locationId}/customFields`, { method: 'GET' }, accessToken, logger, correlationId);
   const json = response.ok ? await response.json() : { customFields: [] };
   const existing = new Map<string, any>();
   for (const field of json.customFields ?? json.data ?? []) {
@@ -467,6 +529,7 @@ async function ensureCustomFields(locationId: string, logger: ReturnType<typeof 
           entityType: 'contact',
         }),
       },
+      accessToken,
       logger,
       correlationId,
     );
@@ -488,6 +551,7 @@ async function ensureLocationCustomValues(
   locationId: string,
   payload: ProvisioningPayload,
   trainerProfile: Record<string, unknown>,
+  accessToken: string,
   logger: ReturnType<typeof createLogger>,
   correlationId: string,
 ) {
@@ -513,6 +577,7 @@ async function ensureLocationCustomValues(
       method: 'PUT',
       body: JSON.stringify({ customValues }),
     },
+    accessToken,
     logger,
     correlationId,
   );
@@ -528,10 +593,11 @@ async function ensureLocationCustomValues(
 async function ensureCalendars(
   locationId: string,
   primaryUserId: string | null,
+  accessToken: string,
   logger: ReturnType<typeof createLogger>,
   correlationId: string,
 ) {
-  const response = await ghlRequest(`/v1/locations/${locationId}/calendars`, { method: 'GET' }, logger, correlationId);
+  const response = await ghlRequest(`/v1/locations/${locationId}/calendars`, { method: 'GET' }, accessToken, logger, correlationId);
   const json = response.ok ? await response.json() : { calendars: [] };
   const existing = new Map<string, any>();
   for (const calendar of json.calendars ?? json.data ?? []) {
@@ -562,6 +628,7 @@ async function ensureCalendars(
           userId: primaryUserId ?? undefined,
         }),
       },
+      accessToken,
       logger,
       correlationId,
     );
@@ -583,6 +650,7 @@ async function ensurePrimaryUser(
   locationId: string,
   payload: ProvisioningPayload,
   existingConfig: GHLConfigRecord | null,
+  accessToken: string,
   logger: ReturnType<typeof createLogger>,
   correlationId: string,
 ) {
@@ -591,7 +659,7 @@ async function ensurePrimaryUser(
     return { id: existingConfig.primary_user_id };
   }
 
-  const response = await ghlRequest(`/v1/locations/${locationId}/users`, { method: 'GET' }, logger, correlationId);
+  const response = await ghlRequest(`/v1/locations/${locationId}/users`, { method: 'GET' }, accessToken, logger, correlationId);
   if (response.ok) {
     const json = await response.json();
     const existing = (json.users ?? json.data ?? []).find(
@@ -614,6 +682,7 @@ async function ensurePrimaryUser(
         role: 'admin',
       }),
     },
+    accessToken,
     logger,
     correlationId,
   );
@@ -675,10 +744,255 @@ function resolveQuietHours(payload: ProvisioningPayload) {
   };
 }
 
-async function ghlRequest(path: string, init: RequestInit, logger: ReturnType<typeof createLogger>, correlationId: string) {
+async function applySnapshotAssets(
+  locationId: string,
+  planTier: string,
+  accessToken: string,
+  logger: ReturnType<typeof createLogger>,
+  correlationId: string,
+): Promise<{ success: boolean; details: any }> {
+  try {
+    // Map plan tier to snapshot file
+    const tierMap: Record<string, string> = {
+      'starter': 'starter',
+      'professional': 'professional',
+      'growth': 'growth',
+    };
+
+    const tier = tierMap[planTier.toLowerCase()] || 'starter';
+
+    logger.info('Loading snapshot', { tier, planTier });
+
+    // Load snapshot JSON file
+    let snapshotData: any;
+    try {
+      // Use import.meta.url to resolve the path relative to this file
+      const baseUrl = new URL('.', import.meta.url).href;
+      const snapshotUrl = new URL(`snapshots/${tier}.json`, baseUrl).href;
+      const snapshotFile = await Deno.readTextFile(new URL(snapshotUrl).pathname);
+      snapshotData = JSON.parse(snapshotFile);
+    } catch (error) {
+      // Fallback: try reading from relative path
+      try {
+        const snapshotFile = await Deno.readTextFile(`./snapshots/${tier}.json`);
+        snapshotData = JSON.parse(snapshotFile);
+      } catch (fallbackError) {
+        logger.warn('Failed to load snapshot file, using empty snapshot', { 
+          tier, 
+          error: error instanceof Error ? error.message : String(error),
+          fallbackError: fallbackError instanceof Error ? fallbackError.message : String(fallbackError)
+        });
+        snapshotData = { tier, tags: { additional: [] }, customFields: { additional: [] }, workflows: { definitions: [] }, automations: { definitions: [] }, calendars: { additional: [] }, pipelines: { definitions: [] }, funnels: { definitions: [] } };
+      }
+    }
+
+    const results: any = {
+      tags: { created: [], skipped: [] },
+      customFields: { created: [], skipped: [] },
+      workflows: { created: [], skipped: [] },
+      automations: { created: [], skipped: [] },
+      calendars: { created: [], skipped: [] },
+      pipelines: { created: [], skipped: [] },
+      funnels: { created: [], skipped: [] },
+    };
+
+    // Apply additional tags
+    if (snapshotData.tags?.additional) {
+      const existingTagsResponse = await ghlRequest(`/v1/locations/${locationId}/tags`, { method: 'GET' }, accessToken, logger, correlationId);
+      const existingTagsJson = existingTagsResponse.ok ? await existingTagsResponse.json() : { tags: [] };
+      const existingTags = new Set<string>((existingTagsJson.tags ?? existingTagsJson.data ?? []).map((tag: any) => String(tag.name).toLowerCase()));
+
+      for (const tagName of snapshotData.tags.additional) {
+        if (existingTags.has(tagName.toLowerCase())) {
+          results.tags.skipped.push(tagName);
+          continue;
+        }
+
+        const createResponse = await ghlRequest(
+          `/v1/locations/${locationId}/tags`,
+          {
+            method: 'POST',
+            body: JSON.stringify({ name: tagName }),
+          },
+          accessToken,
+          logger,
+          correlationId,
+        );
+
+        if (createResponse.ok) {
+          results.tags.created.push(tagName);
+        } else {
+          const errorText = await createResponse.text();
+          logger.warn('Failed to create snapshot tag', { tag: tagName, status: createResponse.status, errorText });
+          results.tags.skipped.push(tagName);
+        }
+      }
+    }
+
+    // Apply additional custom fields
+    if (snapshotData.customFields?.additional) {
+      const existingFieldsResponse = await ghlRequest(`/v1/locations/${locationId}/customFields`, { method: 'GET' }, accessToken, logger, correlationId);
+      const existingFieldsJson = existingFieldsResponse.ok ? await existingFieldsResponse.json() : { customFields: [] };
+      const existingFields = new Map<string, any>();
+      for (const field of existingFieldsJson.customFields ?? existingFieldsJson.data ?? []) {
+        existingFields.set(String(field.name).toLowerCase(), field);
+      }
+
+      for (const field of snapshotData.customFields.additional) {
+        if (existingFields.has(field.name.toLowerCase())) {
+          results.customFields.skipped.push(field.name);
+          continue;
+        }
+
+        const createResponse = await ghlRequest(
+          `/v1/locations/${locationId}/customFields`,
+          {
+            method: 'POST',
+            body: JSON.stringify({
+              name: field.name,
+              dataType: field.fieldType,
+              options: field.options ?? undefined,
+              entityType: 'contact',
+            }),
+          },
+          accessToken,
+          logger,
+          correlationId,
+        );
+
+        if (createResponse.ok) {
+          results.customFields.created.push(field.name);
+        } else {
+          const errorText = await createResponse.text();
+          logger.warn('Failed to create snapshot custom field', { field: field.name, status: createResponse.status, errorText });
+          results.customFields.skipped.push(field.name);
+        }
+      }
+    }
+
+    // Apply additional calendars
+    if (snapshotData.calendars?.additional) {
+      const existingCalendarsResponse = await ghlRequest(`/v1/locations/${locationId}/calendars`, { method: 'GET' }, accessToken, logger, correlationId);
+      const existingCalendarsJson = existingCalendarsResponse.ok ? await existingCalendarsResponse.json() : { calendars: [] };
+      const existingCalendars = new Map<string, any>();
+      for (const calendar of existingCalendarsJson.calendars ?? existingCalendarsJson.data ?? []) {
+        existingCalendars.set(String(calendar.name).toLowerCase(), calendar);
+      }
+
+      for (const calendar of snapshotData.calendars.additional) {
+        if (existingCalendars.has(calendar.name.toLowerCase())) {
+          results.calendars.skipped.push(calendar.name);
+          continue;
+        }
+
+        const createResponse = await ghlRequest(
+          `/v1/locations/${locationId}/calendars`,
+          {
+            method: 'POST',
+            body: JSON.stringify({
+              name: calendar.name,
+              slug: calendar.slug,
+              description: calendar.description,
+              meetingDuration: calendar.duration,
+              slotInterval: calendar.slotInterval,
+              minCancellationNotice: calendar.minNotice,
+              bufferTimeBefore: calendar.bufferBefore,
+              bufferTimeAfter: calendar.bufferAfter,
+              timezoneMode: calendar.timezoneMode,
+            }),
+          },
+          accessToken,
+          logger,
+          correlationId,
+        );
+
+        if (createResponse.ok) {
+          results.calendars.created.push(calendar.name);
+        } else {
+          const errorText = await createResponse.text();
+          logger.warn('Failed to create snapshot calendar', { calendar: calendar.name, status: createResponse.status, errorText });
+          results.calendars.skipped.push(calendar.name);
+        }
+      }
+    }
+
+    // Note: Workflows, automations, pipelines, and funnels would require more complex API calls
+    // For now, we log them but don't create them automatically
+    // These should be created manually or via more specific GHL API endpoints
+    if (snapshotData.workflows?.definitions?.length > 0) {
+      logger.info('Snapshot contains workflow definitions (manual creation required)', {
+        count: snapshotData.workflows.definitions.length,
+        workflows: snapshotData.workflows.definitions.map((w: any) => w.name),
+      });
+      results.workflows.note = 'Workflow creation requires manual setup or additional API endpoints';
+    }
+
+    if (snapshotData.automations?.definitions?.length > 0) {
+      logger.info('Snapshot contains automation definitions (manual creation required)', {
+        count: snapshotData.automations.definitions.length,
+        automations: snapshotData.automations.definitions.map((a: any) => a.name),
+      });
+      results.automations.note = 'Automation creation requires manual setup or additional API endpoints';
+    }
+
+    if (snapshotData.pipelines?.definitions?.length > 0) {
+      logger.info('Snapshot contains pipeline definitions (manual creation required)', {
+        count: snapshotData.pipelines.definitions.length,
+        pipelines: snapshotData.pipelines.definitions.map((p: any) => p.name),
+      });
+      results.pipelines.note = 'Pipeline creation requires manual setup or additional API endpoints';
+    }
+
+    if (snapshotData.funnels?.definitions?.length > 0) {
+      logger.info('Snapshot contains funnel definitions (manual creation required)', {
+        count: snapshotData.funnels.definitions.length,
+        funnels: snapshotData.funnels.definitions.map((f: any) => f.name),
+      });
+      results.funnels.note = 'Funnel creation requires manual setup or additional API endpoints';
+    }
+
+    logger.info('Snapshot application complete', {
+      tier,
+      locationId,
+      results: {
+        tagsCreated: results.tags.created.length,
+        customFieldsCreated: results.customFields.created.length,
+        calendarsCreated: results.calendars.created.length,
+      },
+    });
+
+    return {
+      success: true,
+      details: {
+        tier,
+        snapshotId: snapshotData.snapshotId,
+        results,
+      },
+    };
+  } catch (error) {
+    logger.error('Failed to apply snapshot assets', {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    return {
+      success: false,
+      details: {
+        error: error instanceof Error ? error.message : String(error),
+      },
+    };
+  }
+}
+
+async function ghlRequest(
+  path: string,
+  init: RequestInit,
+  accessToken: string,
+  logger: ReturnType<typeof createLogger>,
+  correlationId: string,
+) {
   const url = path.startsWith('http') ? path : `${GHL_API_BASE}${path}`;
   const headers = new Headers(init.headers ?? {});
-  headers.set('Authorization', `Bearer ${GHL_ACCESS_TOKEN}`);
+  headers.set('Authorization', `Bearer ${accessToken}`);
   headers.set('Content-Type', 'application/json');
   headers.set('Version', GHL_API_VERSION);
   headers.set('x-correlation-id', correlationId);

@@ -1,0 +1,341 @@
+{
+  "tier": "professional",
+  "description": "Unlimited scale with advanced automations and enterprise features",
+  "snapshotId": "ZyDyVPypdONMcyasVKMR",
+  "tags": {
+    "additional": [
+      "new_lead",
+      "follow_up_needed",
+      "birthday_this_month",
+      "welcome_sent",
+      "onboarding_started",
+      "vip_client",
+      "group_class_member",
+      "corporate_client",
+      "recurring_session",
+      "high_value_lead",
+      "at_risk",
+      "recovery_campaign",
+      "survey_sent",
+      "nurture_active"
+    ],
+    "workflowTags": [
+      "workflow:missed_call",
+      "workflow:appointment_reminder",
+      "workflow:birthday_greeting",
+      "workflow:lead_nurture",
+      "workflow:at_risk_recovery",
+      "workflow:survey_request"
+    ]
+  },
+  "customFields": {
+    "additional": [
+      {
+        "name": "Referral Source",
+        "key": "referral_source",
+        "fieldType": "select",
+        "options": ["Social Media", "Word of Mouth", "Website", "Google Search", "Partner", "Event", "Other"]
+      },
+      {
+        "name": "Client Status",
+        "key": "client_status",
+        "fieldType": "select",
+        "options": ["Prospect", "Active", "Paused", "Inactive", "VIP"]
+      },
+      {
+        "name": "Contract Type",
+        "key": "contract_type",
+        "fieldType": "select",
+        "options": ["Monthly", "Quarterly", "Annual", "Pay-per-session", "Group Class"]
+      },
+      {
+        "name": "Preferred Trainer",
+        "key": "preferred_trainer",
+        "fieldType": "text"
+      },
+      {
+        "name": "Group Class Preference",
+        "key": "group_class_pref",
+        "fieldType": "select",
+        "options": ["Yoga", "HIIT", "Strength", "Cardio", "Mixed", "None"]
+      },
+      {
+        "name": "Monthly Spend",
+        "key": "monthly_spend",
+        "fieldType": "number"
+      }
+    ]
+  },
+  "workflows": {
+    "definitions": [
+      {
+        "name": "Missed Call Follow-up",
+        "trigger": "missed_call",
+        "conditions": [],
+        "actions": [
+          {
+            "type": "send_sms",
+            "template": "missed_call_followup",
+            "delay": 300,
+            "message": "Hi {{contact.firstName}}, I noticed you called. How can I help you today?"
+          },
+          {
+            "type": "add_tag",
+            "value": "follow_up_needed"
+          }
+        ]
+      },
+      {
+        "name": "Appointment Reminder - 24h Before",
+        "trigger": "appointment_scheduled",
+        "conditions": [
+          {
+            "field": "appointment.startTime",
+            "operator": "hours_until",
+            "value": 24
+          }
+        ],
+        "actions": [
+          {
+            "type": "send_sms",
+            "template": "appointment_reminder_24h",
+            "delay": 0
+          },
+          {
+            "type": "send_email",
+            "template": "appointment_reminder_email",
+            "delay": 0
+          }
+        ]
+      },
+      {
+        "name": "Birthday Greeting",
+        "trigger": "contact_birthday",
+        "conditions": [],
+        "actions": [
+          {
+            "type": "send_sms",
+            "template": "birthday_greeting",
+            "delay": 0
+          },
+          {
+            "type": "send_email",
+            "template": "birthday_email",
+            "delay": 0
+          }
+        ]
+      },
+      {
+        "name": "At-Risk Client Recovery",
+        "trigger": "tag_added",
+        "conditions": [
+          {
+            "field": "tag",
+            "operator": "equals",
+            "value": "at_risk"
+          }
+        ],
+        "actions": [
+          {
+            "type": "send_email",
+            "template": "at_risk_recovery",
+            "delay": 0,
+            "subject": "We miss you, {{contact.firstName}}!"
+          },
+          {
+            "type": "send_sms",
+            "template": "at_risk_sms",
+            "delay": 3600,
+            "message": "Hi {{contact.firstName}}, we noticed you haven't been in. We'd love to help you get back on track. Reply to schedule a session!"
+          },
+          {
+            "type": "add_tag",
+            "value": "recovery_campaign"
+          },
+          {
+            "type": "create_task",
+            "title": "Follow up with at-risk client: {{contact.firstName}}",
+            "dueDate": "+2 days"
+          }
+        ]
+      },
+      {
+        "name": "Survey Request After Session",
+        "trigger": "appointment_completed",
+        "conditions": [],
+        "actions": [
+          {
+            "type": "send_email",
+            "template": "session_survey",
+            "delay": 3600,
+            "subject": "How was your session, {{contact.firstName}}?"
+          },
+          {
+            "type": "add_tag",
+            "value": "survey_sent"
+          }
+        ]
+      }
+    ],
+    "references": []
+  },
+  "automations": {
+    "definitions": [
+      {
+        "name": "Lead Nurture Sequence - 7 Day",
+        "type": "drip_campaign",
+        "trigger": "contact_created",
+        "conditions": [
+          {
+            "field": "tag",
+            "operator": "equals",
+            "value": "new_lead"
+          }
+        ],
+        "steps": [
+          {
+            "step": 1,
+            "action": "send_email",
+            "template": "welcome_email",
+            "delay": 0
+          },
+          {
+            "step": 2,
+            "action": "send_sms",
+            "template": "day1_sms",
+            "delay": 86400,
+            "message": "Hi {{contact.firstName}}, thanks for your interest! What's your main fitness goal?"
+          },
+          {
+            "step": 3,
+            "action": "send_email",
+            "template": "day3_value_prop",
+            "delay": 259200
+          },
+          {
+            "step": 4,
+            "action": "send_sms",
+            "template": "day7_followup",
+            "delay": 604800,
+            "message": "Hi {{contact.firstName}}, still interested? Let's schedule a free consultation call!"
+          },
+          {
+            "step": 5,
+            "action": "create_task",
+            "title": "Schedule call with {{contact.firstName}}",
+            "dueDate": "+1 day",
+            "delay": 604800
+          }
+        ]
+      },
+      {
+        "name": "Progressive Workflow - New Client Onboarding",
+        "type": "onboarding",
+        "trigger": "tag_added",
+        "conditions": [
+          {
+            "field": "tag",
+            "operator": "equals",
+            "value": "onboarding_started"
+          }
+        ],
+        "steps": [
+          {
+            "step": 1,
+            "action": "send_email",
+            "template": "onboarding_welcome",
+            "delay": 0
+          },
+          {
+            "step": 2,
+            "action": "send_email",
+            "template": "onboarding_checklist",
+            "delay": 86400
+          },
+          {
+            "step": 3,
+            "action": "send_sms",
+            "template": "onboarding_reminder",
+            "delay": 172800,
+            "message": "Hi {{contact.firstName}}, don't forget to complete your onboarding forms!"
+          }
+        ]
+      },
+      {
+        "name": "Multi-Channel Campaign - New Program Launch",
+        "type": "campaign",
+        "trigger": "campaign_started",
+        "conditions": [],
+        "steps": [
+          {
+            "step": 1,
+            "action": "send_email",
+            "template": "campaign_announcement",
+            "delay": 0
+          },
+          {
+            "step": 2,
+            "action": "send_sms",
+            "template": "campaign_sms",
+            "delay": 3600
+          },
+          {
+            "step": 3,
+            "action": "send_messenger",
+            "template": "campaign_messenger",
+            "delay": 7200
+          }
+        ]
+      }
+    ],
+    "references": []
+  },
+  "calendars": {
+    "additional": [
+      {
+        "name": "Group Class (60m)",
+        "slug": "group-class-60m",
+        "description": "Group fitness class session",
+        "duration": 60,
+        "slotInterval": 60,
+        "minNotice": 4,
+        "bufferBefore": 15,
+        "bufferAfter": 15,
+        "timezoneMode": "location"
+      },
+      {
+        "name": "Consultation (30m)",
+        "slug": "consultation-30m",
+        "description": "Initial consultation call",
+        "duration": 30,
+        "slotInterval": 30,
+        "minNotice": 12,
+        "bufferBefore": 10,
+        "bufferAfter": 10,
+        "timezoneMode": "user"
+      }
+    ]
+  },
+  "pipelines": {
+    "definitions": []
+  },
+  "funnels": {
+    "definitions": []
+  },
+  "features": {
+    "unlimitedContacts": true,
+    "unlimitedUsers": true,
+    "advancedAutomations": true,
+    "pipelines": false,
+    "funnels": false,
+    "websites": false,
+    "reviewManagement": false,
+    "socialPlanner": false,
+    "affiliatePortal": true,
+    "whitelabel": false,
+    "campaignManagement": false,
+    "monthlyCredits": 25,
+    "creditRolloverMonths": 3
+  }
+}
+

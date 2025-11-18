@@ -1,40 +1,74 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.76.1';
-import { errorResponse, jsonResponse, corsHeaders } from '../_shared/responses.ts';
+/**
+ * GHL OAuth Callback Handler
+ * Receives authorization code, exchanges for tokens, stores in ghl_config
+ */
 
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
 const GHL_CLIENT_ID = Deno.env.get('GHL_CLIENT_ID');
 const GHL_CLIENT_SECRET = Deno.env.get('GHL_CLIENT_SECRET');
 const GHL_REDIRECT_URI = Deno.env.get('GHL_REDIRECT_URI');
+const APP_URL = Deno.env.get('APP_URL') || 'https://trainu.app';
 
-Deno.serve(async (req) => {
-  // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response(null, {
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      },
-    });
-  }
+const GHL_OAUTH_BASE = 'https://marketplace.gohighlevel.com/oauth';
 
+serve(async (req) => {
   try {
     const url = new URL(req.url);
     const code = url.searchParams.get('code');
+    const stateParam = url.searchParams.get('state');
     const error = url.searchParams.get('error');
 
+    // Handle OAuth error (user declined)
     if (error) {
       console.error('OAuth error:', error);
-      return errorResponse('Authentication failed', 400);
+      return new Response(null, {
+        status: 302,
+        headers: {
+          'Location': `${APP_URL}/onboarding?error=oauth_declined`,
+        },
+      });
     }
 
-    if (!code) {
-      return errorResponse('Missing authorization code', 400);
+    if (!code || !stateParam) {
+      console.error('Missing code or state parameter');
+      return new Response(null, {
+        status: 302,
+        headers: {
+          'Location': `${APP_URL}/onboarding?error=invalid_callback`,
+        },
+      });
     }
 
-    // Exchange code for tokens
-    const tokenResponse = await fetch('https://services.leadconnectorhq.com/oauth/token', {
+    // Decode and parse state
+    let state;
+    try {
+      state = JSON.parse(atob(stateParam));
+    } catch {
+      console.error('Invalid state parameter');
+      return new Response(null, {
+        status: 302,
+        headers: {
+          'Location': `${APP_URL}/onboarding?error=invalid_state`,
+        },
+      });
+    }
+
+    const { trainerId, tier } = state;
+
+    if (!trainerId) {
+      console.error('Missing trainerId in state');
+      return new Response(null, {
+        status: 302,
+        headers: {
+          'Location': `${APP_URL}/onboarding?error=invalid_state`,
+        },
+      });
+    }
+
+    // Exchange authorization code for tokens
+    const tokenResponse = await fetch(`${GHL_OAUTH_BASE}/token`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -43,114 +77,104 @@ Deno.serve(async (req) => {
         client_id: GHL_CLIENT_ID!,
         client_secret: GHL_CLIENT_SECRET!,
         grant_type: 'authorization_code',
-        code,
+        code: code,
         redirect_uri: GHL_REDIRECT_URI!,
-      }),
+      }).toString(),
     });
 
     if (!tokenResponse.ok) {
       const errorText = await tokenResponse.text();
       console.error('Token exchange failed:', errorText);
-      return errorResponse('Failed to exchange authorization code', 500);
+      return new Response(null, {
+        status: 302,
+        headers: {
+          'Location': `${APP_URL}/onboarding?error=token_exchange_failed`,
+        },
+      });
     }
 
-    const tokens = await tokenResponse.json();
-    const { access_token, refresh_token, locationId, userId } = tokens;
+    const tokenData = await tokenResponse.json();
+    const {
+      access_token,
+      refresh_token,
+      expires_in,
+      locationId,
+      companyId,
+      userId,
+    } = tokenData;
 
-    // Get user details from GHL
-    const userResponse = await fetch('https://services.leadconnectorhq.com/users/me', {
-      headers: {
-        'Authorization': `Bearer ${access_token}`,
-        'Version': '2021-07-28',
-      },
-    });
-
-    if (!userResponse.ok) {
-      console.error('Failed to fetch user details');
-      return errorResponse('Failed to fetch user details', 500);
+    if (!access_token || !locationId) {
+      console.error('Missing required token data', { hasAccessToken: !!access_token, locationId });
+      return new Response(null, {
+        status: 302,
+        headers: {
+          'Location': `${APP_URL}/onboarding?error=incomplete_token_data`,
+        },
+      });
     }
 
-    const ghlUser = await userResponse.json();
+    // Calculate token expiration
+    const tokenExpiresAt = new Date(Date.now() + (expires_in * 1000));
 
-    // Create or update Supabase auth user
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    // Create service role client to update ghl_config
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+    );
 
-    // Create Supabase user with GHL metadata
-    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-      email: ghlUser.email,
-      email_confirm: true,
-      user_metadata: {
-        ghl_user_id: userId,
-        ghl_location_id: locationId,
-        name: ghlUser.name || ghlUser.email?.split('@')[0],
-        provider: 'ghl',
-      },
-    });
-
-    if (authError && !authError.message.includes('already registered')) {
-      console.error('Failed to create auth user:', authError);
-      return errorResponse('Failed to create user', 500);
-    }
-
-    const supabaseUserId = authData?.user?.id || (await supabase.auth.admin.listUsers())
-      .data.users?.find(u => u.email === ghlUser.email)?.id;
-
-    if (!supabaseUserId) {
-      return errorResponse('Failed to retrieve user ID', 500);
-    }
-
-    // Store GHL tokens and config
-    const { error: configError } = await supabase
+    // Store OAuth tokens in ghl_config
+    const { error: upsertError } = await supabase
       .from('ghl_config')
       .upsert({
-        trainer_id: supabaseUserId,
+        trainer_id: trainerId,
         location_id: locationId,
         access_token: access_token,
         refresh_token: refresh_token,
-        token_expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-        is_active: true,
+        token_expires_at: tokenExpiresAt.toISOString(),
+        company_id: companyId || null,
+        primary_user_id: userId || null,
+        sms_enabled: true,
+        email_enabled: true,
+        default_channel: 'both',
+        updated_at: new Date().toISOString(),
       }, {
         onConflict: 'trainer_id',
       });
 
-    if (configError) {
-      console.error('Failed to store GHL config:', configError);
+    if (upsertError) {
+      console.error('Failed to store OAuth tokens:', upsertError);
+      return new Response(null, {
+        status: 302,
+        headers: {
+          'Location': `${APP_URL}/onboarding?error=storage_failed`,
+        },
+      });
     }
 
-    // Create user role if not exists
-    await supabase
-      .from('user_roles')
-      .upsert({
-        user_id: supabaseUserId,
-        role: 'trainer',
-      }, {
-        onConflict: 'user_id',
-      });
-
-    // Generate session token
-    const { data: sessionData, error: sessionError } = await supabase.auth.admin.generateLink({
-      type: 'magiclink',
-      email: ghlUser.email,
+    console.log('OAuth tokens stored successfully', {
+      trainerId,
+      locationId,
+      tier,
     });
 
-    if (sessionError || !sessionData) {
-      console.error('Failed to generate session:', sessionError);
-      return errorResponse('Failed to create session', 500);
-    }
-
-    // Return redirect with session token
-    const redirectUrl = `${url.origin}/auth/callback?access_token=${sessionData.properties.hashed_token}`;
+    // Redirect to provisioning or onboarding complete
+    const redirectUrl = tier
+      ? `${APP_URL}/onboarding?oauth=success&tier=${tier}`
+      : `${APP_URL}/onboarding?oauth=success`;
 
     return new Response(null, {
       status: 302,
       headers: {
         'Location': redirectUrl,
-        'Access-Control-Allow-Origin': '*',
       },
     });
-
   } catch (error) {
     console.error('OAuth callback error:', error);
-    return errorResponse('Internal server error', 500);
+    return new Response(null, {
+      status: 302,
+      headers: {
+        'Location': `${APP_URL}/onboarding?error=server_error`,
+      },
+    });
   }
 });

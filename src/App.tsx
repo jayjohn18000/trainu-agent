@@ -31,6 +31,7 @@ const About = lazyWithRetry(() => import("@/pages/landing/About"));
 const Contact = lazyWithRetry(() => import("@/pages/landing/Contact"));
 const Challenge = lazyWithRetry(() => import("@/pages/landing/Challenge"));
 const ChallengeRating = lazyWithRetry(() => import("@/pages/ChallengeRating"));
+const Onboarding = lazyWithRetry(() => import("@/pages/Onboarding"));
 
 const Directory = lazyWithRetry(() => import("@/pages/Directory"));
 const TrainerProfile = lazyWithRetry(() => import("@/pages/TrainerProfile"));
@@ -107,6 +108,7 @@ export default function App() {
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
             <Route path="/directory" element={<Directory />} />
             <Route path="/trainers/:slug" element={<TrainerProfile />} />
 

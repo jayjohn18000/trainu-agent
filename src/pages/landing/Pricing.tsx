@@ -20,6 +20,8 @@ const tiers = [
   {
     name: "Starter",
     price: 79,
+    checkoutUrl: "https://buy.stripe.com/28E4gB5M31lP4eP8I2frW00",
+    tier: "starter",
     description: "Core CRM & Communication Hub for solo trainers",
     popular: false,
     features: [
@@ -38,6 +40,8 @@ const tiers = [
   {
     name: "Professional",
     price: 99,
+    checkoutUrl: "https://buy.stripe.com/9B600lcarfcF8v5gaufrW01",
+    tier: "professional",
     description: "Unlimited scale + SaaS access for growing studios",
     popular: true,
     features: [
@@ -55,6 +59,8 @@ const tiers = [
   {
     name: "Growth+",
     price: 497,
+    checkoutUrl: "https://buy.stripe.com/00waEZ3DV0hL6mX2jEfrW02",
+    tier: "growth",
     description: "Full GHL power + white-glove support",
     popular: false,
     features: [
@@ -190,14 +196,19 @@ export default function Pricing() {
                   <p className="text-xs text-success">{tier.roi}</p>
                 </div>
 
-                <Link to="/login" className="block mb-6">
+                <a 
+                  href={tier.checkoutUrl} 
+                  className="block mb-6"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <Button
                     className={`w-full ${tier.popular ? "shadow-glow" : ""}`}
                     variant={tier.popular ? "default" : "outline"}
                   >
-                    Start Free Trial
+                    Get Started
                   </Button>
-                </Link>
+                </a>
 
                 <ul className="space-y-3">
                   {tier.features.map((feature, index) => (

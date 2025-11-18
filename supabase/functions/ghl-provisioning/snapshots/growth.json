@@ -1,0 +1,594 @@
+{
+  "tier": "growth",
+  "description": "Full GHL suite with all features, unlimited scale, and premium support",
+  "snapshotId": "ZyDyVPypdONMcyasVKMR",
+  "tags": {
+    "additional": [
+      "new_lead",
+      "follow_up_needed",
+      "birthday_this_month",
+      "welcome_sent",
+      "onboarding_started",
+      "vip_client",
+      "group_class_member",
+      "corporate_client",
+      "recurring_session",
+      "high_value_lead",
+      "at_risk",
+      "recovery_campaign",
+      "survey_sent",
+      "nurture_active",
+      "enterprise_client",
+      "agency_partner",
+      "whitelabel_account",
+      "pipeline_lead",
+      "pipeline_qualified",
+      "pipeline_proposal",
+      "pipeline_negotiation",
+      "pipeline_closed_won",
+      "pipeline_closed_lost",
+      "review_requested",
+      "review_received"
+    ],
+    "workflowTags": [
+      "workflow:missed_call",
+      "workflow:appointment_reminder",
+      "workflow:birthday_greeting",
+      "workflow:lead_nurture",
+      "workflow:at_risk_recovery",
+      "workflow:survey_request",
+      "workflow:pipeline_tracking",
+      "workflow:review_request",
+      "workflow:social_scheduler"
+    ]
+  },
+  "customFields": {
+    "additional": [
+      {
+        "name": "Referral Source",
+        "key": "referral_source",
+        "fieldType": "select",
+        "options": ["Social Media", "Word of Mouth", "Website", "Google Search", "Partner", "Event", "Paid Ads", "Other"]
+      },
+      {
+        "name": "Client Status",
+        "key": "client_status",
+        "fieldType": "select",
+        "options": ["Prospect", "Active", "Paused", "Inactive", "VIP", "Enterprise"]
+      },
+      {
+        "name": "Contract Type",
+        "key": "contract_type",
+        "fieldType": "select",
+        "options": ["Monthly", "Quarterly", "Annual", "Pay-per-session", "Group Class", "Enterprise"]
+      },
+      {
+        "name": "Preferred Trainer",
+        "key": "preferred_trainer",
+        "fieldType": "text"
+      },
+      {
+        "name": "Group Class Preference",
+        "key": "group_class_pref",
+        "fieldType": "select",
+        "options": ["Yoga", "HIIT", "Strength", "Cardio", "Mixed", "None"]
+      },
+      {
+        "name": "Monthly Spend",
+        "key": "monthly_spend",
+        "fieldType": "number"
+      },
+      {
+        "name": "Pipeline Stage",
+        "key": "pipeline_stage",
+        "fieldType": "select",
+        "options": ["Lead", "Qualified", "Proposal", "Negotiation", "Closed Won", "Closed Lost"]
+      },
+      {
+        "name": "Opportunity Value",
+        "key": "opportunity_value",
+        "fieldType": "number"
+      },
+      {
+        "name": "Agency Partner",
+        "key": "agency_partner",
+        "fieldType": "text"
+      },
+      {
+        "name": "Funnel Source",
+        "key": "funnel_source",
+        "fieldType": "text"
+      },
+      {
+        "name": "Review Rating",
+        "key": "review_rating",
+        "fieldType": "select",
+        "options": ["1", "2", "3", "4", "5"]
+      }
+    ]
+  },
+  "workflows": {
+    "definitions": [
+      {
+        "name": "Missed Call Follow-up",
+        "trigger": "missed_call",
+        "conditions": [],
+        "actions": [
+          {
+            "type": "send_sms",
+            "template": "missed_call_followup",
+            "delay": 300
+          },
+          {
+            "type": "add_tag",
+            "value": "follow_up_needed"
+          }
+        ]
+      },
+      {
+        "name": "Appointment Reminder - 24h Before",
+        "trigger": "appointment_scheduled",
+        "conditions": [
+          {
+            "field": "appointment.startTime",
+            "operator": "hours_until",
+            "value": 24
+          }
+        ],
+        "actions": [
+          {
+            "type": "send_sms",
+            "template": "appointment_reminder_24h",
+            "delay": 0
+          },
+          {
+            "type": "send_email",
+            "template": "appointment_reminder_email",
+            "delay": 0
+          }
+        ]
+      },
+      {
+        "name": "Birthday Greeting",
+        "trigger": "contact_birthday",
+        "conditions": [],
+        "actions": [
+          {
+            "type": "send_sms",
+            "template": "birthday_greeting",
+            "delay": 0
+          },
+          {
+            "type": "send_email",
+            "template": "birthday_email",
+            "delay": 0
+          }
+        ]
+      },
+      {
+        "name": "At-Risk Client Recovery",
+        "trigger": "tag_added",
+        "conditions": [
+          {
+            "field": "tag",
+            "operator": "equals",
+            "value": "at_risk"
+          }
+        ],
+        "actions": [
+          {
+            "type": "send_email",
+            "template": "at_risk_recovery",
+            "delay": 0
+          },
+          {
+            "type": "send_sms",
+            "template": "at_risk_sms",
+            "delay": 3600
+          },
+          {
+            "type": "add_tag",
+            "value": "recovery_campaign"
+          }
+        ]
+      },
+      {
+        "name": "Survey Request After Session",
+        "trigger": "appointment_completed",
+        "conditions": [],
+        "actions": [
+          {
+            "type": "send_email",
+            "template": "session_survey",
+            "delay": 3600
+          },
+          {
+            "type": "add_tag",
+            "value": "survey_sent"
+          }
+        ]
+      },
+      {
+        "name": "Pipeline Stage Change Notification",
+        "trigger": "pipeline_stage_changed",
+        "conditions": [],
+        "actions": [
+          {
+            "type": "notify_user",
+            "message": "Pipeline stage changed for {{contact.firstName}}: {{pipeline.newStage}}"
+          },
+          {
+            "type": "update_forecast",
+            "stage": "{{pipeline.newStage}}"
+          },
+          {
+            "type": "send_email",
+            "template": "pipeline_update",
+            "delay": 0
+          }
+        ]
+      },
+      {
+        "name": "Review Request Automation",
+        "trigger": "appointment_completed",
+        "conditions": [],
+        "actions": [
+          {
+            "type": "request_review",
+            "delay": 86400
+          },
+          {
+            "type": "add_tag",
+            "value": "review_requested"
+          },
+          {
+            "type": "create_task",
+            "title": "Follow up on review request for {{contact.firstName}}",
+            "dueDate": "+3 days",
+            "delay": 259200
+          }
+        ]
+      },
+      {
+        "name": "Review Received - Thank You",
+        "trigger": "review_received",
+        "conditions": [],
+        "actions": [
+          {
+            "type": "send_email",
+            "template": "review_thank_you",
+            "delay": 0
+          },
+          {
+            "type": "add_tag",
+            "value": "review_received"
+          }
+        ]
+      },
+      {
+        "name": "Social Media Post Scheduler",
+        "trigger": "scheduled_post",
+        "conditions": [],
+        "actions": [
+          {
+            "type": "publish_to_facebook",
+            "delay": 0
+          },
+          {
+            "type": "publish_to_instagram",
+            "delay": 0
+          },
+          {
+            "type": "track_engagement",
+            "delay": 0
+          }
+        ]
+      }
+    ],
+    "references": []
+  },
+  "automations": {
+    "definitions": [
+      {
+        "name": "Lead Nurture Sequence - 7 Day",
+        "type": "drip_campaign",
+        "trigger": "contact_created",
+        "conditions": [
+          {
+            "field": "tag",
+            "operator": "equals",
+            "value": "new_lead"
+          }
+        ],
+        "steps": [
+          {
+            "step": 1,
+            "action": "send_email",
+            "template": "welcome_email",
+            "delay": 0
+          },
+          {
+            "step": 2,
+            "action": "send_sms",
+            "template": "day1_sms",
+            "delay": 86400
+          },
+          {
+            "step": 3,
+            "action": "send_email",
+            "template": "day3_value_prop",
+            "delay": 259200
+          },
+          {
+            "step": 4,
+            "action": "send_sms",
+            "template": "day7_followup",
+            "delay": 604800
+          }
+        ]
+      },
+      {
+        "name": "Full Funnel Automation",
+        "type": "funnel",
+        "trigger": "form_submitted",
+        "conditions": [],
+        "steps": [
+          {
+            "step": 1,
+            "action": "add_to_funnel",
+            "funnelId": "{{funnel.id}}",
+            "delay": 0
+          },
+          {
+            "step": 2,
+            "action": "assign_tag",
+            "value": "funnel_lead",
+            "delay": 0
+          },
+          {
+            "step": 3,
+            "action": "start_nurture_sequence",
+            "sequenceId": "funnel_nurture",
+            "delay": 0
+          },
+          {
+            "step": 4,
+            "action": "notify_sales",
+            "delay": 0
+          },
+          {
+            "step": 5,
+            "action": "add_to_pipeline",
+            "pipelineId": "sales_pipeline",
+            "stage": "Lead",
+            "delay": 0
+          }
+        ]
+      },
+      {
+        "name": "Website Lead Capture",
+        "type": "lead_capture",
+        "trigger": "website_form_submit",
+        "conditions": [],
+        "steps": [
+          {
+            "step": 1,
+            "action": "create_contact",
+            "delay": 0
+          },
+          {
+            "step": 2,
+            "action": "add_to_pipeline",
+            "pipelineId": "sales_pipeline",
+            "stage": "Lead",
+            "delay": 0
+          },
+          {
+            "step": 3,
+            "action": "send_welcome_sequence",
+            "delay": 0
+          },
+          {
+            "step": 4,
+            "action": "assign_tag",
+            "value": "website_lead",
+            "delay": 0
+          }
+        ]
+      },
+      {
+        "name": "Progressive Workflow - New Client Onboarding",
+        "type": "onboarding",
+        "trigger": "tag_added",
+        "conditions": [
+          {
+            "field": "tag",
+            "operator": "equals",
+            "value": "onboarding_started"
+          }
+        ],
+        "steps": [
+          {
+            "step": 1,
+            "action": "send_email",
+            "template": "onboarding_welcome",
+            "delay": 0
+          },
+          {
+            "step": 2,
+            "action": "send_email",
+            "template": "onboarding_checklist",
+            "delay": 86400
+          },
+          {
+            "step": 3,
+            "action": "send_sms",
+            "template": "onboarding_reminder",
+            "delay": 172800
+          }
+        ]
+      },
+      {
+        "name": "Multi-Channel Campaign - New Program Launch",
+        "type": "campaign",
+        "trigger": "campaign_started",
+        "conditions": [],
+        "steps": [
+          {
+            "step": 1,
+            "action": "send_email",
+            "template": "campaign_announcement",
+            "delay": 0
+          },
+          {
+            "step": 2,
+            "action": "send_sms",
+            "template": "campaign_sms",
+            "delay": 3600
+          },
+          {
+            "step": 3,
+            "action": "send_messenger",
+            "template": "campaign_messenger",
+            "delay": 7200
+          },
+          {
+            "step": 4,
+            "action": "publish_social_post",
+            "platforms": ["facebook", "instagram"],
+            "delay": 0
+          }
+        ]
+      }
+    ],
+    "references": []
+  },
+  "calendars": {
+    "additional": [
+      {
+        "name": "Group Class (60m)",
+        "slug": "group-class-60m",
+        "description": "Group fitness class session",
+        "duration": 60,
+        "slotInterval": 60,
+        "minNotice": 4,
+        "bufferBefore": 15,
+        "bufferAfter": 15,
+        "timezoneMode": "location"
+      },
+      {
+        "name": "Consultation (30m)",
+        "slug": "consultation-30m",
+        "description": "Initial consultation call",
+        "duration": 30,
+        "slotInterval": 30,
+        "minNotice": 12,
+        "bufferBefore": 10,
+        "bufferAfter": 10,
+        "timezoneMode": "user"
+      },
+      {
+        "name": "Strategy Session (90m)",
+        "slug": "strategy-session-90m",
+        "description": "Extended strategy and planning session",
+        "duration": 90,
+        "slotInterval": 90,
+        "minNotice": 24,
+        "bufferBefore": 15,
+        "bufferAfter": 15,
+        "timezoneMode": "user"
+      }
+    ]
+  },
+  "pipelines": {
+    "definitions": [
+      {
+        "name": "Sales Pipeline",
+        "stages": [
+          {
+            "name": "Lead",
+            "order": 1,
+            "probability": 10
+          },
+          {
+            "name": "Qualified",
+            "order": 2,
+            "probability": 30
+          },
+          {
+            "name": "Proposal",
+            "order": 3,
+            "probability": 50
+          },
+          {
+            "name": "Negotiation",
+            "order": 4,
+            "probability": 75
+          },
+          {
+            "name": "Closed Won",
+            "order": 5,
+            "probability": 100
+          },
+          {
+            "name": "Closed Lost",
+            "order": 6,
+            "probability": 0
+          }
+        ]
+      }
+    ]
+  },
+  "funnels": {
+    "definitions": [
+      {
+        "name": "New Client Onboarding Funnel",
+        "steps": [
+          {
+            "name": "Landing Page",
+            "type": "landing_page",
+            "order": 1
+          },
+          {
+            "name": "Discovery Call",
+            "type": "appointment",
+            "order": 2
+          },
+          {
+            "name": "Assessment",
+            "type": "form",
+            "order": 3
+          },
+          {
+            "name": "Program Selection",
+            "type": "form",
+            "order": 4
+          },
+          {
+            "name": "First Session",
+            "type": "appointment",
+            "order": 5
+          }
+        ]
+      }
+    ]
+  },
+  "features": {
+    "unlimitedContacts": true,
+    "unlimitedUsers": true,
+    "advancedAutomations": true,
+    "pipelines": true,
+    "funnels": true,
+    "websites": true,
+    "reviewManagement": true,
+    "socialPlanner": true,
+    "affiliatePortal": true,
+    "whitelabel": true,
+    "campaignManagement": true,
+    "monthlyCredits": 100,
+    "creditRolloverMonths": 3,
+    "oneOnOneDemo": true,
+    "campaignAdManagement": true
+  }
+}
+

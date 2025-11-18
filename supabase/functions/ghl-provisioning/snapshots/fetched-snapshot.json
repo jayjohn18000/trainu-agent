@@ -1,0 +1,23 @@
+{
+  "note": "Snapshot fetch returned empty array. This may indicate:",
+  "possibleReasons": [
+    "Snapshot ID ZyDyVPypdONMcyasVKMR may need location-scoped access",
+    "Private API key may require different authentication method",
+    "Snapshot may be SaaS-level and need different endpoint",
+    "Snapshot may need to be accessed via SaaS Configurator API"
+  ],
+  "apiResponse": {
+    "endpoint": "https://services.leadconnectorhq.com/snapshots/ZyDyVPypdONMcyasVKMR",
+    "response": {
+      "snapshots": [],
+      "totalCount": 0
+    }
+  },
+  "nextSteps": [
+    "Verify snapshot ID in SaaS Configurator dashboard",
+    "Check if snapshot needs to be accessed via location context",
+    "Consider using OAuth per-location tokens instead of private API key",
+    "Proceed with tier definitions based on feature requirements"
+  ]
+}
+

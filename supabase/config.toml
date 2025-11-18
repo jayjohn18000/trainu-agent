@@ -15,6 +15,9 @@ verify_jwt = false
 [functions.ghl-periodic-sync]
 verify_jwt = true
 
+[functions.ghl-oauth-init]
+verify_jwt = true
+
 [functions.ghl-oauth-callback]
 verify_jwt = false
 
@@ -100,6 +103,9 @@ verify_jwt = true
 
 [functions.ghl-provisioning]
 verify_jwt = true
+
+[functions.ghl-fetch-snapshot]
+verify_jwt = false
 
 [functions.auto-approval-scheduler]
 verify_jwt = true

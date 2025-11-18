@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { getGHLToken } from "../_shared/ghl-token.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -76,7 +77,7 @@ serve(async (req) => {
 
     const { action, contactData, messageData, queueItemId } = validation.data;
 
-    const GHL_API_BASE = Deno.env.get('GHL_API_BASE');
+    const GHL_API_BASE = Deno.env.get('GHL_API_BASE') ?? 'https://services.leadconnectorhq.com';
     const GHL_ACCESS_TOKEN = Deno.env.get('GHL_ACCESS_TOKEN');
 
     // Get trainer's GHL config
@@ -86,8 +87,22 @@ serve(async (req) => {
       .eq('trainer_id', user.id)
       .single();
 
+    // Get per-location token, fallback to global token
+    let accessToken = ghlConfig?.access_token;
+    if (!accessToken && ghlConfig) {
+      accessToken = await getGHLToken(supabase, user.id, {
+        info: (msg, data) => console.log(`[ghl-integration] ${msg}`, data),
+        warn: (msg, data) => console.warn(`[ghl-integration] ${msg}`, data),
+        error: (msg, data) => console.error(`[ghl-integration] ${msg}`, data),
+        debug: (msg, data) => console.debug(`[ghl-integration] ${msg}`, data),
+      });
+    }
+    if (!accessToken) {
+      accessToken = GHL_ACCESS_TOKEN;
+    }
+
     // DEMO MODE: If creds or config are missing, return mock success
-    if (action === 'send_message' && (!GHL_API_BASE || !GHL_ACCESS_TOKEN || !ghlConfig)) {
+    if (action === 'send_message' && (!GHL_API_BASE || !accessToken || !ghlConfig)) {
       const mockMessageId = `mock_${Date.now()}`;
       console.log(
         JSON.stringify({
@@ -128,7 +143,7 @@ serve(async (req) => {
       if (!ghlConfig) {
         throw new Error('GHL not configured for this trainer');
       }
-      if (!GHL_API_BASE || !GHL_ACCESS_TOKEN) {
+      if (!GHL_API_BASE || !accessToken) {
         throw new Error('GHL credentials not configured');
       }
       console.log('Sending message via GHL:', { contactData, messageData });
@@ -148,7 +163,7 @@ serve(async (req) => {
       const contactResponse = await fetch(`${GHL_API_BASE}/contacts/`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${GHL_ACCESS_TOKEN}`,
+          'Authorization': `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
           'Version': '2021-07-28',
         },
@@ -189,7 +204,7 @@ serve(async (req) => {
         const smsResponse = await fetch(`${GHL_API_BASE}/conversations/messages`, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${GHL_ACCESS_TOKEN}`,
+            'Authorization': `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
             'Version': '2021-07-28',
           },
@@ -218,7 +233,7 @@ serve(async (req) => {
         const emailResponse = await fetch(`${GHL_API_BASE}/conversations/messages`, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${GHL_ACCESS_TOKEN}`,
+            'Authorization': `Bearer ${accessToken}`,
             'Content-Type': 'application/json',
             'Version': '2021-07-28',
           },
@@ -267,7 +282,7 @@ serve(async (req) => {
     // Map emails/phones to GHL contact ids
     if (action === 'getContactIds') {
       const { emails = [], phones = [] } = (await req.json());
-      const isDemo = !GHL_API_BASE || !GHL_ACCESS_TOKEN || !ghlConfig;
+      const isDemo = !GHL_API_BASE || !accessToken || !ghlConfig;
       const result: Record<string, string> = {};
       if (isDemo) {
         [...emails, ...phones].forEach((k: string) => { result[k] = `mock_${btoa(k).slice(0,8)}`; });
@@ -300,7 +315,7 @@ serve(async (req) => {
     // Ensure tags and return mapping of name -> id
     if (action === 'ensureTags') {
       const { names = [] } = (await req.json());
-      const isDemo = !GHL_API_BASE || !GHL_ACCESS_TOKEN || !ghlConfig;
+      const isDemo = !GHL_API_BASE || !accessToken || !ghlConfig;
       const mapping: Record<string, string> = {};
       if (isDemo) {
         names.forEach((n: string) => { mapping[n] = `mock_tag_${btoa(n).slice(0,6)}`; });
@@ -331,7 +346,7 @@ serve(async (req) => {
     // Apply tag to contacts
     if (action === 'applyTags') {
       const { contactIds = [], tagId } = (await req.json());
-      const isDemo = !GHL_API_BASE || !GHL_ACCESS_TOKEN || !ghlConfig;
+      const isDemo = !GHL_API_BASE || !accessToken || !ghlConfig;
       if (isDemo) {
         return new Response(JSON.stringify({ success: true, demo: true, applied: contactIds.length }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
