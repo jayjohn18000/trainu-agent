@@ -91,10 +91,10 @@ export function ROICalculator() {
 
       <div className="mt-8 p-6 rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 text-center">
         <p className="text-2xl font-bold text-primary mb-2">
-          Net Monthly Benefit: ${(moneySaved - 99).toLocaleString()}
+          Net Monthly Benefit: ${(moneySaved - 79).toLocaleString()}
         </p>
         <p className="text-sm text-muted-foreground">
-          TrainU pays for itself in less than 4 clients saved
+          TrainU pays for itself in 3 clients saved
         </p>
       </div>
     </Card>

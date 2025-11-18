@@ -69,7 +69,7 @@ const features = [
   },
   { 
     name: "Starting Price", 
-    trainu: "$99/mo", 
+    trainu: "$79/mo", 
     exercise: "$199/mo", 
     trainerize: "$150/mo",
     description: "Base monthly subscription price for core platform features. Higher tiers may include additional capabilities, client limits, or white-label options."
