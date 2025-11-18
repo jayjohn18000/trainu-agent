@@ -30,6 +30,14 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Support both GET and POST methods
+  if (req.method !== 'GET' && req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      status: 405,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
   try {
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -60,12 +68,24 @@ serve(async (req) => {
       );
     }
 
-    // Get trainer's plan tier from query params or profile
+    // Get trainer's plan tier from query params, request body, or profile
     const url = new URL(req.url);
     let planTier = url.searchParams.get('tier') || 'starter';
     
+    // If POST request, try to get tier from body
+    if (req.method === 'POST' && !url.searchParams.get('tier')) {
+      try {
+        const body = await req.json();
+        if (body?.tier) {
+          planTier = body.tier;
+        }
+      } catch {
+        // Body parsing failed, continue with default
+      }
+    }
+    
     // If no tier specified, try to get from profile
-    if (!url.searchParams.get('tier')) {
+    if (!url.searchParams.get('tier') && planTier === 'starter') {
       const { data: profile } = await supabase
         .from('trainer_profiles')
         .select('plan_tier')

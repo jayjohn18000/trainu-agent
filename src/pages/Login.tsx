@@ -97,8 +97,10 @@ export default function Login() {
         options: {
           data: {
             name: data.name,
+            first_name: data.name.split(' ')[0] || data.name,
+            last_name: data.name.split(' ').slice(1).join(' ') || '',
           },
-          emailRedirectTo: `${window.location.origin}/today`,
+          emailRedirectTo: `${window.location.origin}/onboarding`,
         },
       });
 
@@ -114,7 +116,11 @@ export default function Login() {
       if (authData.session) {
         await initialize();
         toast.success("Account created successfully!");
-        navigate('/today', { replace: true });
+        // Redirect to onboarding to complete GHL setup
+        navigate('/onboarding', { replace: true });
+      } else {
+        // If no session (email confirmation required), show message
+        toast.info("Please check your email to confirm your account");
       }
     } catch (error) {
       toast.error("An error occurred during sign up");
@@ -123,19 +129,15 @@ export default function Login() {
     }
   };
 
+  // GHL OAuth should be handled through the onboarding flow, not directly from login
+  // This button is kept for reference but should redirect to onboarding
   const handleGHLLogin = () => {
-    if (!GHL_CLIENT_ID || !GHL_REDIRECT_URI) {
-      toast.error("GHL OAuth not configured");
+    if (!user) {
+      toast.error("Please sign up or sign in first");
       return;
     }
-
-    const authUrl = new URL('https://marketplace.gohighlevel.com/oauth/chooselocation');
-    authUrl.searchParams.set('response_type', 'code');
-    authUrl.searchParams.set('client_id', GHL_CLIENT_ID);
-    authUrl.searchParams.set('redirect_uri', GHL_REDIRECT_URI);
-    authUrl.searchParams.set('scope', 'contacts.readonly calendars.readonly locations.readonly users.readonly');
-
-    window.location.href = authUrl.toString();
+    // Redirect to onboarding where proper OAuth flow is handled
+    navigate('/onboarding');
   };
 
   return (
