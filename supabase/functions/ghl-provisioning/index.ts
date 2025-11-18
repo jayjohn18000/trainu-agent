@@ -238,6 +238,11 @@ Deno.serve(async (req) => {
     // Refresh token after location creation to ensure we have valid token for subsequent calls
     const accessToken = await refreshGHLToken(supabase, resolvedTrainerId, logger) || existingConfig?.access_token || GHL_ACCESS_TOKEN;
     
+    if (!accessToken) {
+      logger.error('No valid access token available', { trainerId: resolvedTrainerId });
+      throw new Error('Unable to obtain GHL access token. Please ensure OAuth is complete.');
+    }
+    
     const primaryUser = await ensurePrimaryUser(location.id, input, existingConfig, accessToken, logger, correlationId);
     const tags = await ensureTags(location.id, accessToken, logger, correlationId);
     const customFields = await ensureCustomFields(location.id, accessToken, logger, correlationId);

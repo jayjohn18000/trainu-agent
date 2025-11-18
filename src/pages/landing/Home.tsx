@@ -45,7 +45,7 @@ export default function Home() {
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-4 mb-8">
-                  <Link to="/login">
+                  <Link to="/pricing">
                     <Button size="lg" className="shadow-glow hover:shadow-glow-intense w-full sm:w-auto text-lg px-8 py-6 transition-all duration-300 hover:scale-105">
                       Start Free Trial
                     </Button>
