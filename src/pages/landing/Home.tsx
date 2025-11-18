@@ -7,32 +7,15 @@ import { CompetitorTable } from "@/components/landing/CompetitorTable";
 import { AnimatedCounter } from "@/components/landing/AnimatedCounter";
 import { FeatureCard } from "@/components/landing/FeatureCard";
 import { ScrollReveal } from "@/components/landing/ScrollReveal";
-import { 
-  Brain, 
-  TrendingUp, 
-  Clock, 
-  Users, 
-  MessageSquare, 
-  Target,
-  Zap,
-  Shield,
-  BarChart3,
-  Check,
-  Sparkles,
-  ArrowLeftRight,
-  Tag,
-  Menu
-} from "lucide-react";
+import { Brain, TrendingUp, Clock, Users, MessageSquare, Target, Zap, Shield, BarChart3, Check, Sparkles, ArrowLeftRight, Tag, Menu } from "lucide-react";
 import { PricingPreviewCard } from "@/components/landing/PricingPreviewCard";
 import trainerClientGym from "@/assets/trainer-client-gym.jpg";
 import trainerOverhead from "@/assets/trainer-client-overhead.jpg";
 import trainerHomeYoga from "@/assets/trainer-home-yoga.jpg";
 import groupTraining from "@/assets/group-training-class.jpg";
 import gradientBg from "@/assets/gradient-mesh-bg.svg";
-
 export default function Home() {
-  return (
-    <LandingLayout>
+  return <LandingLayout>
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-background" />
@@ -49,7 +32,9 @@ export default function Home() {
                 <h1 className="text-6xl md:text-7xl font-black mb-8 leading-[1.1]">
                   Stop Losing Clients.{" "}
                   <span className="relative inline-block">
-                    <span className="bg-gradient-to-r from-primary via-primary-hover to-primary bg-clip-text text-transparent animate-gradient-shift" style={{ backgroundSize: '200% auto' }}>
+                    <span className="bg-gradient-to-r from-primary via-primary-hover to-primary bg-clip-text text-transparent animate-gradient-shift" style={{
+                    backgroundSize: '200% auto'
+                  }}>
                       Start Growing.
                     </span>
                   </span>
@@ -157,11 +142,7 @@ export default function Home() {
                 <div className="absolute -bottom-10 -left-8 p-5 rounded-2xl bg-card backdrop-blur-xl border border-primary/40 shadow-2xl shadow-primary/30 max-w-xs animate-float">
                   <div className="flex items-center gap-4">
                     <div className="relative h-14 w-14 rounded-full overflow-hidden border-2 border-primary/50 flex-shrink-0">
-                      <img 
-                        src={trainerOverhead} 
-                        alt="Client" 
-                        className="h-full w-full object-cover"
-                      />
+                      <img src={trainerOverhead} alt="Client" className="h-full w-full object-cover" />
                       <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent" />
                     </div>
                     <div>
@@ -283,36 +264,15 @@ export default function Home() {
           
           <div className="grid md:grid-cols-3 gap-8">
             <ScrollReveal delay={100}>
-              <FeatureCard
-                icon={<Clock className="h-14 w-14" />}
-                title="Time Drain"
-                description="15+ hours weekly on admin tasks instead of training clients."
-                image={trainerClientGym}
-                variant="hover-lift"
-                className="border-warning/20 hover:border-warning/40"
-              />
+              <FeatureCard icon={<Clock className="h-14 w-14" />} title="Time Drain" description="15+ hours weekly on admin tasks instead of training clients." image={trainerClientGym} variant="hover-lift" className="border-warning/20 hover:border-warning/40" />
             </ScrollReveal>
             
             <ScrollReveal delay={200}>
-              <FeatureCard
-                icon={<TrendingUp className="h-14 w-14 rotate-180" />}
-                title="Silent Churn"
-                description="Clients ghosting without warning. Too late when you notice."
-                image={trainerHomeYoga}
-                variant="hover-lift"
-                className="border-danger/20 hover:border-danger/40"
-              />
+              <FeatureCard icon={<TrendingUp className="h-14 w-14 rotate-180" />} title="Silent Churn" description="Clients ghosting without warning. Too late when you notice." image={trainerHomeYoga} variant="hover-lift" className="border-danger/20 hover:border-danger/40" />
             </ScrollReveal>
             
             <ScrollReveal delay={300}>
-              <FeatureCard
-                icon={<Users className="h-14 w-14" />}
-                title="Onboarding Chaos"
-                description="New clients falling through the cracks in first 30 days."
-                image={groupTraining}
-                variant="hover-lift"
-                className="border-warning/20 hover:border-warning/40"
-              />
+              <FeatureCard icon={<Users className="h-14 w-14" />} title="Onboarding Chaos" description="New clients falling through the cracks in first 30 days." image={groupTraining} variant="hover-lift" className="border-warning/20 hover:border-warning/40" />
             </ScrollReveal>
           </div>
         </div>
@@ -344,18 +304,12 @@ export default function Home() {
                     AI drafts personalized check-ins so you spend time training, not typing. Review and send in 30 seconds.
                   </p>
                   <ul className="space-y-4">
-                    {[
-                      "Predictive at-risk alerts 7 days before churn",
-                      "Context-aware message drafts using client history",
-                      "Trainers report 90% less time on client messaging"
-                    ].map((item, i) => (
-                      <li key={i} className="flex items-start gap-4">
+                    {["Predictive at-risk alerts 7 days before churn", "Context-aware message drafts using client history", "Trainers report 90% less time on client messaging"].map((item, i) => <li key={i} className="flex items-start gap-4">
                         <div className="h-8 w-8 rounded-full bg-success/10 flex items-center justify-center flex-shrink-0 mt-1">
                           <Check className="h-5 w-5 text-success" />
                         </div>
                         <span className="text-foreground/80 text-lg">{item}</span>
-                      </li>
-                    ))}
+                      </li>)}
                   </ul>
                 </div>
                 <div className="relative">
@@ -395,11 +349,7 @@ export default function Home() {
                 <div className="order-2 lg:order-1 relative">
                   <div className="absolute inset-0 bg-gradient-to-br from-warning/20 to-transparent rounded-3xl blur-3xl" />
                   <div className="relative aspect-[4/5] rounded-3xl overflow-hidden border border-primary/30 shadow-2xl">
-                    <img 
-                      src={trainerOverhead} 
-                      alt="Personal Training Session" 
-                      className="h-full w-full object-cover"
-                    />
+                    <img src={trainerOverhead} alt="Personal Training Session" className="h-full w-full object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
                     <div className="absolute bottom-0 left-0 right-0 p-8">
                       <div className="text-center space-y-4 backdrop-blur-xl bg-card/80 p-8 rounded-2xl border border-primary/30">
@@ -422,18 +372,12 @@ export default function Home() {
                     Clients stay motivated with streaks, challenges, and leaderboards. They compete, you retain.
                   </p>
                   <ul className="space-y-4">
-                    {[
-                      "43% longer average client tenure",
-                      "Community challenges create accountability",
-                      "85% of clients hit milestones faster"
-                    ].map((item, i) => (
-                      <li key={i} className="flex items-start gap-4">
+                    {["43% longer average client tenure", "Community challenges create accountability", "85% of clients hit milestones faster"].map((item, i) => <li key={i} className="flex items-start gap-4">
                         <div className="h-8 w-8 rounded-full bg-success/10 flex items-center justify-center flex-shrink-0 mt-1">
                           <Check className="h-5 w-5 text-success" />
                         </div>
                         <span className="text-foreground/80 text-lg">{item}</span>
-                      </li>
-                    ))}
+                      </li>)}
                   </ul>
                 </div>
               </div>
@@ -452,18 +396,12 @@ export default function Home() {
                     See at-risk clients before they cancel. Get AI recommendations to re-engage them automatically.
                   </p>
                   <ul className="space-y-4">
-                    {[
-                      "70% reduction in surprise cancellations",
-                      "Response rate tracking across all channels",
-                      "Real-time insights optimize your approach"
-                    ].map((item, i) => (
-                      <li key={i} className="flex items-start gap-4">
+                    {["70% reduction in surprise cancellations", "Response rate tracking across all channels", "Real-time insights optimize your approach"].map((item, i) => <li key={i} className="flex items-start gap-4">
                         <div className="h-8 w-8 rounded-full bg-success/10 flex items-center justify-center flex-shrink-0 mt-1">
                           <Check className="h-5 w-5 text-success" />
                         </div>
                         <span className="text-foreground/80 text-lg">{item}</span>
-                      </li>
-                    ))}
+                      </li>)}
                   </ul>
                 </div>
                 <div className="relative">
@@ -478,10 +416,9 @@ export default function Home() {
                           </span>
                         </div>
                         <div className="h-3 rounded-full bg-success/20 overflow-hidden">
-                          <div 
-                            className="h-full rounded-full bg-gradient-to-r from-success to-success/80 transition-all duration-1000 ease-out"
-                            style={{ width: '94%' }}
-                          />
+                          <div className="h-full rounded-full bg-gradient-to-r from-success to-success/80 transition-all duration-1000 ease-out" style={{
+                          width: '94%'
+                        }} />
                         </div>
                       </div>
                       
@@ -493,10 +430,9 @@ export default function Home() {
                           </span>
                         </div>
                         <div className="h-3 rounded-full bg-primary/20 overflow-hidden">
-                          <div 
-                            className="h-full rounded-full bg-gradient-to-r from-primary to-primary-hover transition-all duration-1000 ease-out delay-200"
-                            style={{ width: '87%' }}
-                          />
+                          <div className="h-full rounded-full bg-gradient-to-r from-primary to-primary-hover transition-all duration-1000 ease-out delay-200" style={{
+                          width: '87%'
+                        }} />
                         </div>
                       </div>
                     </div>
@@ -509,69 +445,7 @@ export default function Home() {
       </section>
 
       {/* Custom App Integration Section */}
-      <section className="py-24 bg-gradient-to-b from-transparent to-card/30">
-        <div className="container mx-auto px-4">
-          <ScrollReveal>
-            <div className="text-center mb-16">
-              <h2 className="text-5xl font-bold mb-6">
-                Add Your Custom TrainU App Layers
-              </h2>
-              <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-                Brand your client experience with custom menu links accessible from each sub-account.
-              </p>
-            </div>
-          </ScrollReveal>
-
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <ScrollReveal delay={100}>
-              <div>
-                <h3 className="text-2xl font-bold mb-6">Customize Your Client Portal</h3>
-                <ul className="space-y-4">
-                  {[
-                    "Custom menu links in SaaS Configurator",
-                    "Link to training videos and support resources",
-                    "Open proprietary features and analytics",
-                    "Maintain your brand while using TrainU power"
-                  ].map((item, i) => (
-                    <li key={i} className="flex items-start gap-4">
-                      <div className="h-8 w-8 rounded-full bg-success/10 flex items-center justify-center flex-shrink-0 mt-1">
-                        <Check className="h-5 w-5 text-success" />
-                      </div>
-                      <span className="text-foreground/80 text-lg">{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </ScrollReveal>
-
-            <ScrollReveal delay={200}>
-              <div className="p-8 rounded-2xl bg-card border border-border">
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors cursor-pointer">
-                    <Menu className="h-5 w-5 text-primary" />
-                    <span className="font-medium">Training Library</span>
-                  </div>
-                  <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors cursor-pointer">
-                    <Menu className="h-5 w-5 text-primary" />
-                    <span className="font-medium">Support Chat</span>
-                  </div>
-                  <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors cursor-pointer">
-                    <Menu className="h-5 w-5 text-primary" />
-                    <span className="font-medium">Usage Analytics</span>
-                  </div>
-                  <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors cursor-pointer">
-                    <Menu className="h-5 w-5 text-primary" />
-                    <span className="font-medium">Your Custom App</span>
-                  </div>
-                </div>
-                <p className="text-sm text-muted-foreground mt-4 text-center">
-                  Custom links accessible from left menu
-                </p>
-              </div>
-            </ScrollReveal>
-          </div>
-        </div>
-      </section>
+      
 
       {/* ROI Calculator */}
       <section className="relative py-24 overflow-hidden">
@@ -599,11 +473,7 @@ export default function Home() {
             <ScrollReveal delay={100}>
               <div className="group relative overflow-hidden rounded-2xl border border-primary/20 hover:border-primary/40 transition-all duration-300">
                 <div className="aspect-[4/3] overflow-hidden">
-                  <img 
-                    src={trainerClientGym} 
-                    alt="Personal Training" 
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  />
+                  <img src={trainerClientGym} alt="Personal Training" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
                   <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />
                 </div>
                 <div className="absolute bottom-0 left-0 right-0 p-6">
@@ -620,11 +490,7 @@ export default function Home() {
             <ScrollReveal delay={200}>
               <div className="group relative overflow-hidden rounded-2xl border border-primary/20 hover:border-primary/40 transition-all duration-300">
                 <div className="aspect-[4/3] overflow-hidden">
-                  <img 
-                    src={trainerHomeYoga} 
-                    alt="Home Training" 
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  />
+                  <img src={trainerHomeYoga} alt="Home Training" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
                   <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />
                 </div>
                 <div className="absolute bottom-0 left-0 right-0 p-6">
@@ -641,11 +507,7 @@ export default function Home() {
             <ScrollReveal delay={300}>
               <div className="group relative overflow-hidden rounded-2xl border border-primary/20 hover:border-primary/40 transition-all duration-300">
                 <div className="aspect-[4/3] overflow-hidden">
-                  <img 
-                    src={groupTraining} 
-                    alt="Group Training" 
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  />
+                  <img src={groupTraining} alt="Group Training" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
                   <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />
                 </div>
                 <div className="absolute bottom-0 left-0 right-0 p-6">
@@ -699,55 +561,34 @@ export default function Home() {
 
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             <ScrollReveal delay={100}>
-              <PricingPreviewCard
-                tier={{
-                  name: "Starter",
-                  price: 79,
-                  description: "Core CRM & Communication Hub",
-                  roi: "Pays for itself in 3 clients saved",
-                  highlights: [
-                    "Up to 2 calendars",
-                    "Basic automations",
-                    "$10/mo messaging credit",
-                    "GHL CRM integration"
-                  ]
-                }}
-              />
+              <PricingPreviewCard tier={{
+              name: "Starter",
+              price: 79,
+              description: "Core CRM & Communication Hub",
+              roi: "Pays for itself in 3 clients saved",
+              highlights: ["Up to 2 calendars", "Basic automations", "$10/mo messaging credit", "GHL CRM integration"]
+            }} />
             </ScrollReveal>
 
             <ScrollReveal delay={200}>
-              <PricingPreviewCard
-                tier={{
-                  name: "Professional",
-                  price: 99,
-                  description: "Unlimited scale + SaaS access",
-                  popular: true,
-                  roi: "Pays for itself in 2 clients saved",
-                  highlights: [
-                    "Unlimited contacts & users",
-                    "Advanced automations",
-                    "$25/mo messaging credit",
-                    "Full SaaS dashboard"
-                  ]
-                }}
-              />
+              <PricingPreviewCard tier={{
+              name: "Professional",
+              price: 99,
+              description: "Unlimited scale + SaaS access",
+              popular: true,
+              roi: "Pays for itself in 2 clients saved",
+              highlights: ["Unlimited contacts & users", "Advanced automations", "$25/mo messaging credit", "Full SaaS dashboard"]
+            }} />
             </ScrollReveal>
 
             <ScrollReveal delay={300}>
-              <PricingPreviewCard
-                tier={{
-                  name: "Growth+",
-                  price: 497,
-                  description: "Full GHL power + white-glove support",
-                  roi: "ROI-positive from day 1",
-                  highlights: [
-                    "Full GHL features suite",
-                    "$100/mo messaging credit",
-                    "1:1 demo & onboarding",
-                    "Campaign management support"
-                  ]
-                }}
-              />
+              <PricingPreviewCard tier={{
+              name: "Growth+",
+              price: 497,
+              description: "Full GHL power + white-glove support",
+              roi: "ROI-positive from day 1",
+              highlights: ["Full GHL features suite", "$100/mo messaging credit", "1:1 demo & onboarding", "Campaign management support"]
+            }} />
             </ScrollReveal>
           </div>
 
@@ -790,6 +631,5 @@ export default function Home() {
           </ScrollReveal>
         </div>
       </section>
-    </LandingLayout>
-  );
+    </LandingLayout>;
 }
