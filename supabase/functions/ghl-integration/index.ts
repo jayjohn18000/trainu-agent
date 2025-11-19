@@ -87,9 +87,12 @@ serve(async (req) => {
       .eq('trainer_id', user.id)
       .single();
 
-    // Get per-location token, fallback to global token
+    // Get per-location token (OAuth required for trainer-specific access)
     let accessToken = ghlConfig?.access_token;
-    if (!accessToken && ghlConfig) {
+    const hasOAuthTokens = ghlConfig?.access_token || ghlConfig?.refresh_token;
+    
+    // Try to refresh token if config exists but no current access token
+    if (!accessToken && hasOAuthTokens && ghlConfig) {
       accessToken = await getGHLToken(supabase, user.id, {
         info: (msg, data) => console.log(`[ghl-integration] ${msg}`, data),
         warn: (msg, data) => console.warn(`[ghl-integration] ${msg}`, data),
@@ -97,12 +100,9 @@ serve(async (req) => {
         debug: (msg, data) => console.debug(`[ghl-integration] ${msg}`, data),
       });
     }
-    if (!accessToken) {
-      accessToken = GHL_ACCESS_TOKEN;
-    }
 
-    // DEMO MODE: If creds or config are missing, return mock success
-    if (action === 'send_message' && (!GHL_API_BASE || !accessToken || !ghlConfig)) {
+    // DEMO MODE: If OAuth not completed or creds missing, return mock success
+    if (action === 'send_message' && (!hasOAuthTokens || !accessToken || !ghlConfig)) {
       const mockMessageId = `mock_${Date.now()}`;
       console.log(
         JSON.stringify({
