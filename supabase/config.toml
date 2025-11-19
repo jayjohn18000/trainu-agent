@@ -18,7 +18,7 @@ verify_jwt = true
 [functions.ghl-oauth-init]
 verify_jwt = true
 
-[functions.ghl-oauth-callback]
+[functions.oauth-callback]
 verify_jwt = false
 
 [functions.ab-testing-framework]
