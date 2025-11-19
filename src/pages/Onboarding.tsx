@@ -55,16 +55,26 @@ export default function Onboarding() {
           // Has OAuth tokens, check provisioning
           await checkProvisioningStatus();
         } else if (paymentSuccess) {
-          // User just completed payment and signed up - auto-trigger OAuth
-          console.log('Auto-triggering OAuth for new paid user');
-          toast.info('Connecting to GoHighLevel...');
-          setStep('oauth_required');
-          // Auto-trigger OAuth after a brief delay to show the UI
-          setTimeout(() => {
-            handleConnectGHL();
-          }, 1000);
+          // User just completed payment and signed up - validate session then auto-trigger OAuth
+          console.log('Payment successful, validating session before OAuth...');
+          
+          const { data: sessionData } = await supabase.auth.getSession();
+          
+          if (sessionData?.session) {
+            console.log('Session valid, auto-triggering OAuth for new paid user');
+            toast.info('Connecting to GoHighLevel...');
+            setStep('oauth_required');
+            
+            setTimeout(() => {
+              handleConnectGHL();
+            }, 2000); // Increased from 1s to 2s for session stability
+          } else {
+            console.error('No valid session after payment, cannot auto-trigger OAuth');
+            setError('Session expired. Please try connecting manually below.');
+            setStep('oauth_required');
+          }
         } else {
-          // Need OAuth
+          // Need OAuth - show manual button
           setStep('oauth_required');
         }
       }
@@ -211,6 +221,13 @@ export default function Onboarding() {
               <p className="text-muted-foreground mb-4">
                 We'll set up your white-labeled GHL instance at app.trainu.us
               </p>
+              
+              {error && (
+                <div className="mb-4 p-4 bg-destructive/10 border border-destructive/20 rounded-md">
+                  <p className="text-sm text-destructive">{error}</p>
+                </div>
+              )}
+              
               <div className="space-y-4 mb-6 text-left">
                 <div className="flex items-start gap-3">
                   <CheckCircle2 className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
@@ -243,6 +260,9 @@ export default function Onboarding() {
               <Button onClick={handleConnectGHL} size="lg" className="w-full">
                 Connect GHL Account
               </Button>
+              <p className="text-xs text-muted-foreground mt-4">
+                Need help? <a href="mailto:hello@trainu.us" className="text-primary hover:underline">Contact Support</a>
+              </p>
             </>
           )}
 
@@ -300,14 +320,17 @@ export default function Onboarding() {
                 <AlertCircle className="h-12 w-12 text-destructive" />
               </div>
               <h2 className="text-2xl font-bold text-destructive">Setup Error</h2>
-              <p className="text-muted-foreground mb-4">{error}</p>
-              <div className="flex flex-col gap-2">
-                <Button onClick={() => window.location.reload()} className="w-full">
-                  Try Again
+              <p className="text-muted-foreground mb-6">{error}</p>
+              <div className="flex flex-col gap-3">
+                <Button onClick={handleConnectGHL} className="w-full">
+                  Retry Connection
                 </Button>
                 <Button variant="outline" onClick={() => navigate('/today')} className="w-full">
                   Go to Dashboard
                 </Button>
+                <p className="text-xs text-muted-foreground">
+                  Still having issues? <a href="mailto:hello@trainu.us" className="text-primary hover:underline">Contact Support</a>
+                </p>
               </div>
             </>
           )}
