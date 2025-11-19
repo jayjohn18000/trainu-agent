@@ -28,6 +28,7 @@ export default function Onboarding() {
       const oauthSuccess = searchParams.get('oauth');
       const oauthError = searchParams.get('error');
       const tierParam = searchParams.get('tier');
+      const paymentSuccess = searchParams.get('payment') === 'success';
 
       if (tierParam) {
         setTier(tierParam);
@@ -53,6 +54,15 @@ export default function Onboarding() {
         if (ghlConfig?.access_token) {
           // Has OAuth tokens, check provisioning
           await checkProvisioningStatus();
+        } else if (paymentSuccess) {
+          // User just completed payment and signed up - auto-trigger OAuth
+          console.log('Auto-triggering OAuth for new paid user');
+          toast.info('Connecting to GoHighLevel...');
+          setStep('oauth_required');
+          // Auto-trigger OAuth after a brief delay to show the UI
+          setTimeout(() => {
+            handleConnectGHL();
+          }, 1000);
         } else {
           // Need OAuth
           setStep('oauth_required');
@@ -125,7 +135,18 @@ export default function Onboarding() {
 
   const handleConnectGHL = async () => {
     try {
-      console.log('Initiating OAuth with tier:', tier);
+      // Verify user is authenticated
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.error('No active session found');
+        toast.error('Please log in first');
+        navigate('/login');
+        return;
+      }
+
+      console.log('Session exists, initiating OAuth with tier:', tier);
+      console.log('User ID:', user?.id);
+      
       const { data, error } = await supabase.functions.invoke('ghl-oauth-init', {
         body: { tier },
       });
@@ -134,9 +155,10 @@ export default function Onboarding() {
 
       if (error) {
         console.error('OAuth init failed:', error);
-        setError(`Failed to initialize OAuth: ${error.message}`);
+        console.error('Error details:', JSON.stringify(error, null, 2));
+        setError(`Failed to initialize OAuth: ${error.message || 'Unknown error'}`);
         setStep('error');
-        toast.error('Failed to initiate OAuth');
+        toast.error(`Failed to initiate OAuth: ${error.message || 'Please try again'}`);
         return;
       }
 
@@ -144,13 +166,14 @@ export default function Onboarding() {
         console.log('Redirecting to GHL OAuth:', data.authUrl);
         window.location.href = data.authUrl;
       } else {
-        console.error('Invalid OAuth response - no authUrl');
+        console.error('Invalid OAuth response - no authUrl:', data);
         setError('Invalid OAuth response from server');
         setStep('error');
         toast.error('Invalid OAuth response');
       }
     } catch (err) {
       console.error('OAuth error:', err);
+      console.error('Error stack:', err instanceof Error ? err.stack : 'No stack trace');
       setError('An unexpected error occurred while connecting to GoHighLevel');
       setStep('error');
       toast.error('Failed to connect to GoHighLevel');
