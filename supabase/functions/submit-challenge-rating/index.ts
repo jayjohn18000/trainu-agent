@@ -19,7 +19,25 @@ serve(async (req: Request) => {
     const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
     const body = await req.json();
-    logger.info("Received rating submission", { body });
+    
+    // Sanitize sensitive data before logging
+    const sanitizedLog = {
+      trainerId: body.trainerId,
+      trainerName: body.trainerName,
+      trainerCity: body.trainerCity,
+      trainerState: body.trainerState,
+      raterEmail: body.raterEmail ? '[REDACTED]' : undefined,
+      raterPhone: body.raterPhone ? '[REDACTED]' : undefined,
+      verificationMethod: body.verificationMethod,
+      ratings: {
+        expertise: body.ratingExpertise,
+        communication: body.ratingCommunication,
+        motivation: body.ratingMotivation,
+        results: body.ratingResults,
+        value: body.ratingValue
+      }
+    };
+    logger.info("Received rating submission", { sanitized: sanitizedLog });
 
     // Zod validation schema - city and state required for custom trainers
     const submitRatingSchema = z.object({

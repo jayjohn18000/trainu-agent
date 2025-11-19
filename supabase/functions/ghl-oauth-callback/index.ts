@@ -84,7 +84,12 @@ serve(async (req) => {
 
     if (!tokenResponse.ok) {
       const errorText = await tokenResponse.text();
-      console.error('Token exchange failed:', errorText);
+      // Sanitize error logs to prevent token leakage
+      console.error('Token exchange failed:', { 
+        status: tokenResponse.status,
+        statusText: tokenResponse.statusText,
+        hasError: !!errorText 
+      });
       return new Response(null, {
         status: 302,
         headers: {
