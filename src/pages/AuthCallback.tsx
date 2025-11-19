@@ -14,6 +14,9 @@ export default function AuthCallback() {
         const params = new URLSearchParams(window.location.search);
         const accessToken = params.get('access_token');
 
+        // Immediately clear URL to prevent token exposure in browser history
+        window.history.replaceState({}, document.title, window.location.pathname);
+
         if (!accessToken) {
           throw new Error('No access token provided');
         }
