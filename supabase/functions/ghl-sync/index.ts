@@ -8,25 +8,24 @@ Deno.serve(async (req) => {
   const syncStartTime = Date.now();
   
   try {
-    // Authenticate user
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return errorResponse('Authorization required', 401);
-    }
-
-    const token = authHeader.replace('Bearer ', '');
+    // Use service role client (no JWT required)
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     );
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    if (authError || !user) {
-      console.error('Auth error:', authError);
-      return errorResponse('Unauthorized', 401);
+    // Get trainer_id from request body for internal calls
+    let trainerId: string | null = null;
+    
+    try {
+      const body = await req.json();
+      trainerId = body?.trainerId;
+    } catch {
+      // If no body, try to get all configs
+      console.log('No trainer_id specified, syncing all trainers');
     }
 
-    console.log(`Starting GHL sync for user ${user.id}...`);
+    console.log(`Starting GHL sync${trainerId ? ` for trainer ${trainerId}` : ''}...`);
 
     // Get GHL access token from environment
     const ghlAccessToken = Deno.env.get('GHL_ACCESS_TOKEN');
@@ -35,12 +34,17 @@ Deno.serve(async (req) => {
       return errorResponse('GHL_ACCESS_TOKEN not configured', 500);
     }
 
-    // Get GHL configs only for authenticated user
-    const { data: configs, error: configError } = await supabase
+    // Get GHL configs (filter by trainer_id if provided)
+    let query = supabase
       .from('ghl_config')
       .select('*')
-      .eq('trainer_id', user.id)
       .not('location_id', 'is', null);
+
+    if (trainerId) {
+      query = query.eq('trainer_id', trainerId);
+    }
+
+    const { data: configs, error: configError } = await query;
 
     if (configError) {
       console.error('Error fetching GHL configs:', configError);
