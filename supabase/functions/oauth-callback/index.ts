@@ -162,7 +162,41 @@ serve(async (req) => {
       tier,
     });
 
-    // Redirect to provisioning or onboarding complete
+    // Trigger provisioning automatically
+    console.log('Triggering provisioning for trainer:', trainerId);
+    try {
+      const provisioningResponse = await fetch(
+        `${Deno.env.get('SUPABASE_URL')}/functions/v1/ghl-provisioning`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            trainerId,
+            planTier: tier || 'starter',
+          }),
+        }
+      );
+
+      if (!provisioningResponse.ok) {
+        const errorText = await provisioningResponse.text();
+        console.error('Provisioning failed:', {
+          status: provisioningResponse.status,
+          error: errorText,
+        });
+        // Continue to onboarding even if provisioning fails
+        // The onboarding page will show the error and allow retry
+      } else {
+        console.log('Provisioning triggered successfully');
+      }
+    } catch (provisionError) {
+      console.error('Failed to trigger provisioning:', provisionError);
+      // Continue to onboarding even if provisioning fails
+    }
+
+    // Redirect to onboarding
     const redirectUrl = tier
       ? `${APP_URL}/onboarding?oauth=success&tier=${tier}`
       : `${APP_URL}/onboarding?oauth=success`;

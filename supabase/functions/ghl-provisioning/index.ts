@@ -229,11 +229,25 @@ Deno.serve(async (req) => {
       correlationId,
       dfyRequestId: input.dfyRequestId ?? null,
       planTier: input.planTier,
+      step: 'starting',
+      progress: 0,
     });
 
     const trainerProfile = await ensureTrainerProfile(supabase, resolvedTrainerId, input, dfyRequest, logger);
+    
+    await markProvisioningStatus(supabase, resolvedTrainerId, 'provisioning', {
+      correlationId,
+      step: 'location_creation',
+      progress: 10,
+    });
 
     const location = await ensureLocation(input, trainerProfile, existingConfig, supabase, resolvedTrainerId, logger, correlationId);
+    
+    await markProvisioningStatus(supabase, resolvedTrainerId, 'provisioning', {
+      correlationId,
+      step: 'token_refresh',
+      progress: 25,
+    });
     
     // Refresh token after location creation to ensure we have valid token for subsequent calls
     const accessToken = await refreshGHLToken(supabase, resolvedTrainerId, logger) || existingConfig?.access_token || GHL_ACCESS_TOKEN;
@@ -243,10 +257,44 @@ Deno.serve(async (req) => {
       throw new Error('Unable to obtain GHL access token. Please ensure OAuth is complete.');
     }
     
+    await markProvisioningStatus(supabase, resolvedTrainerId, 'provisioning', {
+      correlationId,
+      step: 'user_creation',
+      progress: 35,
+    });
+    
     const primaryUser = await ensurePrimaryUser(location.id, input, existingConfig, accessToken, logger, correlationId);
+    
+    await markProvisioningStatus(supabase, resolvedTrainerId, 'provisioning', {
+      correlationId,
+      step: 'tags',
+      progress: 50,
+    });
+    
     const tags = await ensureTags(location.id, accessToken, logger, correlationId);
+    
+    await markProvisioningStatus(supabase, resolvedTrainerId, 'provisioning', {
+      correlationId,
+      step: 'custom_fields',
+      progress: 60,
+    });
+    
     const customFields = await ensureCustomFields(location.id, accessToken, logger, correlationId);
+    
+    await markProvisioningStatus(supabase, resolvedTrainerId, 'provisioning', {
+      correlationId,
+      step: 'location_values',
+      progress: 70,
+    });
+    
     await ensureLocationCustomValues(location.id, input, trainerProfile, accessToken, logger, correlationId);
+    
+    await markProvisioningStatus(supabase, resolvedTrainerId, 'provisioning', {
+      correlationId,
+      step: 'calendars',
+      progress: 80,
+    });
+    
     const calendars = await ensureCalendars(
       location.id,
       primaryUser?.id ?? existingConfig?.primary_user_id ?? null,
@@ -254,6 +302,12 @@ Deno.serve(async (req) => {
       logger,
       correlationId,
     );
+
+    await markProvisioningStatus(supabase, resolvedTrainerId, 'provisioning', {
+      correlationId,
+      step: 'snapshot',
+      progress: 90,
+    });
 
     // Apply snapshot based on plan tier
     const snapshotResult = await applySnapshotAssets(
@@ -278,6 +332,12 @@ Deno.serve(async (req) => {
       logger,
     );
 
+    await markProvisioningStatus(supabase, resolvedTrainerId, 'active', {
+      correlationId,
+      step: 'complete',
+      progress: 100,
+    });
+
     if (input.dfyRequestId) {
       await supabase
         .from('dfy_requests')
@@ -285,10 +345,11 @@ Deno.serve(async (req) => {
         .eq('id', input.dfyRequestId);
     }
 
-    logger.info('Provisioning completed', {
+    logger.info('Provisioning completed successfully', {
       trainerId: resolvedTrainerId,
       locationId: location.id,
       primaryUserId: primaryUser?.id ?? existingConfig?.primary_user_id ?? null,
+      duration: Date.now() - Date.parse(new Date().toISOString()),
     });
 
     return new Response(
