@@ -168,9 +168,9 @@ export default function Login() {
         </CardHeader>
         <CardContent className="space-y-6">
           {paymentSuccess && (
-            <div className="mb-4 p-4 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
-              <p className="text-green-800 dark:text-green-200 font-medium text-center">Payment successful! 🎉</p>
-              <p className="text-green-700 dark:text-green-300 text-sm text-center mt-1">
+            <div className="mb-4 p-4 bg-success text-success-foreground border border-success rounded-lg">
+              <p className="font-medium text-center">Payment successful! 🎉</p>
+              <p className="text-sm text-center mt-1 opacity-90">
                 Create your account to get started with your <strong className="capitalize">{tier}</strong> plan
               </p>
             </div>
