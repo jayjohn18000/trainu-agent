@@ -235,7 +235,7 @@ Deno.serve(async (req) => {
 
     const trainerProfile = await ensureTrainerProfile(supabase, resolvedTrainerId, input, dfyRequest, logger);
     
-    await markProvisioningStatus(supabase, resolvedTrainerId, 'provisioning', {
+    await markProvisioningStatus(supabase, resolvedTrainerId, 'creating_location', {
       correlationId,
       step: 'location_creation',
       progress: 10,
@@ -243,7 +243,7 @@ Deno.serve(async (req) => {
 
     const location = await ensureLocation(input, trainerProfile, existingConfig, supabase, resolvedTrainerId, logger, correlationId);
     
-    await markProvisioningStatus(supabase, resolvedTrainerId, 'provisioning', {
+    await markProvisioningStatus(supabase, resolvedTrainerId, 'creating_location', {
       correlationId,
       step: 'token_refresh',
       progress: 25,
@@ -257,7 +257,7 @@ Deno.serve(async (req) => {
       throw new Error('Unable to obtain GHL access token. Please ensure OAuth is complete.');
     }
     
-    await markProvisioningStatus(supabase, resolvedTrainerId, 'provisioning', {
+    await markProvisioningStatus(supabase, resolvedTrainerId, 'creating_user', {
       correlationId,
       step: 'user_creation',
       progress: 35,
@@ -265,7 +265,7 @@ Deno.serve(async (req) => {
     
     const primaryUser = await ensurePrimaryUser(location.id, input, existingConfig, accessToken, logger, correlationId);
     
-    await markProvisioningStatus(supabase, resolvedTrainerId, 'provisioning', {
+    await markProvisioningStatus(supabase, resolvedTrainerId, 'applying_snapshots', {
       correlationId,
       step: 'tags',
       progress: 50,
@@ -332,7 +332,7 @@ Deno.serve(async (req) => {
       logger,
     );
 
-    await markProvisioningStatus(supabase, resolvedTrainerId, 'active', {
+    await markProvisioningStatus(supabase, resolvedTrainerId, 'completed', {
       correlationId,
       step: 'complete',
       progress: 100,
@@ -409,7 +409,7 @@ async function refreshGHLToken(
 async function markProvisioningStatus(
   supabase: any,
   trainerId: string,
-  status: 'provisioning' | 'active' | 'failed',
+  status: 'provisioning' | 'active' | 'failed' | 'creating_location' | 'creating_user' | 'applying_snapshots' | 'completed',
   metadata: Record<string, unknown>,
 ) {
   if (!trainerId) return;
@@ -419,8 +419,8 @@ async function markProvisioningStatus(
     .upsert(
       {
         trainer_id: trainerId,
-        provisioning_status: status === 'active' ? 'active' : status,
-        status,
+        provisioning_status: status,
+        status: status === 'completed' ? 'active' : status,
         setup_type: 'dfy',
         admin_notes: metadata?.correlationId
           ? `Provisioned via automation (${metadata.correlationId})`

@@ -16,6 +16,8 @@ export default function Onboarding() {
   const [step, setStep] = useState<OnboardingStep>('loading');
   const [error, setError] = useState<string | null>(null);
   const [tier, setTier] = useState<string>('starter');
+  const [provisioningProgress, setProvisioningProgress] = useState<string>('Initializing...');
+  const [provisioningStep, setProvisioningStep] = useState<number>(0);
 
   useEffect(() => {
     if (!user) {
@@ -85,6 +87,8 @@ export default function Onboarding() {
 
   const checkProvisioningStatus = async () => {
     setStep('provisioning');
+    setProvisioningProgress('Checking account status...');
+    setProvisioningStep(1);
     
     try {
       // Check if already provisioned
@@ -96,6 +100,8 @@ export default function Onboarding() {
 
       if (profile?.location) {
         // Already provisioned - redirect to app.trainu.us
+        setProvisioningProgress('Account ready! Redirecting...');
+        setProvisioningStep(5);
         setStep('complete');
         setTimeout(() => {
           window.location.href = 'https://app.trainu.us';
@@ -104,6 +110,9 @@ export default function Onboarding() {
       }
 
       // Trigger provisioning
+      setProvisioningProgress('Creating your GHL account...');
+      setProvisioningStep(2);
+      
       const userMeta = (user as any).user_metadata || {};
       const { data, error: provError } = await supabase.functions.invoke('ghl-provisioning', {
         body: {
@@ -116,8 +125,8 @@ export default function Onboarding() {
             phone: userMeta.phone || '',
           },
           business: {
-            brandName: `${userMeta.first_name || 'Trainer'}'s Training`,
-            legalName: `${userMeta.first_name || 'Trainer'}'s Training`,
+            brandName: userMeta.business_name || `${userMeta.first_name || 'Trainer'}'s Training`,
+            legalName: userMeta.business_name || `${userMeta.first_name || 'Trainer'}'s Training`,
             supportEmail: user!.email!,
           },
         },
@@ -125,20 +134,62 @@ export default function Onboarding() {
 
       if (provError) {
         console.error('Provisioning error:', provError);
-        setError('Failed to provision your account. Please contact support.');
+        setError(`Provisioning failed: ${provError.message || 'Unknown error'}`);
         setStep('error');
+        toast.error('Failed to provision your account');
         return;
       }
 
-      console.log('Provisioning successful:', data);
-      toast.success('Account provisioned! Redirecting to your GHL dashboard...');
-      setStep('complete');
-      setTimeout(() => {
-        window.location.href = 'https://app.trainu.us';
-      }, 2000);
+      // Poll for provisioning completion
+      setProvisioningProgress('Setting up automations and workflows...');
+      setProvisioningStep(3);
+      
+      let attempts = 0;
+      const maxAttempts = 30; // 30 seconds max
+      
+      const pollInterval = setInterval(async () => {
+        attempts++;
+        
+        const { data: ghlConfig } = await supabase
+          .from('ghl_config')
+          .select('provisioning_status, last_sync_error')
+          .eq('trainer_id', user!.id)
+          .single();
+
+        if (ghlConfig?.provisioning_status === 'completed') {
+          clearInterval(pollInterval);
+          setProvisioningProgress('Configuration complete!');
+          setProvisioningStep(5);
+          setStep('complete');
+          setTimeout(() => {
+            window.location.href = 'https://app.trainu.us';
+          }, 2000);
+        } else if (ghlConfig?.provisioning_status === 'failed') {
+          clearInterval(pollInterval);
+          setError(`Provisioning failed: ${ghlConfig.last_sync_error || 'Unknown error'}`);
+          setStep('error');
+        } else if (attempts >= maxAttempts) {
+          clearInterval(pollInterval);
+          setError('Provisioning is taking longer than expected. Please contact support.');
+          setStep('error');
+        } else {
+          // Update progress message based on status
+          if (ghlConfig?.provisioning_status === 'creating_location') {
+            setProvisioningProgress('Creating your workspace...');
+            setProvisioningStep(2);
+          } else if (ghlConfig?.provisioning_status === 'creating_user') {
+            setProvisioningProgress('Setting up your admin account...');
+            setProvisioningStep(3);
+          } else if (ghlConfig?.provisioning_status === 'applying_snapshots') {
+            setProvisioningProgress('Applying templates and automations...');
+            setProvisioningStep(4);
+          }
+        }
+      }, 1000);
+
     } catch (err) {
-      console.error('Provisioning error:', err);
-      setError('An unexpected error occurred. Please contact support.');
+      console.error('Provisioning check error:', err);
+      setError('Failed to check provisioning status. Please try again.');
       setStep('error');
     }
   };
@@ -280,8 +331,46 @@ export default function Onboarding() {
             <>
               <Loader2 className="h-12 w-12 animate-spin mx-auto text-primary" />
               <h2 className="text-2xl font-bold">Provisioning Your Account</h2>
-              <p className="text-muted-foreground">
-                We're setting up your CRM, workflows, and automations. This may take a minute...
+              <p className="text-muted-foreground mb-6">
+                {provisioningProgress}
+              </p>
+              
+              {/* Progress indicator */}
+              <div className="space-y-3 mb-6">
+                <div className="flex items-center gap-3 text-sm">
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center ${provisioningStep >= 1 ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+                    {provisioningStep > 1 ? <CheckCircle2 className="w-4 h-4" /> : '1'}
+                  </div>
+                  <span className={provisioningStep >= 1 ? 'text-foreground' : 'text-muted-foreground'}>Initializing</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm">
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center ${provisioningStep >= 2 ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+                    {provisioningStep > 2 ? <CheckCircle2 className="w-4 h-4" /> : '2'}
+                  </div>
+                  <span className={provisioningStep >= 2 ? 'text-foreground' : 'text-muted-foreground'}>Creating workspace</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm">
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center ${provisioningStep >= 3 ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+                    {provisioningStep > 3 ? <CheckCircle2 className="w-4 h-4" /> : '3'}
+                  </div>
+                  <span className={provisioningStep >= 3 ? 'text-foreground' : 'text-muted-foreground'}>Setting up admin account</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm">
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center ${provisioningStep >= 4 ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+                    {provisioningStep > 4 ? <CheckCircle2 className="w-4 h-4" /> : '4'}
+                  </div>
+                  <span className={provisioningStep >= 4 ? 'text-foreground' : 'text-muted-foreground'}>Applying templates & automations</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm">
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center ${provisioningStep >= 5 ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+                    {provisioningStep >= 5 ? <CheckCircle2 className="w-4 h-4" /> : '5'}
+                  </div>
+                  <span className={provisioningStep >= 5 ? 'text-foreground' : 'text-muted-foreground'}>Complete!</span>
+                </div>
+              </div>
+              
+              <p className="text-xs text-muted-foreground">
+                This usually takes 30-60 seconds...
               </p>
             </>
           )}
