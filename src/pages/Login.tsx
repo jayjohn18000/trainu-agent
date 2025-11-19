@@ -43,6 +43,7 @@ export default function Login() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const tier = searchParams.get('tier') || 'starter';
+  const paymentSuccess = searchParams.get('payment') === 'success';
   const { user, initialize } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -152,7 +153,15 @@ export default function Login() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {tier && (
+          {paymentSuccess && (
+            <div className="mb-4 p-4 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg">
+              <p className="text-green-800 dark:text-green-200 font-medium text-center">Payment successful! 🎉</p>
+              <p className="text-green-700 dark:text-green-300 text-sm text-center mt-1">
+                Create your account to get started with your <strong className="capitalize">{tier}</strong> plan
+              </p>
+            </div>
+          )}
+          {tier && !paymentSuccess && (
             <div className="mb-4 p-3 bg-primary/10 rounded-lg">
               <p className="text-sm text-center">
                 Starting your <strong className="capitalize">{tier}</strong> plan setup
