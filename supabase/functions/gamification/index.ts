@@ -54,7 +54,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Handle POST requests with action-based routing
     if (req.method === 'POST') {
       let body: any;
       
@@ -72,7 +71,6 @@ Deno.serve(async (req) => {
       const action = body.action;
       console.log('Action:', action);
 
-      // Handle progress request
       if (action === 'progress') {
         const { data: profile } = await supabase
           .from('trainer_profiles')
@@ -97,7 +95,6 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Handle achievements request
       if (action === 'achievements') {
         const { data: profile } = await supabase
           .from('trainer_profiles')
@@ -107,14 +104,18 @@ Deno.serve(async (req) => {
 
         const { data: unlockedAchievements } = await supabase
           .from('trainer_achievements')
-          .select('achievement_id')
+          .select('achievement_id, unlocked_at')
           .eq('trainer_id', user.id);
 
         const unlockedIds = new Set(unlockedAchievements?.map(a => a.achievement_id) || []);
+        
         const achievements = ACHIEVEMENTS.map(achievement => ({
-          ...achievement,
+          id: achievement.id,
+          name: achievement.name,
+          description: achievement.description,
           unlocked: unlockedIds.has(achievement.id),
-          progress: achievement.condition(profile) ? 100 : 0,
+          unlockedAt: unlockedAchievements?.find(a => a.achievement_id === achievement.id)?.unlocked_at,
+          progress: achievement.condition(profile || {}) ? 1 : 0,
         }));
 
         return new Response(JSON.stringify({ achievements }), {
@@ -122,70 +123,75 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Handle award XP request
       if (action === 'award_xp') {
-        const { amount, reason } = body;
-        console.log('Award XP - amount:', amount, 'type:', typeof amount);
-        console.log('Award XP - reason:', reason, 'type:', typeof reason);
+        const { amount, reason } = body as AwardXPRequest;
 
-        // Validate required fields
         if (typeof amount !== 'number' || isNaN(amount)) {
-          console.error('Invalid amount:', amount, 'Full body:', JSON.stringify(body));
-          return new Response(JSON.stringify({ error: 'Amount must be a valid number' }), {
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          });
-        }
-        
-        if (typeof reason !== 'string' || !reason.trim()) {
-          console.error('Invalid reason:', reason);
-          return new Response(JSON.stringify({ error: 'Reason must be a non-empty string' }), {
+          return new Response(JSON.stringify({ error: 'Invalid amount' }), {
             status: 400,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
           });
         }
 
-        // Get current profile
+        if (!reason || typeof reason !== 'string') {
+          return new Response(JSON.stringify({ error: 'Invalid reason' }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          });
+        }
+
         const { data: profile } = await supabase
           .from('trainer_profiles')
           .select('*')
           .eq('id', user.id)
           .maybeSingle();
 
-        const currentXP = profile?.xp || 0;
-        const newXP = currentXP + amount;
+        const oldXp = profile?.xp || 0;
         const oldLevel = profile?.level || 1;
-        const newLevel = calculateLevel(newXP);
+        const newXp = oldXp + amount;
+        const newLevel = calculateLevel(newXp);
+        const leveledUp = newLevel > oldLevel;
 
-        // Update profile
         await supabase
           .from('trainer_profiles')
-          .update({ xp: newXP, level: newLevel })
-          .eq('id', user.id);
+          .upsert({
+            id: user.id,
+            xp: newXp,
+            level: newLevel,
+            updated_at: new Date().toISOString(),
+          });
 
-        // Record XP history
         await supabase
-          .from('xp_history')
-          .insert({ trainer_id: user.id, amount, reason });
+          .from('trainer_xp_history')
+          .insert({
+            trainer_id: user.id,
+            amount,
+            reason,
+            created_at: new Date().toISOString(),
+          });
 
-        // Check for new achievements
         const { data: unlockedAchievements } = await supabase
           .from('trainer_achievements')
           .select('achievement_id')
           .eq('trainer_id', user.id);
 
         const unlockedIds = new Set(unlockedAchievements?.map(a => a.achievement_id) || []);
-        const newAchievements = [];
+        const newAchievements: Achievement[] = [];
+
+        const stats = {
+          ...profile,
+          level: newLevel,
+          xp: newXp,
+        };
 
         for (const achievement of ACHIEVEMENTS) {
-          if (!unlockedIds.has(achievement.id) && achievement.condition(profile)) {
+          if (!unlockedIds.has(achievement.id) && achievement.condition(stats)) {
             await supabase
               .from('trainer_achievements')
               .insert({
                 trainer_id: user.id,
                 achievement_id: achievement.id,
-                achievement_name: achievement.name,
-                achievement_description: achievement.description,
+                unlocked_at: new Date().toISOString(),
               });
             newAchievements.push(achievement);
           }
@@ -195,8 +201,12 @@ Deno.serve(async (req) => {
           success: true,
           oldLevel,
           newLevel,
-          leveledUp: newLevel > oldLevel,
-          newAchievements,
+          leveledUp,
+          newAchievements: newAchievements.map(a => ({
+            id: a.id,
+            name: a.name,
+            description: a.description,
+          })),
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
@@ -208,15 +218,13 @@ Deno.serve(async (req) => {
       });
     }
 
-    return new Response(JSON.stringify({ error: 'Invalid request' }), {
-      status: 400,
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      status: 405,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
-
   } catch (error) {
     console.error('Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return new Response(JSON.stringify({ error: errorMessage }), {
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
