@@ -66,7 +66,7 @@ export function LandingNav() {
                 Sign In
               </Button>
             </Link>
-            <Link to="/login">
+            <Link to="/pricing">
               <Button size="sm" className="shadow-glow">
                 Start Free Trial
               </Button>
@@ -104,7 +104,7 @@ export function LandingNav() {
                   Sign In
                 </Button>
               </Link>
-              <Link to="/login" className="block">
+              <Link to="/pricing" className="block">
                 <Button size="sm" className="w-full shadow-glow">
                   Start Free Trial
                 </Button>

@@ -193,6 +193,10 @@ export default function Pricing() {
                     </span>
                     <span className="text-muted-foreground">/month</span>
                   </div>
+                  <Badge variant="secondary" className="mb-2">
+                    <Zap className="h-3 w-3 mr-1" />
+                    14-Day Free Trial
+                  </Badge>
                   <p className="text-xs text-success">{tier.roi}</p>
                 </div>
 
@@ -206,7 +210,7 @@ export default function Pricing() {
                     className={`w-full ${tier.popular ? "shadow-glow" : ""}`}
                     variant={tier.popular ? "default" : "outline"}
                   >
-                    Get Started
+                    Start Free Trial
                   </Button>
                 </a>
 

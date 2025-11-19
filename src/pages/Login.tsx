@@ -120,10 +120,24 @@ export default function Login() {
         await initialize();
         toast.success("Account created successfully!");
         // Redirect to onboarding with tier to complete GHL setup
-        navigate(`/onboarding?tier=${tier}`, { replace: true });
-      } else {
-        // If no session (email confirmation required), show message
-        toast.info("Please check your email to confirm your account");
+        navigate(`/onboarding?tier=${tier}${paymentSuccess ? '&payment=success' : ''}`, { replace: true });
+      } else if (authData.user) {
+        // If no session (email confirmation required), show message and poll for session
+        toast.info("Account created! Please check your email to verify. You'll be automatically logged in after verification.");
+        
+        // Poll for session every 2 seconds
+        const checkSession = setInterval(async () => {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session) {
+            clearInterval(checkSession);
+            await initialize();
+            toast.success("Email verified! Redirecting...");
+            navigate(`/onboarding?tier=${tier}${paymentSuccess ? '&payment=success' : ''}`, { replace: true });
+          }
+        }, 2000);
+        
+        // Stop polling after 5 minutes
+        setTimeout(() => clearInterval(checkSession), 300000);
       }
     } catch (error) {
       toast.error("An error occurred during sign up");
