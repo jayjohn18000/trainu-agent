@@ -21,6 +21,7 @@ const signInSchema = z.object({
 
 const signUpSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
+  businessName: z.string().optional(),
   email: z.string().email("Invalid email address"),
   password: z.string()
     .min(8, "Password must be at least 8 characters")
@@ -56,7 +57,7 @@ export default function Login() {
 
   const signUpForm = useForm<SignUpForm>({
     resolver: zodResolver(signUpSchema),
-    defaultValues: { name: "", email: "", password: "", confirmPassword: "", terms: false },
+    defaultValues: { name: "", businessName: "", email: "", password: "", confirmPassword: "", terms: false },
   });
 
   useEffect(() => {
@@ -102,6 +103,7 @@ export default function Login() {
             name: data.name,
             first_name: data.name.split(' ')[0] || data.name,
             last_name: data.name.split(' ').slice(1).join(' ') || '',
+            business_name: data.businessName || `${data.name.split(' ')[0]}'s Training`,
           },
           emailRedirectTo: `${window.location.origin}/onboarding`,
         },
@@ -252,6 +254,18 @@ export default function Login() {
                   />
                   {signUpForm.formState.errors.name && (
                     <p className="text-sm text-destructive">{signUpForm.formState.errors.name.message}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="signup-business">Business Name (Optional)</Label>
+                  <Input
+                    id="signup-business"
+                    placeholder="John's Personal Training"
+                    {...signUpForm.register("businessName")}
+                  />
+                  {signUpForm.formState.errors.businessName && (
+                    <p className="text-sm text-destructive">{signUpForm.formState.errors.businessName.message}</p>
                   )}
                 </div>
 

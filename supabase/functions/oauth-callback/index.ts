@@ -164,7 +164,30 @@ serve(async (req) => {
 
     // Trigger provisioning automatically
     console.log('Triggering provisioning for trainer:', trainerId);
+    
+    // Fetch user metadata to pass to provisioning
+    const { data: userData } = await supabase.auth.admin.getUserById(trainerId);
+    const userMeta = userData?.user?.user_metadata || {};
+    
     try {
+      const provisioningPayload = {
+        trainerId,
+        planTier: tier || 'starter',
+        trainer: {
+          email: userData?.user?.email || '',
+          firstName: userMeta.first_name || 'Trainer',
+          lastName: userMeta.last_name || '',
+          phone: userMeta.phone || ''
+        },
+        business: {
+          brandName: userMeta.business_name || `${userMeta.first_name || 'Trainer'}'s Training`,
+          legalName: userMeta.business_name || `${userMeta.first_name || 'Trainer'}'s Training`,
+          supportEmail: userData?.user?.email || ''
+        }
+      };
+      
+      console.log('Provisioning payload:', JSON.stringify(provisioningPayload, null, 2));
+      
       const provisioningResponse = await fetch(
         `${Deno.env.get('SUPABASE_URL')}/functions/v1/ghl-provisioning`,
         {
@@ -173,10 +196,7 @@ serve(async (req) => {
             'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            trainerId,
-            planTier: tier || 'starter',
-          }),
+          body: JSON.stringify(provisioningPayload),
         }
       );
 
