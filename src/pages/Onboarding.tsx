@@ -125,25 +125,35 @@ export default function Onboarding() {
 
   const handleConnectGHL = async () => {
     try {
+      console.log('Initiating OAuth with tier:', tier);
       const { data, error } = await supabase.functions.invoke('ghl-oauth-init', {
         body: { tier },
       });
 
+      console.log('OAuth init response:', { data, error });
+
       if (error) {
+        console.error('OAuth init failed:', error);
+        setError(`Failed to initialize OAuth: ${error.message}`);
+        setStep('error');
         toast.error('Failed to initiate OAuth');
-        console.error('OAuth init error:', error);
         return;
       }
 
       if (data?.authUrl) {
-        // Redirect to GHL OAuth
+        console.log('Redirecting to GHL OAuth:', data.authUrl);
         window.location.href = data.authUrl;
       } else {
+        console.error('Invalid OAuth response - no authUrl');
+        setError('Invalid OAuth response from server');
+        setStep('error');
         toast.error('Invalid OAuth response');
       }
     } catch (err) {
-      toast.error('Failed to connect to GoHighLevel');
       console.error('OAuth error:', err);
+      setError('An unexpected error occurred while connecting to GoHighLevel');
+      setStep('error');
+      toast.error('Failed to connect to GoHighLevel');
     }
   };
 
@@ -263,15 +273,17 @@ export default function Onboarding() {
 
           {step === 'error' && (
             <>
-              <AlertCircle className="h-12 w-12 mx-auto text-destructive" />
-              <h2 className="text-2xl font-bold">Setup Error</h2>
-              <p className="text-muted-foreground">{error}</p>
-              <div className="space-y-2">
-                <Button onClick={() => setStep('oauth_required')} className="w-full">
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <AlertCircle className="h-12 w-12 text-destructive" />
+              </div>
+              <h2 className="text-2xl font-bold text-destructive">Setup Error</h2>
+              <p className="text-muted-foreground mb-4">{error}</p>
+              <div className="flex flex-col gap-2">
+                <Button onClick={() => window.location.reload()} className="w-full">
                   Try Again
                 </Button>
-                <Button variant="outline" onClick={() => navigate('/support')} className="w-full">
-                  Contact Support
+                <Button variant="outline" onClick={() => navigate('/today')} className="w-full">
+                  Go to Dashboard
                 </Button>
               </div>
             </>
