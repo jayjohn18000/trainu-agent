@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import * as gamificationAPI from '@/lib/api/gamification';
+import { useAuthStore } from '@/lib/store/useAuthStore';
 
 export const XP_REWARDS = {
   APPROVE_MESSAGE: 25,
@@ -52,6 +53,7 @@ interface XPNotification {
 }
 
 export function useTrainerGamification() {
+  const { user } = useAuthStore();
   const [progress, setProgress] = useState<TrainerProgress>({
     xp: 0,
     level: 1,
@@ -64,13 +66,19 @@ export function useTrainerGamification() {
   const [levelUpNotification, setLevelUpNotification] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Load progress from API on mount
+  // Load progress from API on mount (only if authenticated)
   useEffect(() => {
-    loadProgress();
-  }, []);
+    if (user) {
+      loadProgress();
+    } else {
+      setLoading(false);
+    }
+  }, [user]);
 
-  // Subscribe to realtime updates on trainer profile
+  // Subscribe to realtime updates on trainer profile (only if authenticated)
   useEffect(() => {
+    if (!user) return;
+
     const channel = supabase
       .channel('trainer-progress')
       .on(
@@ -89,7 +97,7 @@ export function useTrainerGamification() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [user]);
 
   const loadProgress = async () => {
     try {
