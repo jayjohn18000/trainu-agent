@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -41,6 +41,9 @@ export default function ChallengeRating() {
   const [searchQuery, setSearchQuery] = useState("");
   const [ratingId, setRatingId] = useState<string>("");
   const [verificationCode, setVerificationCode] = useState("");
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const [codeExpiresAt, setCodeExpiresAt] = useState<Date | null>(null);
+  const [timeRemaining, setTimeRemaining] = useState<number>(0);
   
   const [data, setData] = useState<RatingData>({
     trainerName: "",
@@ -119,6 +122,7 @@ export default function ChallengeRating() {
     }
 
     setLoading(true);
+    setSubmissionError(null);
     try {
       const { data: result, error } = await supabase.functions.invoke("submit-challenge-rating", {
         body: {
@@ -130,12 +134,52 @@ export default function ChallengeRating() {
       if (error) throw error;
       
       setRatingId(result.ratingId);
+      const expiryDate = new Date(Date.now() + 15 * 60 * 1000);
+      setCodeExpiresAt(expiryDate);
       toast.success("Verification code sent to your email!");
       setStep(3);
     } catch (error: any) {
-      toast.error(error.message || "Failed to submit rating");
+      const errorMsg = error.message || "Failed to submit rating";
+      setSubmissionError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    if (!ratingId) {
+      toast.error("No rating ID found");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await supabase.functions.invoke("resend-challenge-code", {
+        body: { ratingId },
+      });
+
+      if (error) throw error;
+      
+      const expiryDate = new Date(Date.now() + 15 * 60 * 1000);
+      setCodeExpiresAt(expiryDate);
+      setVerificationCode("");
+      toast.success("New verification code sent!");
+    } catch (error: any) {
+      toast.error(error.message || "Failed to resend code");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditEmail = () => {
+    setStep(2);
+    setSubmissionError(null);
+  };
+
+  const handleCancelRating = () => {
+    if (confirm("Are you sure you want to cancel? Your progress will be lost.")) {
+      navigate("/challenge");
     }
   };
 
@@ -165,6 +209,30 @@ export default function ChallengeRating() {
     }
   };
 
+  // Countdown timer for code expiry
+  useEffect(() => {
+    if (!codeExpiresAt) return;
+    
+    const interval = setInterval(() => {
+      const now = Date.now();
+      const expiry = codeExpiresAt.getTime();
+      const remaining = Math.max(0, Math.floor((expiry - now) / 1000));
+      setTimeRemaining(remaining);
+      
+      if (remaining === 0) {
+        clearInterval(interval);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [codeExpiresAt]);
+
+  const formatTimeRemaining = () => {
+    const minutes = Math.floor(timeRemaining / 60);
+    const seconds = timeRemaining % 60;
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
   const shareUrl = `https://trainu.us/challenge/rate${data.trainerId ? `?trainerId=${data.trainerId}` : ""}`;
   const shareText = `I just rated ${data.trainerName} in the #TrainU2025 Challenge! Help them win - rate your trainer: ${shareUrl}`;
 
@@ -173,8 +241,20 @@ export default function ChallengeRating() {
       <div className="container mx-auto px-4 max-w-2xl">
         <Button
           variant="ghost"
-          onClick={() => step > 1 ? setStep(step - 1) : navigate("/challenge")}
+          onClick={() => {
+            if (step === 3) {
+              // Don't allow going back from verification step without explicit action
+              return;
+            }
+            if (step > 1) {
+              setStep(step - 1);
+              setSubmissionError(null);
+            } else {
+              navigate("/challenge");
+            }
+          }}
           className="mb-6"
+          disabled={step === 3}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
@@ -250,9 +330,14 @@ export default function ChallengeRating() {
                     )}
                   </div>
 
-                  <div className="pt-4 border-t">
-                    <Label>Trainer not listed? Enter their information:</Label>
-                    <div className="space-y-3 mt-2">
+                  <div className="pt-6 border-t mt-6">
+                    <div className="bg-muted/50 p-4 rounded-lg mb-4">
+                      <p className="text-sm font-semibold mb-2">Can't find your trainer?</p>
+                      <p className="text-xs text-muted-foreground">
+                        If your trainer isn't listed above, you can add them manually by entering their information below.
+                      </p>
+                    </div>
+                    <div className="space-y-3">
                       <Input
                         value={data.trainerName}
                         onChange={(e) => setData({ ...data, trainerName: e.target.value })}
@@ -371,6 +456,12 @@ export default function ChallengeRating() {
                 />
               </div>
 
+              {submissionError && (
+                <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+                  {submissionError}
+                </div>
+              )}
+
               <Button onClick={handleRatingSubmit} disabled={loading} className="w-full">
                 {loading ? "Submitting..." : "Submit Rating"}
               </Button>
@@ -385,6 +476,18 @@ export default function ChallengeRating() {
               <p className="text-muted-foreground">
                 We've sent a 6-digit verification code to <strong>{data.raterEmail}</strong>
               </p>
+
+              {timeRemaining > 0 && (
+                <div className="text-sm font-medium text-primary">
+                  Code expires in {formatTimeRemaining()}
+                </div>
+              )}
+
+              {timeRemaining === 0 && codeExpiresAt && (
+                <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+                  Verification code has expired. Please resend a new code.
+                </div>
+              )}
 
               <div className="flex flex-col items-center gap-4">
                 <Label>Enter Verification Code</Label>
@@ -408,8 +511,20 @@ export default function ChallengeRating() {
                 {loading ? "Verifying..." : "Verify Code"}
               </Button>
 
+              <div className="flex flex-col gap-2 pt-4 border-t">
+                <Button onClick={handleResendCode} variant="outline" disabled={loading} className="w-full">
+                  Resend Code
+                </Button>
+                <Button onClick={handleEditEmail} variant="ghost" className="w-full">
+                  Edit Email Address
+                </Button>
+                <Button onClick={handleCancelRating} variant="ghost" className="w-full text-destructive hover:text-destructive">
+                  Cancel Rating
+                </Button>
+              </div>
+
               <p className="text-xs text-muted-foreground">
-                Code expires in 15 minutes. Didn't receive it? Check your spam folder.
+                Didn't receive it? Check your spam folder or click "Resend Code" above.
               </p>
             </div>
           )}
