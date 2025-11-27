@@ -8,30 +8,27 @@ import { ActivityFeed } from "@/components/agent/ActivityFeed";
 import { MessageEditor } from "@/components/agent/MessageEditor";
 import { InsightCard } from "@/components/agent/InsightCard";
 import { getRecentInsightsWithDrafts } from "@/lib/api/events";
-import { ValueMetricsWidget } from "@/components/agent/ValueMetricsWidget";
-import { MessagesWidget } from "@/components/agent/MessagesWidget";
 import { CalendarWidget } from "@/components/agent/CalendarWidget";
 import { AtRiskWidget } from "@/components/agent/AtRiskWidget";
-import { DraftCard } from "@/components/agent/DraftCard";
 import { WelcomeModal } from "@/components/onboarding/WelcomeModal";
 import { TourOverlay } from "@/components/onboarding/TourOverlay";
 import { Confetti } from "@/components/effects/Confetti";
-import { QueueCardSkeletonList } from "@/components/skeletons/QueueCardSkeleton";
 import { ActivityFeedSkeleton } from "@/components/skeletons/ActivityFeedSkeleton";
-import { ValueMetricsSkeleton } from "@/components/skeletons/ValueMetricsSkeleton";
 import { SettingsModal } from "@/components/modals/SettingsModal";
 import { CalendarModal } from "@/components/modals/CalendarModal";
 import { MessagesModal } from "@/components/modals/MessagesModal";
 import { KeyboardShortcutsOverlay } from "@/components/navigation/KeyboardShortcutsOverlay";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useTrainerGamification } from "@/hooks/useTrainerGamification";
 import { useAchievementTracker } from "@/hooks/useAchievementTracker";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useTrainerDashboardStats } from "@/hooks/queries/useTrainerDashboardStats";
+import { useUpcomingSessions } from "@/hooks/queries/useUpcomingSessions";
+import { useRecentUpdates } from "@/hooks/queries/useRecentUpdates";
 import { TrainerXPNotification } from "@/components/gamification/TrainerXPNotification";
 import { AchievementUnlockNotification } from "@/components/ui/AchievementUnlockNotification";
 import { KPICard } from "@/components/KPICard";
@@ -41,12 +38,11 @@ import { RecentUpdates } from "@/components/dashboard/RecentUpdates";
 
 import { markTourComplete, shouldShowAiTour } from "@/lib/utils/tourManager";
 import type { TourType } from "@/components/onboarding/TourOverlay";
-import { Zap, CheckCircle, TrendingUp, Keyboard, X, Users, CalendarDays, UserCheck, Activity, ListChecks } from "lucide-react";
+import { Zap, Keyboard, X, Users, CalendarDays, UserCheck, Activity, ListChecks } from "lucide-react";
 import { analytics } from "@/lib/analytics";
-import { resolveGhlLink } from "@/lib/ghl/links";
-import { getFlags } from "@/lib/flags";
 import { cn } from "@/lib/utils";
 import type { QueueItem } from "@/types/agent";
+import { formatDistanceToNow } from "date-fns";
 
 // Memoized QueueList component for performance
 const QueueList = memo(({
@@ -82,18 +78,22 @@ export default function Today() {
   const [isLoading, setIsLoading] = useState(true);
   const [previousLevel, setPreviousLevel] = useState<number | null>(null);
   const [insights, setInsights] = useState<Awaited<ReturnType<typeof getRecentInsightsWithDrafts>>>([]);
-  const {
-    toast
-  } = useToast();
-  const {
-    awardXP,
-    progress
-  } = useTrainerGamification();
-  const {
-    updateStats,
-    newlyUnlockedAchievements
-  } = useAchievementTracker();
+  const { toast } = useToast();
+  const { awardXP, progress } = useTrainerGamification();
+  const { updateStats, newlyUnlockedAchievements } = useAchievementTracker();
   const isMobile = useIsMobile();
+  
+  // Real data hooks
+  const { data: dashboardStats, isLoading: statsLoading } = useTrainerDashboardStats();
+  const { data: upcomingSessions, isLoading: sessionsLoading } = useUpcomingSessions();
+  const { data: recentUpdates, isLoading: updatesLoading } = useRecentUpdates();
+  
+  // Transform upcoming sessions for the component
+  const formattedSessions = (upcomingSessions || []).map(session => ({
+    client: session.clientName,
+    time: formatDistanceToNow(session.time, { addSuffix: true }),
+    type: session.type,
+  }));
 
   // Load initial data
   useEffect(() => {
@@ -646,33 +646,44 @@ export default function Today() {
 
         {/* KPI Row */}
         <section className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" aria-label="Key metrics">
-          <KPICard 
-            title="Active Clients" 
-            value={24} 
-            icon={Users}
-            trend={{ value: 12, positive: true }}
-            onClick={() => navigate('/clients')}
-          />
-          <KPICard 
-            title="Sessions This Week" 
-            value={18} 
-            icon={CalendarDays}
-            trend={{ value: 8, positive: true }}
-            onClick={() => setCalendarOpen(true)}
-          />
-          <KPICard 
-            title="Retention Rate" 
-            value="94%" 
-            icon={UserCheck}
-            trend={{ value: 3, positive: true }}
-          />
-          <KPICard 
-            title="Avg Client Progress" 
-            value="78%" 
-            icon={Activity}
-            trend={{ value: 5, positive: true }}
-            onClick={() => navigate('/clients')}
-          />
+          {statsLoading ? (
+            <>
+              <Skeleton className="h-28 rounded-lg" />
+              <Skeleton className="h-28 rounded-lg" />
+              <Skeleton className="h-28 rounded-lg" />
+              <Skeleton className="h-28 rounded-lg" />
+            </>
+          ) : (
+            <>
+              <KPICard 
+                title="Active Clients" 
+                value={dashboardStats?.activeClients ?? 0} 
+                icon={Users}
+                trend={{ value: 12, positive: true }}
+                onClick={() => navigate('/clients')}
+              />
+              <KPICard 
+                title="Sessions This Week" 
+                value={dashboardStats?.sessionsThisWeek ?? 0} 
+                icon={CalendarDays}
+                trend={{ value: 8, positive: true }}
+                onClick={() => setCalendarOpen(true)}
+              />
+              <KPICard 
+                title="Retention Rate" 
+                value={`${dashboardStats?.retentionRate ?? 0}%`} 
+                icon={UserCheck}
+                trend={{ value: 3, positive: true }}
+              />
+              <KPICard 
+                title="Avg Client Progress" 
+                value={`${dashboardStats?.avgClientProgress ?? 0}%`} 
+                icon={Activity}
+                trend={{ value: 5, positive: true }}
+                onClick={() => navigate('/clients')}
+              />
+            </>
+          )}
         </section>
 
         {/* MetricsChart */}
@@ -682,8 +693,16 @@ export default function Today() {
 
         {/* Two Column: Upcoming Sessions + Recent Updates */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6">
-          <UpcomingSessions onViewAll={() => setCalendarOpen(true)} />
-          <RecentUpdates onViewAll={() => navigate('/clients')} />
+          <UpcomingSessions 
+            sessions={formattedSessions} 
+            onViewAll={() => setCalendarOpen(true)} 
+            isLoading={sessionsLoading}
+          />
+          <RecentUpdates 
+            updates={recentUpdates} 
+            onViewAll={() => navigate('/clients')} 
+            isLoading={updatesLoading}
+          />
         </div>
 
         {/* Recent Insights */}
