@@ -1,12 +1,14 @@
 import { supabase } from "@/integrations/supabase/client";
 
+export type MessageChannel = "sms" | "email" | "both" | "instagram" | "facebook" | "whatsapp" | "dm";
+
 export interface Message {
   id: string;
   trainer_id: string;
   contact_id: string;
   status: "draft" | "queued" | "sent" | "delivered" | "read" | "failed";
   content: string;
-  channel: "sms" | "email" | "both";
+  channel: MessageChannel;
   confidence: number | null;
   why_reasons: string[] | null;
   scheduled_for: string | null;
@@ -80,7 +82,7 @@ export async function listMessagesForContact(contactId: string): Promise<Message
     .order('created_at', { ascending: true });
 
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []) as Message[];
 }
 
 export async function sendMessage(contactId: string, content: string): Promise<{ id: string }> {
@@ -112,7 +114,7 @@ export async function listDraftsAndQueued(limit = 20): Promise<Message[]> {
     .order("confidence", { ascending: false })
     .limit(limit);
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []) as Message[];
 }
 
 export async function approveMessage(messageId: string) {
@@ -134,7 +136,7 @@ export async function sendNow(messageId: string) {
 export async function createDraftMessage(
   contactId: string,
   content: string,
-  channel: 'sms' | 'email' | 'both' = 'sms'
+  channel: MessageChannel = 'sms'
 ): Promise<{ id: string }> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
@@ -154,5 +156,3 @@ export async function createDraftMessage(
   if (error) throw error;
   return data;
 }
-
-
