@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Users, MessageSquare, Calendar, Settings, ChevronLeft, ChevronRight, FolderKanban } from "lucide-react";
+import { Home, Users, MessageSquare, Calendar, Settings, ChevronLeft, ChevronRight, FolderKanban, ListChecks } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { TrainerLevelDisplay } from "@/components/gamification/TrainerLevelDisplay";
@@ -18,14 +18,15 @@ interface TrainerSidebarProps {
 }
 
 const navItems = [
-  { label: 'Today', path: '/today', icon: Home, shortcut: '1', isModal: false },
-  { label: 'Clients', path: '/clients', icon: Users, shortcut: '2', isModal: false },
-  { label: 'Programs', path: '/programs', icon: FolderKanban, shortcut: '3', isModal: false },
-  { label: 'Messages', icon: MessageSquare, shortcut: '4', isModal: true },
-  { label: 'Calendar', icon: Calendar, shortcut: '5', isModal: true },
+  { label: 'Home', path: '/today', icon: Home, shortcut: '1', isModal: false },
+  { label: 'Queue', path: '/queue', icon: ListChecks, shortcut: '2', isModal: false },
+  { label: 'Clients', path: '/clients', icon: Users, shortcut: '3', isModal: false },
+  { label: 'Programs', path: '/programs', icon: FolderKanban, shortcut: '4', isModal: false },
+  { label: 'Messages', icon: MessageSquare, shortcut: '5', isModal: true },
+  { label: 'Calendar', icon: Calendar, shortcut: '6', isModal: true },
 ];
 
-const settingsItem = { label: 'Settings', path: '/settings-agent', icon: Settings, shortcut: '6', isModal: false };
+const settingsItem = { label: 'Settings', path: '/settings-agent', icon: Settings, shortcut: '7', isModal: false };
 
 export function TrainerSidebar({ collapsed, onToggle }: TrainerSidebarProps) {
   const location = useLocation();

@@ -34,10 +34,14 @@ import { useAchievementTracker } from "@/hooks/useAchievementTracker";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { TrainerXPNotification } from "@/components/gamification/TrainerXPNotification";
 import { AchievementUnlockNotification } from "@/components/ui/AchievementUnlockNotification";
+import { KPICard } from "@/components/KPICard";
+import { MetricsChart } from "@/components/MetricsChart";
+import { UpcomingSessions } from "@/components/dashboard/UpcomingSessions";
+import { RecentUpdates } from "@/components/dashboard/RecentUpdates";
 
 import { markTourComplete, shouldShowAiTour } from "@/lib/utils/tourManager";
 import type { TourType } from "@/components/onboarding/TourOverlay";
-import { Zap, CheckCircle, TrendingUp, Keyboard, X } from "lucide-react";
+import { Zap, CheckCircle, TrendingUp, Keyboard, X, Users, CalendarDays, UserCheck, Activity, ListChecks } from "lucide-react";
 import { analytics } from "@/lib/analytics";
 import { resolveGhlLink } from "@/lib/ghl/links";
 import { getFlags } from "@/lib/flags";
@@ -607,20 +611,80 @@ export default function Today() {
       <main className="container mx-auto px-4 md:px-6 py-4 md:py-6 max-w-[1600px]" role="main" aria-label="Dashboard">
         {/* Header */}
         <header className="flex items-center justify-between mb-6 md:mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold">Today</h1>
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold">Home</h1>
+            <p className="text-muted-foreground text-sm">Welcome back! Here's your training business at a glance.</p>
+          </div>
           <div className="flex items-center gap-2">
             {!isMobile && <Button variant="ghost" size="icon" onClick={() => setShortcutsOpen(true)} title="Keyboard shortcuts (?)" aria-label="View keyboard shortcuts">
                 <Keyboard className="h-4 w-4" />
               </Button>}
-            {safeItemsCount > 0 && <Button variant="outline" size="sm" onClick={handleApproveAllSafe} data-tour="approve-btn" aria-label={`Approve ${safeItemsCount} safe messages`}>
-                <Zap className="h-4 w-4 mr-2" aria-hidden="true" />
-                Approve {safeItemsCount} Safe
-              </Button>}
           </div>
         </header>
 
-        {/* WIP Banner */}
-        
+        {/* Pending Approvals Banner */}
+        {queue.length > 0 && (
+          <Card className="mb-6 p-4 md:p-6 bg-primary/5 border-primary/20">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <ListChecks className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">Pending Approvals</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {queue.length} message{queue.length > 1 ? 's' : ''} waiting for review
+                  </p>
+                </div>
+              </div>
+              <Button onClick={() => navigate('/queue')}>
+                Review in Queue →
+              </Button>
+            </div>
+          </Card>
+        )}
+
+        {/* KPI Row */}
+        <section className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6" aria-label="Key metrics">
+          <KPICard 
+            title="Active Clients" 
+            value={24} 
+            icon={Users}
+            trend={{ value: 12, positive: true }}
+            onClick={() => navigate('/clients')}
+          />
+          <KPICard 
+            title="Sessions This Week" 
+            value={18} 
+            icon={CalendarDays}
+            trend={{ value: 8, positive: true }}
+            onClick={() => setCalendarOpen(true)}
+          />
+          <KPICard 
+            title="Retention Rate" 
+            value="94%" 
+            icon={UserCheck}
+            trend={{ value: 3, positive: true }}
+          />
+          <KPICard 
+            title="Avg Client Progress" 
+            value="78%" 
+            icon={Activity}
+            trend={{ value: 5, positive: true }}
+            onClick={() => navigate('/clients')}
+          />
+        </section>
+
+        {/* MetricsChart */}
+        <section className="mb-6" aria-label="Performance metrics">
+          <MetricsChart />
+        </section>
+
+        {/* Two Column: Upcoming Sessions + Recent Updates */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 mb-6">
+          <UpcomingSessions onViewAll={() => setCalendarOpen(true)} />
+          <RecentUpdates onViewAll={() => navigate('/clients')} />
+        </div>
 
         {/* Recent Insights */}
         {insights.length > 0 && <section className="mb-6 space-y-3" aria-label="Recent insights">
@@ -629,64 +693,6 @@ export default function Today() {
               {insights.map(insight => <InsightCard key={insight.id} insight={insight} onViewDraft={draftId => navigate(`/queue#${draftId}`)} />)}
             </div>
           </section>}
-
-        {/* Queue CTA */}
-        {queue.length > 0 && <Card className="mb-6 p-6 bg-primary/5 border-primary/20">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold">Pending Approvals</h3>
-                <p className="text-sm text-muted-foreground">
-                  {queue.length} message{queue.length > 1 ? 's' : ''} waiting for review
-                </p>
-              </div>
-              <Button onClick={() => navigate('/queue')}>
-                Review in Queue →
-              </Button>
-            </div>
-          </Card>}
-
-        {/* 2-Column Layout: Queue + Your Impact/Messages */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 lg:gap-8 mb-6 md:mb-8">
-          {/* Queue Column */}
-          <section className="space-y-4" aria-label="Message queue">
-            <button onClick={() => window.location.href = '/queue'} className="w-full text-left group" data-tour="queue" aria-label="View full message queue">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold group-hover:text-primary transition-colors">
-                  Queue {queue.length > 0 && `(${queue.length})`}
-                </h2>
-                <Badge variant="outline" className="text-xs group-hover:border-primary transition-colors">
-                  View All →
-                </Badge>
-              </div>
-            </button>
-            
-            {isLoading ? <QueueCardSkeletonList count={3} /> : queue.length === 0 ? <EmptyState icon={CheckCircle} title="All Caught Up!" description="Great work! No pending items in your queue. Your agent will notify you when there's something new." /> : <>
-                <QueueList queue={queue} selectedIndex={selectedIndex} onApprove={handleApprove} onEdit={handleEdit} onSendNow={handleSendNow} />
-                {queue.length > 3 && <button onClick={() => window.location.href = '/queue'} className="w-full" aria-label={`View ${queue.length - 3} more items in queue`}>
-                    <Card className="p-4 border-dashed border-2 hover:border-primary/50 transition-colors cursor-pointer text-center">
-                      <p className="text-sm text-muted-foreground">
-                        +{queue.length - 3} more in queue
-                      </p>
-                    </Card>
-                  </button>}
-              </>}
-          </section>
-
-          {/* Right Column: Overview */}
-          <section className="space-y-4" aria-label="Performance overview">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">Overview</h2>
-              <Badge variant="outline" className="text-xs">
-                <TrendingUp className="h-3 w-3 mr-1" aria-hidden="true" />
-                ↑ 15%
-              </Badge>
-            </div>
-            <div data-tour="metrics">
-              {isLoading ? <ValueMetricsSkeleton /> : <ValueMetricsWidget queueCount={queue.length} feedCount={feed.length} />}
-            </div>
-            <MessagesWidget onOpenMessages={() => setMessagesOpen(true)} />
-          </section>
-        </div>
 
         {/* Bottom Widgets Bar */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
