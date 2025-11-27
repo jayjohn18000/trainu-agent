@@ -957,6 +957,44 @@ export type Database = {
         }
         Relationships: []
       }
+      client_notes: {
+        Row: {
+          contact_id: string
+          content: string
+          created_at: string
+          id: string
+          note_type: string
+          trainer_id: string
+          updated_at: string
+        }
+        Insert: {
+          contact_id: string
+          content: string
+          created_at?: string
+          id?: string
+          note_type?: string
+          trainer_id: string
+          updated_at?: string
+        }
+        Update: {
+          contact_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          note_type?: string
+          trainer_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_notes_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_nudge_history: {
         Row: {
           booking_generated: boolean | null
@@ -3945,7 +3983,14 @@ export type Database = {
         | "completed"
         | "no_show"
       consent_status: "active" | "pending" | "opted_out"
-      message_channel: "sms" | "email" | "both"
+      message_channel:
+        | "sms"
+        | "email"
+        | "both"
+        | "instagram"
+        | "facebook"
+        | "whatsapp"
+        | "dm"
       message_status:
         | "draft"
         | "queued"
@@ -4091,7 +4136,15 @@ export const Constants = {
         "no_show",
       ],
       consent_status: ["active", "pending", "opted_out"],
-      message_channel: ["sms", "email", "both"],
+      message_channel: [
+        "sms",
+        "email",
+        "both",
+        "instagram",
+        "facebook",
+        "whatsapp",
+        "dm",
+      ],
       message_status: [
         "draft",
         "queued",

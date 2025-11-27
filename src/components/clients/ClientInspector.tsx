@@ -10,30 +10,37 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 import { ClientDetail } from "@/lib/data/clients/types";
 import { formatDistanceToNow, format } from "date-fns";
 import {
   MessageSquare,
   Tag,
-  FileText,
   Calendar,
   TrendingUp,
   Mail,
   Phone,
   Target,
   ExternalLink,
+  Smartphone,
+  Instagram,
+  Facebook,
+  MessageCircle,
+  Trophy,
+  FileText,
+  Plus,
+  Loader2,
+  Trash2,
 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { useDraftsStore } from "@/lib/store/useDraftsStore";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 import { TemplateEditor } from "./TemplateEditor";
-import { createDraftMessage, type Message } from "@/lib/api/messages";
+import { createDraftMessage, type Message, type MessageChannel } from "@/lib/api/messages";
 import { createEvent, createOrUpdateInsight } from "@/lib/api/events";
-import { createNote, listNotes, type Note } from "@/lib/api/notes";
+import { createNote, listNotes, deleteNote, type Note, type NoteType } from "@/lib/api/notes";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { resolveGhlLink } from "@/lib/ghl/links";
 
@@ -43,6 +50,24 @@ interface ClientInspectorProps {
   client: ClientDetail | null;
   loading?: boolean;
 }
+
+// Channel icon and label mapping
+const channelConfig: Record<MessageChannel, { icon: React.ReactNode; label: string; color: string }> = {
+  sms: { icon: <Smartphone className="h-3 w-3" />, label: 'SMS', color: 'bg-blue-500/10 text-blue-600' },
+  email: { icon: <Mail className="h-3 w-3" />, label: 'Email', color: 'bg-purple-500/10 text-purple-600' },
+  both: { icon: <MessageSquare className="h-3 w-3" />, label: 'Multi', color: 'bg-gray-500/10 text-gray-600' },
+  instagram: { icon: <Instagram className="h-3 w-3" />, label: 'Instagram', color: 'bg-pink-500/10 text-pink-600' },
+  facebook: { icon: <Facebook className="h-3 w-3" />, label: 'Facebook', color: 'bg-blue-600/10 text-blue-700' },
+  whatsapp: { icon: <MessageCircle className="h-3 w-3" />, label: 'WhatsApp', color: 'bg-green-500/10 text-green-600' },
+  dm: { icon: <MessageSquare className="h-3 w-3" />, label: 'DM', color: 'bg-indigo-500/10 text-indigo-600' },
+};
+
+// Note type config
+const noteTypeConfig: Record<NoteType, { icon: React.ReactNode; label: string; color: string }> = {
+  goal: { icon: <Target className="h-4 w-4" />, label: 'Goal', color: 'bg-primary/10 text-primary' },
+  milestone: { icon: <Trophy className="h-4 w-4" />, label: 'Milestone', color: 'bg-amber-500/10 text-amber-600' },
+  quick_note: { icon: <FileText className="h-4 w-4" />, label: 'Note', color: 'bg-muted text-muted-foreground' },
+};
 
 export function ClientInspector({
   open,
@@ -56,6 +81,9 @@ export function ClientInspector({
   const [syncingIds, setSyncingIds] = useState<Set<string>>(new Set());
   const [notes, setNotes] = useState<Note[]>([]);
   const [notesLoading, setNotesLoading] = useState(false);
+  const [newNoteContent, setNewNoteContent] = useState('');
+  const [selectedNoteType, setSelectedNoteType] = useState<NoteType>('quick_note');
+  const [savingNote, setSavingNote] = useState(false);
   const { addFromQuickAction } = useDraftsStore();
   const { user } = useAuthStore();
   const { toast } = useToast();
@@ -69,21 +97,13 @@ export function ClientInspector({
         .select('*')
         .eq('contact_id', contactId)
         .order('created_at', { ascending: false });
-      setDbMessages(data || []);
+      setDbMessages((data || []) as Message[]);
     } catch (error) {
       console.error('Failed to fetch messages:', error);
     } finally {
       setMessagesLoading(false);
     }
   }, []);
-
-  // Fetch messages and notes from database
-  useEffect(() => {
-    if (client?.id) {
-      fetchMessages(client.id);
-      fetchNotes(client.id);
-    }
-  }, [client?.id, fetchMessages]);
 
   const fetchNotes = useCallback(async (contactId: string) => {
     setNotesLoading(true);
@@ -96,6 +116,14 @@ export function ClientInspector({
       setNotesLoading(false);
     }
   }, []);
+
+  // Fetch messages and notes from database
+  useEffect(() => {
+    if (client?.id) {
+      fetchMessages(client.id);
+      fetchNotes(client.id);
+    }
+  }, [client?.id, fetchMessages, fetchNotes]);
 
   // Realtime subscription for messages
   useEffect(() => {
@@ -122,10 +150,49 @@ export function ClientInspector({
     };
   }, [client?.id, fetchMessages]);
 
+  const handleSaveNote = async () => {
+    if (!client?.id || !newNoteContent.trim()) return;
+    
+    setSavingNote(true);
+    try {
+      const note = await createNote(client.id, newNoteContent, selectedNoteType);
+      setNotes(prev => [note, ...prev]);
+      setNewNoteContent('');
+      setSelectedNoteType('quick_note');
+      toast({
+        title: "Note saved",
+        description: `${noteTypeConfig[selectedNoteType].label} added successfully.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save note.",
+        variant: "destructive",
+      });
+    } finally {
+      setSavingNote(false);
+    }
+  };
+
+  const handleDeleteNote = async (noteId: string) => {
+    try {
+      await deleteNote(noteId);
+      setNotes(prev => prev.filter(n => n.id !== noteId));
+      toast({
+        title: "Note deleted",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete note.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleSaveTemplate = async (content: string) => {
     if (!client?.id) return;
 
-    // Create optimistic temporary message
     const tempId = `temp-${Date.now()}`;
     const optimisticMessage: Message = {
       id: tempId,
@@ -140,15 +207,12 @@ export function ClientInspector({
       created_at: new Date().toISOString(),
     };
 
-    // Add to messages list with syncing flag
     setDbMessages((prev) => [optimisticMessage, ...prev]);
     setSyncingIds((prev) => new Set(prev).add(tempId));
 
     try {
-      // Save to database
       const { id } = await createDraftMessage(client.id, content, 'sms');
       
-      // Replace optimistic message with real data
       setDbMessages((prev) => 
         prev.map((msg) => 
           msg.id === tempId 
@@ -157,7 +221,6 @@ export function ClientInspector({
         )
       );
 
-      // Remove from syncing set
       setSyncingIds((prev) => {
         const next = new Set(prev);
         next.delete(tempId);
@@ -169,7 +232,6 @@ export function ClientInspector({
         description: "Draft created and added to queue.",
       });
     } catch (error) {
-      // Remove optimistic message on error
       setDbMessages((prev) => prev.filter((msg) => msg.id !== tempId));
       setSyncingIds((prev) => {
         const next = new Set(prev);
@@ -253,7 +315,6 @@ export function ClientInspector({
             </div>
           </div>
           
-          {/* Edit in GHL Button */}
           <Button 
             onClick={handleEditInGHL} 
             className="w-full mt-4 gap-2"
@@ -274,7 +335,6 @@ export function ClientInspector({
                 try {
                   const messageContent = `Hey ${client.name.split(' ')[0]}, quick check-in — how did your last workout go?`;
                   
-                  // 1. Create event
                   await createEvent({
                     trainer_id: user.id,
                     event_type: 'check_in',
@@ -283,23 +343,20 @@ export function ClientInspector({
                     metadata: { action: 'check_in' },
                   });
 
-                  // 2. Create/update insight
                   await createOrUpdateInsight({
                     trainer_id: user.id,
                     contact_id: client.id,
-                    risk_score: Math.max(0, client.risk - 5), // Slight improvement
+                    risk_score: Math.max(0, client.risk - 5),
                     last_activity_at: new Date().toISOString(),
                   });
 
-                  // 3. Create draft
-                  const { id: draftId } = await createDraftMessage(client.id, messageContent, 'sms');
+                  await createDraftMessage(client.id, messageContent, 'sms');
 
                   toast({ 
                     title: "Check-in created", 
                     description: "Redirecting to queue...",
                   });
                   
-                  // Redirect to queue
                   navigate('/queue');
                 } catch (e) {
                   toast({ title: "Error", description: "Failed to create check-in.", variant: "destructive" });
@@ -315,7 +372,6 @@ export function ClientInspector({
                 try {
                   const messageContent = `Hey ${client.name.split(' ')[0]}, missed you last time. Everything okay? I can help you get back on track — want to pick a new time?`;
                   
-                  // 1. Create event
                   await createEvent({
                     trainer_id: user.id,
                     event_type: 'recover_no_show',
@@ -324,7 +380,6 @@ export function ClientInspector({
                     metadata: { action: 'recover_no_show' },
                   });
 
-                  // 2. Create/update insight (increase risk for no-show)
                   await createOrUpdateInsight({
                     trainer_id: user.id,
                     contact_id: client.id,
@@ -332,7 +387,6 @@ export function ClientInspector({
                     last_activity_at: new Date().toISOString(),
                   });
 
-                  // 3. Create draft
                   await createDraftMessage(client.id, messageContent, 'sms');
 
                   toast({ 
@@ -340,7 +394,6 @@ export function ClientInspector({
                     description: "Redirecting to queue...",
                   });
                   
-                  // Redirect to queue
                   navigate('/queue');
                 } catch (e) {
                   toast({ title: "Error", description: "Failed to create recover message.", variant: "destructive" });
@@ -358,7 +411,6 @@ export function ClientInspector({
                   const whenStr = when ? when.toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'your next session';
                   const messageContent = `Hi ${client.name.split(' ')[0]}, can you confirm ${whenStr}? Reply YES to confirm or NO to reschedule.`;
                   
-                  // 1. Create event
                   await createEvent({
                     trainer_id: user.id,
                     event_type: 'confirm_session',
@@ -367,7 +419,6 @@ export function ClientInspector({
                     metadata: { action: 'confirm', session_time: when?.toISOString() },
                   });
 
-                  // 2. Create/update insight
                   await createOrUpdateInsight({
                     trainer_id: user.id,
                     contact_id: client.id,
@@ -375,7 +426,6 @@ export function ClientInspector({
                     last_activity_at: new Date().toISOString(),
                   });
 
-                  // 3. Create draft
                   await createDraftMessage(client.id, messageContent, 'sms');
 
                   toast({ 
@@ -383,7 +433,6 @@ export function ClientInspector({
                     description: "Redirecting to queue...",
                   });
                   
-                  // Redirect to queue
                   navigate('/queue');
                 } catch (e) {
                   toast({ title: "Error", description: "Failed to create confirm message.", variant: "destructive" });
@@ -543,7 +592,7 @@ export function ClientInspector({
             <TabsContent value="messages" className="space-y-3 mt-4">
               <div className="bg-muted/50 rounded-lg p-4 mb-4">
                 <p className="text-sm text-muted-foreground">
-                  Message history synced from GHL. To send new messages, use the quick actions above to create drafts.
+                  Message history synced from GHL. Channel badges show where each message originated.
                 </p>
               </div>
 
@@ -552,43 +601,52 @@ export function ClientInspector({
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 </div>
               ) : dbMessages.length > 0 ? (
-                dbMessages.map((message) => (
-                  <Card key={message.id} className="p-4">
-                    <div className="flex items-start gap-3">
-                      <div className="h-8 w-8 rounded-full flex items-center justify-center bg-primary/10 text-primary">
-                        <MessageSquare className="h-4 w-4" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Badge
-                            variant={
-                              message.status === 'draft'
-                                ? 'secondary'
-                                : message.status === 'queued'
-                                ? 'default'
-                                : message.status === 'sent'
-                                ? 'default'
-                                : 'outline'
-                            }
-                          >
-                            {message.status}
-                          </Badge>
-                          {syncingIds.has(message.id) && (
-                            <Badge variant="outline" className="animate-pulse">
-                              syncing...
-                            </Badge>
-                          )}
+                dbMessages.map((message) => {
+                  const channel = channelConfig[message.channel] || channelConfig.sms;
+                  return (
+                    <Card key={message.id} className="p-4">
+                      <div className="flex items-start gap-3">
+                        <div className={`h-8 w-8 rounded-full flex items-center justify-center ${channel.color}`}>
+                          {channel.icon}
                         </div>
-                        <p className="text-sm">{message.content}</p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {formatDistanceToNow(new Date(message.created_at), {
-                            addSuffix: true,
-                          })}
-                        </p>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            {/* Channel Badge */}
+                            <Badge variant="outline" className={`text-xs ${channel.color} border-0`}>
+                              {channel.icon}
+                              <span className="ml-1">{channel.label}</span>
+                            </Badge>
+                            {/* Status Badge */}
+                            <Badge
+                              variant={
+                                message.status === 'draft'
+                                  ? 'secondary'
+                                  : message.status === 'queued'
+                                  ? 'default'
+                                  : message.status === 'sent'
+                                  ? 'default'
+                                  : 'outline'
+                              }
+                            >
+                              {message.status}
+                            </Badge>
+                            {syncingIds.has(message.id) && (
+                              <Badge variant="outline" className="animate-pulse">
+                                syncing...
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-sm">{message.content}</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {formatDistanceToNow(new Date(message.created_at), {
+                              addSuffix: true,
+                            })}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  </Card>
-                ))
+                    </Card>
+                  );
+                })
               ) : (
                 <p className="text-center text-muted-foreground py-8">
                   No messages yet. Create a template to get started.
@@ -597,12 +655,58 @@ export function ClientInspector({
             </TabsContent>
 
             <TabsContent value="notes" className="space-y-4 mt-4">
-              <div className="bg-muted/50 rounded-lg p-4">
-                <p className="text-sm text-muted-foreground">
-                  Notes are read-only in TrainU Intelligence. To add or edit notes, open this contact in GHL.
-                </p>
-              </div>
+              {/* Add Note Form */}
+              <Card className="p-4 space-y-3">
+                <h3 className="font-semibold flex items-center gap-2">
+                  <Plus className="h-4 w-4" />
+                  Add New Note
+                </h3>
+                <Textarea
+                  placeholder="Enter note content..."
+                  value={newNoteContent}
+                  onChange={(e) => setNewNoteContent(e.target.value)}
+                  maxLength={500}
+                  rows={3}
+                />
+                <div className="flex items-center justify-between">
+                  <div className="flex gap-1">
+                    {(Object.keys(noteTypeConfig) as NoteType[]).map((type) => {
+                      const config = noteTypeConfig[type];
+                      return (
+                        <Button
+                          key={type}
+                          variant={selectedNoteType === type ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setSelectedNoteType(type)}
+                          className="gap-1"
+                        >
+                          {config.icon}
+                          {config.label}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    {newNoteContent.length}/500
+                  </span>
+                </div>
+                <Button 
+                  onClick={handleSaveNote} 
+                  disabled={!newNoteContent.trim() || savingNote}
+                  className="w-full"
+                >
+                  {savingNote ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    'Save Note'
+                  )}
+                </Button>
+              </Card>
 
+              {/* Notes List */}
               {notesLoading ? (
                 <div className="flex items-center justify-center py-8">
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -610,18 +714,33 @@ export function ClientInspector({
               ) : notes.length > 0 ? (
                 <div className="space-y-3">
                   <h3 className="font-semibold">Previous Notes</h3>
-                  {notes.map((note) => (
-                    <Card key={note.id} className="p-4">
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <span>Added by {user?.email?.split('@')[0] || 'Trainer'}</span>
-                          <span>•</span>
-                          <span>{formatDistanceToNow(new Date(note.created_at), { addSuffix: true })}</span>
+                  {notes.map((note) => {
+                    const config = noteTypeConfig[note.note_type] || noteTypeConfig.quick_note;
+                    return (
+                      <Card key={note.id} className="p-4">
+                        <div className="flex items-start justify-between mb-2">
+                          <Badge variant="outline" className={`${config.color} border-0`}>
+                            {config.icon}
+                            <span className="ml-1">{config.label}</span>
+                          </Badge>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground">
+                              {formatDistanceToNow(new Date(note.created_at), { addSuffix: true })}
+                            </span>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                              onClick={() => handleDeleteNote(note.id)}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-                      <p className="text-sm whitespace-pre-wrap">{note.content}</p>
-                    </Card>
-                  ))}
+                        <p className="text-sm whitespace-pre-wrap">{note.content}</p>
+                      </Card>
+                    );
+                  })}
                 </div>
               ) : (
                 <p className="text-center text-muted-foreground py-8">
