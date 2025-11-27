@@ -38,6 +38,11 @@ export const queryKeys = {
     list: () => [...queryKeys.programs.all, 'list'] as const,
     detail: (id: string) => [...queryKeys.programs.all, 'detail', id] as const,
   },
+  dashboard: {
+    all: ['dashboard'] as const,
+    stats: () => [...queryKeys.dashboard.all, 'stats'] as const,
+    recentUpdates: () => [...queryKeys.dashboard.all, 'recent-updates'] as const,
+  },
 };
 
 
