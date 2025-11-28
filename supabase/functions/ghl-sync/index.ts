@@ -89,37 +89,48 @@ Deno.serve(async (req) => {
       
       console.log(`Using ${tokenType} token for trainer ${trainer_id}${refreshed ? ' (refreshed)' : ''}`);
 
-      // Fetch and store calendar widget ID if missing
-      if (!booking_widget_id) {
-        try {
-          const calendarsUrl = `${GHL_API_BASE}/calendars/?locationId=${location_id}`;
-          const calendarsResponse = await fetch(calendarsUrl, {
-            headers: {
-              'Authorization': `Bearer ${effectiveToken}`,
-              'Version': '2021-07-28',
-              'Accept': 'application/json',
-            },
-          });
+      // Always fetch and store all calendars
+      try {
+        const calendarsUrl = `${GHL_API_BASE}/calendars/?locationId=${location_id}`;
+        const calendarsResponse = await fetch(calendarsUrl, {
+          headers: {
+            'Authorization': `Bearer ${effectiveToken}`,
+            'Version': '2021-07-28',
+            'Accept': 'application/json',
+          },
+        });
+        
+        if (calendarsResponse.ok) {
+          const calendarsData = await calendarsResponse.json();
+          const calendars = calendarsData.calendars || [];
           
-          if (calendarsResponse.ok) {
-            const calendarsData = await calendarsResponse.json();
-            const calendars = calendarsData.calendars || [];
+          if (calendars.length > 0) {
+            // Store all calendars with metadata
+            const calendarList = calendars.map((c: any) => ({
+              id: c.id,
+              name: c.name || 'Unnamed Calendar',
+              duration: c.slotDuration || c.duration || 30,
+              type: c.calendarType || c.type || 'service',
+            }));
             
-            if (calendars.length > 0) {
-              const primaryCalendarId = calendars[0].id;
-              console.log(`Found calendar for trainer ${trainer_id}, storing widget ID:`, primaryCalendarId);
-              
-              await supabase
-                .from('ghl_config')
-                .update({ booking_widget_id: primaryCalendarId })
-                .eq('trainer_id', trainer_id);
+            console.log(`Found ${calendars.length} calendars for trainer ${trainer_id}`);
+            
+            // Update ghl_calendars and set booking_widget_id if not set
+            const updateData: any = { ghl_calendars: calendarList };
+            if (!booking_widget_id) {
+              updateData.booking_widget_id = calendars[0].id;
             }
-          } else {
-            console.warn(`Failed to fetch calendars for trainer ${trainer_id}:`, calendarsResponse.status);
+            
+            await supabase
+              .from('ghl_config')
+              .update(updateData)
+              .eq('trainer_id', trainer_id);
           }
-        } catch (calendarError) {
-          console.warn(`Error fetching calendars for trainer ${trainer_id}:`, calendarError);
+        } else {
+          console.warn(`Failed to fetch calendars for trainer ${trainer_id}:`, calendarsResponse.status);
         }
+      } catch (calendarError) {
+        console.warn(`Error fetching calendars for trainer ${trainer_id}:`, calendarError);
       }
 
       let contactsCount = 0;
