@@ -295,7 +295,7 @@ Deno.serve(async (req) => {
       progress: 80,
     });
     
-    const calendars = await ensureCalendars(
+    const { calendars, primaryCalendarId } = await ensureCalendars(
       location.id,
       primaryUser?.id ?? existingConfig?.primary_user_id ?? null,
       accessToken,
@@ -328,6 +328,7 @@ Deno.serve(async (req) => {
         defaultChannel: input.prefs?.defaultChannel ?? existingConfig?.default_channel ?? 'both',
         quietHours: resolveQuietHours(input),
         dfyRequestId: input.dfyRequestId,
+        bookingWidgetId: primaryCalendarId,
       },
       logger,
     );
@@ -662,18 +663,31 @@ async function ensureCalendars(
   accessToken: string,
   logger: ReturnType<typeof createLogger>,
   correlationId: string,
-) {
+): Promise<{ calendars: Record<string, any>; primaryCalendarId: string | null }> {
   const response = await ghlRequest(`/v1/locations/${locationId}/calendars`, { method: 'GET' }, accessToken, logger, correlationId);
   const json = response.ok ? await response.json() : { calendars: [] };
+  const existingCalendars = json.calendars ?? json.data ?? [];
   const existing = new Map<string, any>();
-  for (const calendar of json.calendars ?? json.data ?? []) {
+  for (const calendar of existingCalendars) {
     existing.set(String(calendar.name).toLowerCase(), calendar);
   }
 
   const ensured: Record<string, any> = {};
+  let primaryCalendarId: string | null = null;
+
+  // If there are existing calendars, use the first one as primary
+  if (existingCalendars.length > 0) {
+    primaryCalendarId = existingCalendars[0].id;
+  }
+
   for (const blueprint of CALENDAR_BLUEPRINTS) {
     if (existing.has(blueprint.name.toLowerCase())) {
-      ensured[blueprint.slug] = existing.get(blueprint.name.toLowerCase());
+      const existingCal = existing.get(blueprint.name.toLowerCase());
+      ensured[blueprint.slug] = existingCal;
+      // Use the first created calendar as primary if not already set
+      if (!primaryCalendarId && existingCal?.id) {
+        primaryCalendarId = existingCal.id;
+      }
       continue;
     }
 
@@ -701,15 +715,20 @@ async function ensureCalendars(
 
     if (createResponse.ok) {
       const createdCalendar = await createResponse.json();
-      ensured[blueprint.slug] = createdCalendar.calendar ?? createdCalendar;
+      const cal = createdCalendar.calendar ?? createdCalendar;
+      ensured[blueprint.slug] = cal;
+      // Use the first successfully created calendar as primary if not already set
+      if (!primaryCalendarId && cal?.id) {
+        primaryCalendarId = cal.id;
+      }
     } else {
       const errorText = await createResponse.text();
       logger.warn('Failed to create calendar', { calendar: blueprint.name, status: createResponse.status, errorText });
     }
   }
 
-  logger.info('Calendar provisioning complete', { locationId, ensured: Object.keys(ensured) });
-  return ensured;
+  logger.info('Calendar provisioning complete', { locationId, ensured: Object.keys(ensured), primaryCalendarId });
+  return { calendars: ensured, primaryCalendarId };
 }
 
 async function ensurePrimaryUser(
@@ -775,6 +794,7 @@ async function persistProvisioningSuccess(
     defaultChannel: string;
     quietHours: { enabled: boolean; start: string | null; end: string | null };
     dfyRequestId?: string | undefined;
+    bookingWidgetId?: string | null;
   },
   logger: ReturnType<typeof createLogger>,
 ) {
@@ -791,6 +811,11 @@ async function persistProvisioningSuccess(
     webhook_registered: true,
     provisioned_at: new Date().toISOString(),
   };
+
+  // Add booking widget ID if available
+  if (data.bookingWidgetId) {
+    updatePayload.booking_widget_id = data.bookingWidgetId;
+  }
 
   const { error } = await supabase.from('ghl_config').upsert(updatePayload, { onConflict: 'trainer_id' });
   if (error) {

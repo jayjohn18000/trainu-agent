@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
     const allScopeErrors: string[] = [];
 
     for (const config of configs) {
-      const { trainer_id, location_id, access_token, token_expires_at } = config;
+      const { trainer_id, location_id, access_token, token_expires_at, booking_widget_id } = config;
       
       if (!location_id) {
         console.log(`Skipping trainer ${trainer_id}: missing location_id`);
@@ -88,6 +88,39 @@ Deno.serve(async (req) => {
       );
       
       console.log(`Using ${tokenType} token for trainer ${trainer_id}${refreshed ? ' (refreshed)' : ''}`);
+
+      // Fetch and store calendar widget ID if missing
+      if (!booking_widget_id) {
+        try {
+          const calendarsUrl = `${GHL_API_BASE}/calendars/?locationId=${location_id}`;
+          const calendarsResponse = await fetch(calendarsUrl, {
+            headers: {
+              'Authorization': `Bearer ${effectiveToken}`,
+              'Version': '2021-07-28',
+              'Accept': 'application/json',
+            },
+          });
+          
+          if (calendarsResponse.ok) {
+            const calendarsData = await calendarsResponse.json();
+            const calendars = calendarsData.calendars || [];
+            
+            if (calendars.length > 0) {
+              const primaryCalendarId = calendars[0].id;
+              console.log(`Found calendar for trainer ${trainer_id}, storing widget ID:`, primaryCalendarId);
+              
+              await supabase
+                .from('ghl_config')
+                .update({ booking_widget_id: primaryCalendarId })
+                .eq('trainer_id', trainer_id);
+            }
+          } else {
+            console.warn(`Failed to fetch calendars for trainer ${trainer_id}:`, calendarsResponse.status);
+          }
+        } catch (calendarError) {
+          console.warn(`Error fetching calendars for trainer ${trainer_id}:`, calendarError);
+        }
+      }
 
       let contactsCount = 0;
       let conversationsCount = 0;
