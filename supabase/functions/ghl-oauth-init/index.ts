@@ -68,24 +68,24 @@ serve(async (req) => {
       );
     }
 
-    // Get trainer's plan tier from query params, request body, or profile
+    // Get tier and redirect from query params or request body
     const url = new URL(req.url);
     let planTier = url.searchParams.get('tier') || 'starter';
+    let redirectPath = url.searchParams.get('redirect') || '/onboarding';
     
-    // If POST request, try to get tier from body
-    if (req.method === 'POST' && !url.searchParams.get('tier')) {
+    // If POST request, try to get from body
+    if (req.method === 'POST') {
       try {
         const body = await req.json();
-        if (body?.tier) {
-          planTier = body.tier;
-        }
+        if (body?.tier) planTier = body.tier;
+        if (body?.redirect) redirectPath = body.redirect;
       } catch {
-        // Body parsing failed, continue with default
+        // Body parsing failed, continue with defaults
       }
     }
     
     // If no tier specified, try to get from profile
-    if (!url.searchParams.get('tier') && planTier === 'starter') {
+    if (planTier === 'starter') {
       const { data: profile } = await supabase
         .from('trainer_profiles')
         .select('plan_tier')
@@ -97,10 +97,11 @@ serve(async (req) => {
       }
     }
 
-    // Generate state parameter with trainerId and tier
+    // Generate state parameter with trainerId, tier, and redirect
     const state = JSON.stringify({
       trainerId: user.id,
       tier: planTier,
+      redirect: redirectPath,
       timestamp: Date.now(),
     });
 
@@ -115,6 +116,7 @@ serve(async (req) => {
     console.log('Generated OAuth URL', {
       trainerId: user.id,
       tier: planTier,
+      redirect: redirectPath,
       redirectUri: GHL_REDIRECT_URI,
     });
 
@@ -142,4 +144,3 @@ serve(async (req) => {
     );
   }
 });
-

@@ -2,7 +2,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.76.1';
 import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 import { corsHeaders } from '../_shared/responses.ts';
-import { getEffectiveToken } from '../_shared/ghl-location-token.ts';
+import { getGHLToken } from '../_shared/ghl-token.ts';
 
 // Zod validation schemas for GHL API data
 const contactSchema = z.object({
@@ -91,14 +91,14 @@ serve(async (req) => {
 
     for (const config of configs) {
       try {
-        // Get the best available token - prioritize location token over agency token
-        const { token: effectiveToken, tokenType } = getEffectiveToken(
-          config.access_token,
+        // Get the best available token - OAuth with refresh, then agency fallback
+        const { token: effectiveToken, tokenType, refreshed } = await getGHLToken(
+          supabase,
+          config.trainer_id,
           ghlPrivateApiKey,
-          config.token_expires_at
         );
         
-        console.log(`[ghl-periodic-sync] Using ${tokenType} token for trainer ${config.trainer_id}`);
+        console.log(`[ghl-periodic-sync] Using ${tokenType} token for trainer ${config.trainer_id}${refreshed ? ' (refreshed)' : ''}`);
         
         const result = await syncTrainerData(supabase, config, effectiveToken);
         results.push({
