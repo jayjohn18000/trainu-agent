@@ -151,7 +151,12 @@ const QueueCardComponent = ({
                 {onReject && <Button size="sm" variant="destructive" onClick={() => onReject(item.id)} className="flex-1" aria-label="Reject message">
                     Reject
                   </Button>}
-                {onSendNow && <Button size="sm" variant="outline" onClick={() => onSendNow(item.id)} disabled={inQuietHours} title={inQuietHours ? getQuietHoursMessage() : undefined} className="flex-1" aria-label="Send message now">
+{onSendNow && <Button size="sm" variant="outline" onClick={() => {
+                    if (inQuietHours && !window.confirm("It's currently quiet hours (9 PM - 8 AM). Are you sure you want to send now?")) {
+                      return;
+                    }
+                    onSendNow(item.id);
+                  }} title={inQuietHours ? "Override quiet hours" : undefined} className="flex-1" aria-label="Send message now">
                     Send Now
                   </Button>}
                 {onEdit && <Button size="sm" variant="outline" onClick={() => onEdit(item.id)} className="flex-1" aria-label="Edit message">

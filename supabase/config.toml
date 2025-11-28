@@ -128,3 +128,6 @@ verify_jwt = false
 
 [functions.auto-approval-scheduler]
 verify_jwt = true
+
+[functions.message-dispatcher]
+verify_jwt = false
