@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, CheckCircle, RefreshCw, Wifi, WifiOff, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { invokeWithTimeout, TimeoutError } from "@/lib/api/supabase-with-timeout";
 
 interface GHLSettingsModalProps {
   open: boolean;
@@ -21,6 +22,9 @@ interface GHLConfig {
   last_sync_error: string | null;
   contacts_synced: number | null;
 }
+
+const OAUTH_TIMEOUT = 30000; // 30 seconds
+const SYNC_TIMEOUT = 60000; // 60 seconds
 
 export function GHLSettingsModal({ open, onOpenChange }: GHLSettingsModalProps) {
   const [loading, setLoading] = useState(false);
@@ -71,12 +75,20 @@ export function GHLSettingsModal({ open, onOpenChange }: GHLSettingsModalProps) 
         return;
       }
 
-      // Call ghl-oauth-init with redirect back to settings
-      const { data, error } = await supabase.functions.invoke('ghl-oauth-init', {
-        body: { redirect: '/settings-agent' }
+      // Call ghl-oauth-init with timeout
+      const { data, error } = await invokeWithTimeout('ghl-oauth-init', {
+        body: { redirect: '/settings-agent' },
+        timeout: OAUTH_TIMEOUT,
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error instanceof TimeoutError) {
+          toast.error('Connection timed out. Please try again.');
+        } else {
+          toast.error(error.message || 'Failed to start OAuth flow');
+        }
+        return;
+      }
 
       if (data?.authUrl) {
         // Redirect to GHL OAuth consent screen
@@ -98,11 +110,19 @@ export function GHLSettingsModal({ open, onOpenChange }: GHLSettingsModalProps) 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      const { data, error } = await supabase.functions.invoke('ghl-sync', {
-        body: { trainerId: user.id }
+      const { data, error } = await invokeWithTimeout('ghl-sync', {
+        body: { trainerId: user.id },
+        timeout: SYNC_TIMEOUT,
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error instanceof TimeoutError) {
+          toast.error('Sync timed out. Please try again.');
+        } else {
+          toast.error(error.message || 'Sync failed');
+        }
+        return;
+      }
 
       toast.success(`Synced ${data?.synced || 0} records from GHL`);
       await loadConfig();
