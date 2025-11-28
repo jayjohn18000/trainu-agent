@@ -1,10 +1,21 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.76.1'
-import { jsonResponse, errorResponse } from '../_shared/responses.ts'
+import { jsonResponse, errorResponse, optionsResponse } from '../_shared/responses.ts'
 import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts'
 
 const GHL_API_BASE = Deno.env.get('GHL_API_BASE') || 'https://services.leadconnectorhq.com';
 
+// Required GHL scopes for full functionality
+const REQUIRED_SCOPES = {
+  contacts: ['contacts.readonly', 'contacts.write'],
+  conversations: ['conversations.readonly'],
+  calendars: ['calendars.readonly', 'calendars/events.readonly'],
+};
+
 Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return optionsResponse();
+  }
+
   const syncStartTime = Date.now();
   
   try {
@@ -58,6 +69,7 @@ Deno.serve(async (req) => {
 
     let totalSynced = 0;
     const results = [];
+    const allScopeErrors: string[] = [];
 
     for (const config of configs) {
       const { trainer_id, location_id } = config;
@@ -71,8 +83,9 @@ Deno.serve(async (req) => {
       let conversationsCount = 0;
       let appointmentsCount = 0;
       let syncStatus = 'success';
-      let syncError = null;
+      let syncError: string | null = null;
       let conflictsDetected = 0;
+      const scopeErrors: string[] = [];
       const trainerSyncStart = Date.now();
 
       console.log(`Syncing data for trainer ${trainer_id}, location ${location_id}`);
@@ -80,6 +93,8 @@ Deno.serve(async (req) => {
       try {
         // Sync contacts using GHL_PRIVATE_API_KEY + locationId
         const contactsUrl = `${GHL_API_BASE}/contacts/?locationId=${location_id}`;
+        console.log(`Fetching contacts from: ${contactsUrl}`);
+        
         const contactsResponse = await fetch(contactsUrl, {
           headers: {
             'Authorization': `Bearer ${ghlPrivateApiKey}`,
@@ -156,12 +171,19 @@ Deno.serve(async (req) => {
           contactsCount = contacts.length;
           console.log(`Synced ${contactsCount} contacts for trainer ${trainer_id}`);
           totalSynced += contactsCount;
+        } else if (contactsResponse.status === 401 || contactsResponse.status === 403) {
+          const errorText = await contactsResponse.text();
+          console.error(`Contacts API 401/403 - Missing scope. Response: ${errorText}`);
+          scopeErrors.push(`contacts: Missing scope (${REQUIRED_SCOPES.contacts.join(' or ')})`);
         } else {
-          console.error(`Failed to fetch contacts for trainer ${trainer_id}:`, await contactsResponse.text());
+          const errorText = await contactsResponse.text();
+          console.error(`Failed to fetch contacts for trainer ${trainer_id}: ${contactsResponse.status} - ${errorText}`);
         }
 
         // Sync conversations/messages
         const conversationsUrl = `${GHL_API_BASE}/conversations/search?locationId=${location_id}`;
+        console.log(`Fetching conversations from: ${conversationsUrl}`);
+        
         const conversationsResponse = await fetch(conversationsUrl, {
           headers: {
             'Authorization': `Bearer ${ghlPrivateApiKey}`,
@@ -202,10 +224,19 @@ Deno.serve(async (req) => {
 
           conversationsCount = conversations.length;
           console.log(`Synced ${conversationsCount} conversations for trainer ${trainer_id}`);
+        } else if (conversationsResponse.status === 401 || conversationsResponse.status === 403) {
+          const errorText = await conversationsResponse.text();
+          console.error(`Conversations API 401/403 - Missing scope. Response: ${errorText}`);
+          scopeErrors.push(`conversations: Missing scope (${REQUIRED_SCOPES.conversations.join(' or ')})`);
+        } else {
+          const errorText = await conversationsResponse.text();
+          console.error(`Failed to fetch conversations for trainer ${trainer_id}: ${conversationsResponse.status} - ${errorText}`);
         }
 
         // Sync appointments
         const appointmentsUrl = `${GHL_API_BASE}/calendars/events?locationId=${location_id}`;
+        console.log(`Fetching appointments from: ${appointmentsUrl}`);
+        
         const appointmentsResponse = await fetch(appointmentsUrl, {
           headers: {
             'Authorization': `Bearer ${ghlPrivateApiKey}`,
@@ -244,6 +275,20 @@ Deno.serve(async (req) => {
 
           appointmentsCount = appointments.length;
           console.log(`Synced ${appointmentsCount} appointments for trainer ${trainer_id}`);
+        } else if (appointmentsResponse.status === 401 || appointmentsResponse.status === 403) {
+          const errorText = await appointmentsResponse.text();
+          console.error(`Appointments API 401/403 - Missing scope. Response: ${errorText}`);
+          scopeErrors.push(`calendars: Missing scope (${REQUIRED_SCOPES.calendars.join(' or ')})`);
+        } else {
+          const errorText = await appointmentsResponse.text();
+          console.error(`Failed to fetch appointments for trainer ${trainer_id}: ${appointmentsResponse.status} - ${errorText}`);
+        }
+
+        // Determine sync status based on scope errors
+        if (scopeErrors.length > 0) {
+          syncStatus = 'partial';
+          syncError = `Missing GHL API scopes: ${scopeErrors.join('; ')}. Update your Private Integration permissions in GHL.`;
+          allScopeErrors.push(...scopeErrors);
         }
 
       } catch (error) {
@@ -298,6 +343,7 @@ Deno.serve(async (req) => {
         conversations: conversationsCount,
         appointments: appointmentsCount,
         error: syncError,
+        scopeErrors: scopeErrors.length > 0 ? scopeErrors : undefined,
       });
     }
 
@@ -310,6 +356,7 @@ Deno.serve(async (req) => {
       duration_ms: totalDuration,
       timestamp: new Date().toISOString(),
       results,
+      scopeErrors: allScopeErrors.length > 0 ? allScopeErrors : undefined,
     });
 
   } catch (error) {

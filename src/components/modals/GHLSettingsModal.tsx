@@ -5,8 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, CheckCircle, XCircle, RefreshCw, Wifi, WifiOff } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, RefreshCw, Wifi, WifiOff, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface GHLSettingsModalProps {
   open: boolean;
@@ -18,6 +19,7 @@ interface GHLConfig {
   webhook_registered: boolean;
   last_sync_at: string | null;
   last_sync_status: string | null;
+  last_sync_error: string | null;
   contacts_synced: number | null;
 }
 
@@ -42,7 +44,7 @@ export function GHLSettingsModal({ open, onOpenChange }: GHLSettingsModalProps) 
 
       const { data, error } = await supabase
         .from('ghl_config')
-        .select('location_id, webhook_registered, last_sync_at, last_sync_status, contacts_synced')
+        .select('location_id, webhook_registered, last_sync_at, last_sync_status, last_sync_error, contacts_synced')
         .eq('trainer_id', user.id)
         .maybeSingle();
 
@@ -83,20 +85,23 @@ export function GHLSettingsModal({ open, onOpenChange }: GHLSettingsModalProps) 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
+      // Use upsert with onConflict to properly update existing rows
       const { error: upsertError } = await supabase
         .from('ghl_config')
         .upsert({
           trainer_id: user.id,
           location_id: locationId.trim(),
-          is_active: true,
+          updated_at: new Date().toISOString(),
+        }, {
+          onConflict: 'trainer_id',
         });
 
       if (upsertError) throw upsertError;
 
       toast.success(`Connected to ${data.location?.name || 'GHL Location'}`);
 
-      // Register webhook
-      await handleRegisterWebhook();
+      // Register webhook - pass locationId directly
+      await handleRegisterWebhook(locationId.trim());
 
       // Trigger initial sync
       await handleSync();
@@ -112,15 +117,24 @@ export function GHLSettingsModal({ open, onOpenChange }: GHLSettingsModalProps) 
     }
   };
 
-  const handleRegisterWebhook = async () => {
+  const handleRegisterWebhook = async (locId?: string) => {
     try {
-      const { error } = await supabase.functions.invoke('ghl-webhook-register');
+      const { data, error } = await supabase.functions.invoke('ghl-webhook-register', {
+        body: { locationId: locId || locationId.trim() }
+      });
+      
       if (error) {
         console.error('Webhook registration error:', error);
-        // Don't throw - webhook registration is not critical for initial setup
+        toast.error('Webhook registration failed - real-time sync may be limited');
+        return;
       }
-    } catch (error) {
+      
+      if (data?.success) {
+        toast.success('Real-time sync enabled');
+      }
+    } catch (error: any) {
       console.error('Webhook registration failed:', error);
+      toast.error('Webhook registration failed');
     }
   };
 
@@ -136,7 +150,13 @@ export function GHLSettingsModal({ open, onOpenChange }: GHLSettingsModalProps) 
 
       if (error) throw error;
 
-      toast.success(`Synced ${data?.synced || 0} records from GHL`);
+      // Check for scope errors in the response
+      if (data?.scopeErrors?.length > 0) {
+        toast.warning('Sync completed with limited data - see details below');
+      } else {
+        toast.success(`Synced ${data?.synced || 0} records from GHL`);
+      }
+      
       await loadConfig();
     } catch (error: any) {
       console.error('Sync error:', error);
@@ -151,6 +171,10 @@ export function GHLSettingsModal({ open, onOpenChange }: GHLSettingsModalProps) 
     const date = new Date(dateStr);
     return date.toLocaleString();
   };
+
+  const isScopeError = config?.last_sync_error?.includes('scope') || 
+                       config?.last_sync_error?.includes('401') ||
+                       config?.last_sync_error?.includes('Unauthorized');
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -217,11 +241,33 @@ export function GHLSettingsModal({ open, onOpenChange }: GHLSettingsModalProps) 
           {/* Connection Status */}
           {config?.location_id && (
             <div className="space-y-4">
+              {/* Scope Error Warning */}
+              {isScopeError && (
+                <Alert variant="destructive" className="bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800">
+                  <AlertTriangle className="h-4 w-4 text-amber-600" />
+                  <AlertDescription className="text-amber-800 dark:text-amber-200">
+                    <p className="font-medium mb-2">Missing GHL API Scopes</p>
+                    <p className="text-xs mb-2">
+                      Your GHL Private Integration needs additional permissions. In GHL, go to:
+                    </p>
+                    <ol className="text-xs list-decimal list-inside space-y-1 mb-2">
+                      <li>Settings → Integrations → Private Integrations</li>
+                      <li>Select your integration</li>
+                      <li>Enable these scopes: <strong>contacts.readonly</strong>, <strong>contacts.write</strong>, <strong>conversations.readonly</strong>, <strong>calendars.readonly</strong></li>
+                      <li>Save and generate a new API key</li>
+                    </ol>
+                    <p className="text-xs text-amber-600 dark:text-amber-400">
+                      Contact support if you need help: hello@trainu.us
+                    </p>
+                  </AlertDescription>
+                </Alert>
+              )}
+
               {/* Sync Status */}
               <div className="bg-muted/50 p-4 rounded-lg space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Sync Status</span>
-                  <Badge variant={config.last_sync_status === 'success' ? 'default' : 'secondary'}>
+                  <Badge variant={config.last_sync_status === 'success' ? 'default' : config.last_sync_status === 'partial' ? 'secondary' : 'destructive'}>
                     {config.last_sync_status || 'Unknown'}
                   </Badge>
                 </div>
@@ -237,6 +283,13 @@ export function GHLSettingsModal({ open, onOpenChange }: GHLSettingsModalProps) 
                   </div>
                 </div>
 
+                {/* Sync Error Details */}
+                {config.last_sync_error && !isScopeError && (
+                  <div className="text-xs text-destructive bg-destructive/10 p-2 rounded">
+                    {config.last_sync_error}
+                  </div>
+                )}
+
                 {/* Webhook Status */}
                 <div className="flex items-center gap-2 pt-2 border-t">
                   {config.webhook_registered ? (
@@ -248,6 +301,14 @@ export function GHLSettingsModal({ open, onOpenChange }: GHLSettingsModalProps) 
                     <>
                       <WifiOff className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm text-muted-foreground">Webhook not registered</span>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => handleRegisterWebhook()}
+                        className="ml-auto text-xs"
+                      >
+                        Retry
+                      </Button>
                     </>
                   )}
                 </div>
