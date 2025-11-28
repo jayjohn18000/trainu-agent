@@ -11,7 +11,8 @@ const GHL_CLIENT_SECRET = Deno.env.get('GHL_CLIENT_SECRET');
 const GHL_REDIRECT_URI = Deno.env.get('GHL_REDIRECT_URI');
 const APP_URL = Deno.env.get('APP_URL') || 'https://trainu.app';
 
-const GHL_OAUTH_BASE = 'https://marketplace.gohighlevel.com/oauth';
+// Sub-Account apps use services.leadconnectorhq.com for token exchange
+const GHL_TOKEN_URL = 'https://services.leadconnectorhq.com/oauth/token';
 
 serve(async (req) => {
   try {
@@ -70,10 +71,12 @@ serve(async (req) => {
     }
 
     // Exchange authorization code for tokens
-    const tokenResponse = await fetch(`${GHL_OAUTH_BASE}/token`, {
+    console.log('Exchanging code for tokens at:', GHL_TOKEN_URL);
+    const tokenResponse = await fetch(GHL_TOKEN_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
+        'Accept': 'application/json',
       },
       body: new URLSearchParams({
         client_id: GHL_CLIENT_ID!,
@@ -81,16 +84,17 @@ serve(async (req) => {
         grant_type: 'authorization_code',
         code: code,
         redirect_uri: GHL_REDIRECT_URI!,
+        user_type: 'Location', // Required for Sub-Account apps
       }).toString(),
     });
 
     if (!tokenResponse.ok) {
-      const errorText = await tokenResponse.text();
-      // Sanitize error logs to prevent token leakage
+      const errorData = await tokenResponse.json().catch(() => ({}));
       console.error('Token exchange failed:', { 
         status: tokenResponse.status,
         statusText: tokenResponse.statusText,
-        hasError: !!errorText 
+        error: errorData.error || 'unknown',
+        message: errorData.message || errorData.error_description || 'No details',
       });
       return new Response(null, {
         status: 302,
