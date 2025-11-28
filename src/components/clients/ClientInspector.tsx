@@ -151,10 +151,14 @@ export function ClientInspector({
   }, [client?.id, fetchMessages]);
 
   const handleSaveNote = async () => {
-    if (!client?.id || !newNoteContent.trim()) return;
+    if (!client?.id || !newNoteContent.trim()) {
+      console.log('[handleSaveNote] Missing client or content');
+      return;
+    }
     
     setSavingNote(true);
     try {
+      console.log('[handleSaveNote] Saving note for client:', client.id);
       const note = await createNote(client.id, newNoteContent, selectedNoteType);
       setNotes(prev => [note, ...prev]);
       setNewNoteContent('');
@@ -164,9 +168,11 @@ export function ClientInspector({
         description: `${noteTypeConfig[selectedNoteType].label} added successfully.`,
       });
     } catch (error) {
+      console.error('[handleSaveNote] Error:', error);
+      const message = error instanceof Error ? error.message : "Failed to save note.";
       toast({
         title: "Error",
-        description: "Failed to save note.",
+        description: message,
         variant: "destructive",
       });
     } finally {
