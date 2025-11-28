@@ -2,6 +2,8 @@ import { create } from "zustand";
 import { supabase } from "@/integrations/supabase/client";
 import { queryClient } from "@/lib/query/client";
 import { queryKeys } from "@/lib/query/keys";
+import { invokeWithTimeout, TimeoutError } from "@/lib/api/supabase-with-timeout";
+import { toast } from "sonner";
 
 interface AgentMessage {
   id: string;
@@ -22,6 +24,8 @@ interface AgentState {
   sendMessage: (text: string) => Promise<void>;
   loadHistory: () => Promise<void>;
 }
+
+const AGENT_TIMEOUT = 45000; // 45 seconds for AI responses
 
 export const useAgentStore = create<AgentState>((set, get) => ({
   input: "",
@@ -90,11 +94,17 @@ export const useAgentStore = create<AgentState>((set, get) => ({
     set((state) => ({ messages: [...state.messages, userMsg] }));
 
     try {
-      const { data, error } = await supabase.functions.invoke("ai-agent", {
-        body: { message: trimmed }
+      const { data, error } = await invokeWithTimeout("ai-agent", {
+        body: { message: trimmed },
+        timeout: AGENT_TIMEOUT,
       });
 
-      if (error) throw error;
+      if (error) {
+        if (error instanceof TimeoutError) {
+          toast.error('Request timed out. Please try again.');
+        }
+        throw error;
+      }
 
       if (data?.message) {
         const assistantMsg: AgentMessage = {
@@ -116,6 +126,10 @@ export const useAgentStore = create<AgentState>((set, get) => ({
       set((state) => ({ 
         messages: state.messages.filter(m => m.id !== userMsg.id) 
       }));
+      
+      if (!(error instanceof TimeoutError)) {
+        toast.error('Failed to send message. Please try again.');
+      }
     } finally {
       set({ loading: false, input: "" });
     }

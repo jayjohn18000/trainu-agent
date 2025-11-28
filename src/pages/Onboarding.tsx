@@ -6,6 +6,10 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, CheckCircle2, AlertCircle, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
+import { invokeWithTimeout, TimeoutError } from "@/lib/api/supabase-with-timeout";
+
+const OAUTH_TIMEOUT = 30000; // 30 seconds
+const PROVISIONING_TIMEOUT = 90000; // 90 seconds
 
 type OnboardingStep = 'loading' | 'oauth_required' | 'oauth_success' | 'provisioning' | 'complete' | 'error';
 
@@ -208,15 +212,21 @@ export default function Onboarding() {
       console.log('Session exists, initiating OAuth with tier:', tier);
       console.log('User ID:', user?.id);
       
-      const { data, error } = await supabase.functions.invoke('ghl-oauth-init', {
+      const { data, error } = await invokeWithTimeout('ghl-oauth-init', {
         body: { tier },
+        timeout: OAUTH_TIMEOUT,
       });
 
       console.log('OAuth init response:', { data, error });
 
       if (error) {
+        if (error instanceof TimeoutError) {
+          setError('Connection timed out. Please check your internet and try again.');
+          setStep('error');
+          toast.error('Connection timed out');
+          return;
+        }
         console.error('OAuth init failed:', error);
-        console.error('Error details:', JSON.stringify(error, null, 2));
         setError(`Failed to initialize OAuth: ${error.message || 'Unknown error'}`);
         setStep('error');
         toast.error(`Failed to initiate OAuth: ${error.message || 'Please try again'}`);
@@ -234,7 +244,6 @@ export default function Onboarding() {
       }
     } catch (err) {
       console.error('OAuth error:', err);
-      console.error('Error stack:', err instanceof Error ? err.stack : 'No stack trace');
       setError('An unexpected error occurred while connecting to GoHighLevel');
       setStep('error');
       toast.error('Failed to connect to GoHighLevel');
