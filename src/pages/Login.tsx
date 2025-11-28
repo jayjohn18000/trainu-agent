@@ -37,9 +37,6 @@ const signUpSchema = z.object({
 type SignInForm = z.infer<typeof signInSchema>;
 type SignUpForm = z.infer<typeof signUpSchema>;
 
-const GHL_CLIENT_ID = import.meta.env.VITE_GHL_CLIENT_ID;
-const GHL_REDIRECT_URI = import.meta.env.VITE_GHL_REDIRECT_URI;
-
 export default function Login() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -148,15 +145,42 @@ export default function Login() {
     }
   };
 
-  // GHL OAuth should be handled through the onboarding flow, not directly from login
-  // This button is kept for reference but should redirect to onboarding
-  const handleGHLLogin = () => {
+  const [isGHLLoading, setIsGHLLoading] = useState(false);
+
+  const handleGHLLogin = async () => {
     if (!user) {
-      toast.error("Please sign up or sign in first");
+      toast.error("Please sign up or sign in first, then connect GoHighLevel");
       return;
     }
-    // Redirect to onboarding where proper OAuth flow is handled
-    navigate('/onboarding');
+    
+    setIsGHLLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Please sign in first");
+        return;
+      }
+
+      const response = await supabase.functions.invoke('ghl-oauth-init', {
+        body: { planTier: tier, redirectPath: '/today' },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || 'Failed to initialize OAuth');
+      }
+
+      const { authUrl } = response.data;
+      if (authUrl) {
+        window.location.href = authUrl;
+      } else {
+        throw new Error('No auth URL returned');
+      }
+    } catch (error) {
+      console.error('GHL OAuth error:', error);
+      toast.error("Failed to connect to GoHighLevel. Please try again.");
+    } finally {
+      setIsGHLLoading(false);
+    }
   };
 
   return (
@@ -374,12 +398,16 @@ export default function Login() {
             onClick={handleGHLLogin}
             variant="outline"
             className="w-full"
-            disabled={!GHL_CLIENT_ID}
+            disabled={isGHLLoading}
           >
-            <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z" />
-            </svg>
-            {GHL_CLIENT_ID ? "GoHighLevel (Coming Soon)" : "GoHighLevel (Not Configured)"}
+            {isGHLLoading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z" />
+              </svg>
+            )}
+            {user ? "Connect GoHighLevel" : "Sign in to Connect GoHighLevel"}
           </Button>
 
           <div className="bg-muted/50 rounded-lg p-4 space-y-2">
