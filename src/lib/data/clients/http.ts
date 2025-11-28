@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Client, ClientDetail, ClientDataProvider, ClientListParams } from "./types";
 import { APIError } from "@/lib/errors";
+import { toTitleCase } from "@/lib/utils";
 
 export class HttpClientProvider implements ClientDataProvider {
   async list(params: ClientListParams): Promise<{ items: Client[]; total: number }> {
@@ -42,7 +43,7 @@ export class HttpClientProvider implements ClientDataProvider {
     // Map contacts to Client format
     const items: Client[] = (data || []).map(contact => ({
       id: contact.id,
-      name: `${contact.first_name} ${contact.last_name || ''}`.trim(),
+      name: toTitleCase(`${contact.first_name || ''} ${contact.last_name || ''}`).trim(),
       email: contact.email || undefined,
       phone: contact.phone || undefined,
       tags: contact.tags || [],
@@ -80,7 +81,7 @@ export class HttpClientProvider implements ClientDataProvider {
     // Map contact to ClientDetail format
     const clientDetail: ClientDetail = {
       id: contact.id,
-      name: `${contact.first_name} ${contact.last_name || ''}`.trim(),
+      name: toTitleCase(`${contact.first_name || ''} ${contact.last_name || ''}`).trim(),
       email: contact.email || undefined,
       phone: contact.phone || undefined,
       tags: contact.tags || [],
