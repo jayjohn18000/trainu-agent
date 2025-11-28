@@ -5,9 +5,10 @@ import { MessageEditor } from "@/components/agent/MessageEditor";
 import { AutoApprovalCountdown } from "@/components/agent/AutoApprovalCountdown";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useTrainerGamification } from "@/hooks/useTrainerGamification";
-import { ArrowLeft, Zap, CheckCircle, Loader2, Sparkles } from "lucide-react";
+import { ArrowLeft, Zap, CheckCircle, Loader2, Sparkles, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { listDraftsAndQueued, approveMessage, sendNow, type Message } from "@/lib/api/messages";
 import type { QueueItem } from "@/types/agent";
@@ -19,8 +20,22 @@ export default function Queue() {
   const [editingItem, setEditingItem] = useState<Message | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [ghlConnected, setGhlConnected] = useState(true);
   const { toast } = useToast();
   const { awardXP } = useTrainerGamification();
+
+  const checkGhlConnection = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    
+    const { data: config } = await supabase
+      .from('ghl_config')
+      .select('access_token, location_id')
+      .eq('trainer_id', user.id)
+      .single();
+    
+    setGhlConnected(!!config?.access_token && !!config?.location_id);
+  };
 
   const loadQueue = async () => {
     setLoading(true);
@@ -55,6 +70,7 @@ export default function Queue() {
 
   useEffect(() => {
     loadQueue();
+    checkGhlConnection();
     
     // Real-time subscription
     const channel = supabase
@@ -309,6 +325,19 @@ export default function Queue() {
           )}
         </div>
       </div>
+
+      {/* GHL Connection Warning */}
+      {!ghlConnected && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            Messages won't be delivered until you connect GHL in{" "}
+            <Button variant="link" className="p-0 h-auto" onClick={() => navigate('/settings')}>
+              Settings
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Stats Bar */}
       <div className="grid grid-cols-3 gap-4 mb-6">

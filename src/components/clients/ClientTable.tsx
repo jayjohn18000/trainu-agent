@@ -32,14 +32,21 @@ import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query/keys";
 import { clientProvider } from "@/lib/data/clients/provider";
 import { useCallback, memo } from "react";
+import { StreakCell } from "./StreakCell";
+
+interface ExtendedClient extends Client {
+  current_streak?: number;
+  last_checkin_at?: string | null;
+}
 
 interface ClientTableProps {
-  clients: Client[];
+  clients: ExtendedClient[];
   selectedId?: string;
   onSelect: (client: Client) => void;
   sortBy?: string;
   sortDir?: "asc" | "desc";
   onSort: (field: string) => void;
+  onRefresh?: () => void;
 }
 
 function getRiskBadge(risk: number) {
@@ -73,6 +80,7 @@ export function ClientTable({
   sortBy,
   sortDir,
   onSort,
+  onRefresh,
 }: ClientTableProps) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -132,7 +140,7 @@ export function ClientTable({
             <TableHead>
               <SortButton field="name">Client</SortButton>
             </TableHead>
-            <TableHead>Status</TableHead>
+            <TableHead>Streak</TableHead>
             <TableHead>
               <SortButton field="risk">Risk</SortButton>
             </TableHead>
@@ -175,7 +183,14 @@ export function ClientTable({
                   </div>
                 </div>
               </TableCell>
-              <TableCell>{getStatusBadge(client.status)}</TableCell>
+              <TableCell onClick={(e) => e.stopPropagation()}>
+                <StreakCell
+                  clientId={client.id}
+                  currentStreak={client.current_streak ?? 0}
+                  lastCheckinAt={client.last_checkin_at ?? null}
+                  onCheckinComplete={onRefresh}
+                />
+              </TableCell>
               <TableCell>
                 <TooltipProvider>
                   <Tooltip>
@@ -292,9 +307,14 @@ export function ClientTable({
           </div>
 
           <div className="grid grid-cols-2 gap-2 text-sm mb-3">
-            <div>
-              <span className="text-muted-foreground">Status:</span>{" "}
-              {getStatusBadge(client.status)}
+            <div onClick={(e) => e.stopPropagation()}>
+              <span className="text-muted-foreground">Streak:</span>{" "}
+              <StreakCell
+                clientId={client.id}
+                currentStreak={client.current_streak ?? 0}
+                lastCheckinAt={client.last_checkin_at ?? null}
+                onCheckinComplete={onRefresh}
+              />
             </div>
             <div>
               <span className="text-muted-foreground">Risk:</span> {getRiskBadge(client.risk)}

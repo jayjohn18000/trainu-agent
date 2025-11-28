@@ -1059,10 +1059,12 @@ export type Database = {
         Row: {
           consent_status: Database["public"]["Enums"]["consent_status"] | null
           created_at: string | null
+          current_streak: number | null
           email: string | null
           first_name: string
           ghl_contact_id: string | null
           id: string
+          last_checkin_at: string | null
           last_message_sent_at: string | null
           last_name: string | null
           last_synced_to_ghl_at: string | null
@@ -1078,10 +1080,12 @@ export type Database = {
         Insert: {
           consent_status?: Database["public"]["Enums"]["consent_status"] | null
           created_at?: string | null
+          current_streak?: number | null
           email?: string | null
           first_name: string
           ghl_contact_id?: string | null
           id?: string
+          last_checkin_at?: string | null
           last_message_sent_at?: string | null
           last_name?: string | null
           last_synced_to_ghl_at?: string | null
@@ -1097,10 +1101,12 @@ export type Database = {
         Update: {
           consent_status?: Database["public"]["Enums"]["consent_status"] | null
           created_at?: string | null
+          current_streak?: number | null
           email?: string | null
           first_name?: string
           ghl_contact_id?: string | null
           id?: string
+          last_checkin_at?: string | null
           last_message_sent_at?: string | null
           last_name?: string | null
           last_synced_to_ghl_at?: string | null
