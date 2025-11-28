@@ -134,6 +134,7 @@ export default function Clients() {
           sortBy={sortBy}
           sortDir={sortDir}
           onSort={handleSort}
+          onRefresh={() => queryClient.invalidateQueries({ queryKey: queryKeys.clients.all })}
         />
       ) : (
         <EmptyState
