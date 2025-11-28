@@ -176,7 +176,7 @@ export function ClientTable({
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <div className="font-medium">{client.name}</div>
+                    <div className="font-medium capitalize">{client.name}</div>
                     {client.email && (
                       <div className="text-sm text-muted-foreground">{client.email}</div>
                     )}
@@ -277,7 +277,7 @@ export function ClientTable({
                 </AvatarFallback>
               </Avatar>
               <div>
-                <div className="font-semibold">{client.name}</div>
+                <div className="font-semibold capitalize">{client.name}</div>
                 <div className="text-sm text-muted-foreground">{client.email}</div>
               </div>
             </div>
