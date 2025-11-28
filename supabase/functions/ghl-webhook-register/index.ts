@@ -83,34 +83,63 @@ Deno.serve(async (req) => {
     ];
 
     // Register webhook with GHL using the shared URL
+    // Note: Private Integration API keys may not support webhook registration
     const registerUrl = `${GHL_API_BASE}/webhooks/`;
-    console.log(`Registering webhook at: ${registerUrl}`);
+    console.log(`Attempting webhook registration at: ${registerUrl}`);
     
-    const registerResponse = await fetch(registerUrl, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${ghlPrivateApiKey}`,
-        'Version': '2021-07-28',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        locationId: locationId,
-        url: webhookUrl,
-        events: events,
-        name: `TrainU Sync - ${locationId}`,
-      }),
-    });
+    try {
+      const registerResponse = await fetch(registerUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${ghlPrivateApiKey}`,
+          'Version': '2021-07-28',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          locationId: locationId,
+          url: webhookUrl,
+          events: events,
+          name: `TrainU Sync - ${locationId}`,
+        }),
+      });
 
-    const responseText = await registerResponse.text();
-    console.log(`GHL webhook response status: ${registerResponse.status}`);
-    console.log(`GHL webhook response: ${responseText}`);
+      const responseText = await registerResponse.text();
+      console.log(`GHL webhook response status: ${registerResponse.status}`);
+      console.log(`GHL webhook response body: ${responseText || '(empty)'}`);
 
-    if (!registerResponse.ok) {
-      // Check if webhook already exists (common error)
+      // Handle various response statuses
+      if (registerResponse.ok) {
+        let webhookData;
+        try {
+          webhookData = JSON.parse(responseText);
+        } catch {
+          webhookData = { id: 'unknown' };
+        }
+        
+        console.log('Webhook registered successfully:', webhookData);
+
+        // Update GHL config with webhook info
+        await supabase
+          .from('ghl_config')
+          .update({
+            webhook_url: webhookUrl,
+            webhook_registered: true,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('trainer_id', user.id);
+
+        return jsonResponse({
+          success: true,
+          webhook_id: webhookData.id,
+          webhook_url: webhookUrl,
+          events: events,
+        });
+      }
+
+      // Handle webhook already exists
       if (responseText.includes('already exists') || responseText.includes('duplicate') || registerResponse.status === 409) {
         console.log('Webhook already exists, marking as registered');
         
-        // Update config to mark as registered anyway
         await supabase
           .from('ghl_config')
           .update({
@@ -127,45 +156,83 @@ Deno.serve(async (req) => {
           events: events,
         });
       }
-      
-      // Check for scope/permission errors
+
+      // Handle 404 - endpoint not available for this API key type
+      if (registerResponse.status === 404) {
+        console.log('Webhook endpoint not available - Private Integration API keys may not support webhooks');
+        console.log('Falling back to periodic sync only');
+        
+        // Don't mark as registered, but don't fail the whole process
+        await supabase
+          .from('ghl_config')
+          .update({
+            webhook_registered: false,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('trainer_id', user.id);
+
+        return jsonResponse({
+          success: true,
+          message: 'Webhook registration not available with Private Integration API. Using periodic sync instead (every 30 minutes).',
+          fallback: 'periodic_sync',
+        });
+      }
+
+      // Handle 401/403 - missing webhook scope
       if (registerResponse.status === 401 || registerResponse.status === 403) {
         console.error('GHL API permission error - missing webhook scope');
-        return errorResponse('Missing GHL API scope: webhooks.write. Please update your Private Integration permissions.', 403);
+        
+        await supabase
+          .from('ghl_config')
+          .update({
+            webhook_registered: false,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('trainer_id', user.id);
+
+        return jsonResponse({
+          success: true,
+          message: 'Missing GHL API scope for webhooks. Using periodic sync instead (every 30 minutes).',
+          fallback: 'periodic_sync',
+        });
       }
+
+      // Other errors
+      console.error(`Webhook registration failed with status ${registerResponse.status}: ${responseText}`);
       
-      return errorResponse(`Failed to register webhook: ${responseText}`, 500);
+      await supabase
+        .from('ghl_config')
+        .update({
+          webhook_registered: false,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('trainer_id', user.id);
+
+      return jsonResponse({
+        success: true,
+        message: 'Webhook registration failed. Using periodic sync instead (every 30 minutes).',
+        fallback: 'periodic_sync',
+        details: responseText || 'No response from GHL',
+      });
+
+    } catch (fetchError) {
+      console.error('Fetch error during webhook registration:', fetchError);
+      
+      // Network error - still allow the flow to continue
+      await supabase
+        .from('ghl_config')
+        .update({
+          webhook_registered: false,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('trainer_id', user.id);
+
+      return jsonResponse({
+        success: true,
+        message: 'Could not connect to GHL for webhook registration. Using periodic sync instead.',
+        fallback: 'periodic_sync',
+      });
     }
-
-    let webhookData;
-    try {
-      webhookData = JSON.parse(responseText);
-    } catch {
-      webhookData = { id: 'unknown' };
-    }
-    
-    console.log('Webhook registered successfully:', webhookData);
-
-    // Update GHL config with webhook info
-    const { error: updateError } = await supabase
-      .from('ghl_config')
-      .update({
-        webhook_url: webhookUrl,
-        webhook_registered: true,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('trainer_id', user.id);
-
-    if (updateError) {
-      console.error('Failed to update config:', updateError);
-    }
-
-    return jsonResponse({
-      success: true,
-      webhook_id: webhookData.id,
-      webhook_url: webhookUrl,
-      events: events,
-    });
 
   } catch (error) {
     console.error('Webhook registration error:', error);
