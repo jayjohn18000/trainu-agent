@@ -27,11 +27,11 @@ Deno.serve(async (req) => {
 
     console.log(`Starting GHL sync${trainerId ? ` for trainer ${trainerId}` : ''}...`);
 
-    // Get GHL access token from environment
-    const ghlAccessToken = Deno.env.get('GHL_ACCESS_TOKEN');
-    if (!ghlAccessToken) {
-      console.error('GHL_ACCESS_TOKEN not configured');
-      return errorResponse('GHL_ACCESS_TOKEN not configured', 500);
+    // Use GHL_PRIVATE_API_KEY (agency-level token) for all API calls
+    const ghlPrivateApiKey = Deno.env.get('GHL_PRIVATE_API_KEY');
+    if (!ghlPrivateApiKey) {
+      console.error('GHL_PRIVATE_API_KEY not configured');
+      return errorResponse('GHL_PRIVATE_API_KEY not configured', 500);
     }
 
     // Get GHL configs (filter by trainer_id if provided)
@@ -78,11 +78,11 @@ Deno.serve(async (req) => {
       console.log(`Syncing data for trainer ${trainer_id}, location ${location_id}`);
 
       try {
-        // Sync contacts
+        // Sync contacts using GHL_PRIVATE_API_KEY + locationId
         const contactsUrl = `${GHL_API_BASE}/contacts/?locationId=${location_id}`;
         const contactsResponse = await fetch(contactsUrl, {
           headers: {
-            'Authorization': `Bearer ${ghlAccessToken}`,
+            'Authorization': `Bearer ${ghlPrivateApiKey}`,
             'Version': '2021-07-28',
           },
         });
@@ -111,6 +111,7 @@ Deno.serve(async (req) => {
               continue; // Skip invalid contacts
             }
             const validContact = validation.data;
+            
             // Check for conflicts - if record exists and was modified in TrainU since last sync
             const { data: existing } = await supabase
               .from('contacts')
@@ -163,7 +164,7 @@ Deno.serve(async (req) => {
         const conversationsUrl = `${GHL_API_BASE}/conversations/search?locationId=${location_id}`;
         const conversationsResponse = await fetch(conversationsUrl, {
           headers: {
-            'Authorization': `Bearer ${ghlAccessToken}`,
+            'Authorization': `Bearer ${ghlPrivateApiKey}`,
             'Version': '2021-07-28',
           },
         });
@@ -207,7 +208,7 @@ Deno.serve(async (req) => {
         const appointmentsUrl = `${GHL_API_BASE}/calendars/events?locationId=${location_id}`;
         const appointmentsResponse = await fetch(appointmentsUrl, {
           headers: {
-            'Authorization': `Bearer ${ghlAccessToken}`,
+            'Authorization': `Bearer ${ghlPrivateApiKey}`,
             'Version': '2021-07-28',
           },
         });

@@ -26,11 +26,11 @@ Deno.serve(async (req) => {
 
     console.log(`Starting GHL push${trainerId ? ` for trainer ${trainerId}` : ''}...`);
 
-    // Get GHL access token
-    const ghlAccessToken = Deno.env.get('GHL_ACCESS_TOKEN');
-    if (!ghlAccessToken) {
-      console.error('GHL_ACCESS_TOKEN not configured');
-      return errorResponse('GHL_ACCESS_TOKEN not configured', 500);
+    // Use GHL_PRIVATE_API_KEY (agency-level token) for all API calls
+    const ghlPrivateApiKey = Deno.env.get('GHL_PRIVATE_API_KEY');
+    if (!ghlPrivateApiKey) {
+      console.error('GHL_PRIVATE_API_KEY not configured');
+      return errorResponse('GHL_PRIVATE_API_KEY not configured', 500);
     }
 
     // Get pending sync queue items (filter by trainer_id if provided)
@@ -71,7 +71,7 @@ Deno.serve(async (req) => {
         .eq('id', item.id);
 
       try {
-        // Get trainer's GHL config
+        // Get trainer's GHL config for location_id
         const { data: config } = await supabase
           .from('ghl_config')
           .select('location_id')
@@ -82,10 +82,11 @@ Deno.serve(async (req) => {
           throw new Error('No GHL location configured for trainer');
         }
 
+        // Use GHL_PRIVATE_API_KEY for all operations
         if (item.entity_type === 'contact') {
-          await processContactSync(item, config.location_id, ghlAccessToken, supabase);
+          await processContactSync(item, config.location_id, ghlPrivateApiKey, supabase);
         } else if (item.entity_type === 'booking') {
-          await processBookingSync(item, config.location_id, ghlAccessToken, supabase);
+          await processBookingSync(item, config.location_id, ghlPrivateApiKey, supabase);
         }
 
         // Mark as completed
@@ -160,7 +161,7 @@ Deno.serve(async (req) => {
 async function processContactSync(
   item: any, 
   locationId: string, 
-  accessToken: string,
+  apiKey: string,
   supabase: any
 ) {
   const payload = item.payload;
@@ -172,7 +173,7 @@ async function processContactSync(
       const createResponse = await fetch(createUrl, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
+          'Authorization': `Bearer ${apiKey}`,
           'Version': '2021-07-28',
           'Content-Type': 'application/json',
         },
@@ -215,7 +216,7 @@ async function processContactSync(
     const updateResponse = await fetch(updateUrl, {
       method: 'PUT',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        'Authorization': `Bearer ${apiKey}`,
         'Version': '2021-07-28',
         'Content-Type': 'application/json',
       },
@@ -253,7 +254,7 @@ async function processContactSync(
 async function processBookingSync(
   item: any, 
   locationId: string, 
-  accessToken: string,
+  apiKey: string,
   supabase: any
 ) {
   const payload = item.payload;
@@ -276,7 +277,7 @@ async function processBookingSync(
       const createResponse = await fetch(createUrl, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
+          'Authorization': `Bearer ${apiKey}`,
           'Version': '2021-07-28',
           'Content-Type': 'application/json',
         },
@@ -319,7 +320,7 @@ async function processBookingSync(
     const updateResponse = await fetch(updateUrl, {
       method: 'PUT',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        'Authorization': `Bearer ${apiKey}`,
         'Version': '2021-07-28',
         'Content-Type': 'application/json',
       },
