@@ -1,6 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.76.1'
 import { jsonResponse, errorResponse } from '../_shared/responses.ts'
-import { getEffectiveToken } from '../_shared/ghl-location-token.ts'
+import { getGHLToken } from '../_shared/ghl-token.ts'
 
 const GHL_API_BASE = Deno.env.get('GHL_API_BASE') || 'https://services.leadconnectorhq.com';
 
@@ -72,10 +72,10 @@ Deno.serve(async (req) => {
         .eq('id', item.id);
 
       try {
-        // Get trainer's GHL config for location_id and access_token
+        // Get trainer's GHL config for location_id
         const { data: config } = await supabase
           .from('ghl_config')
-          .select('location_id, access_token, token_expires_at')
+          .select('location_id')
           .eq('trainer_id', item.trainer_id)
           .single();
 
@@ -83,14 +83,14 @@ Deno.serve(async (req) => {
           throw new Error('No GHL location configured for trainer');
         }
 
-        // Get the best available token - prioritize location token over agency token
-        const { token: effectiveToken, tokenType } = getEffectiveToken(
-          config.access_token,
+        // Get the best available token - OAuth with refresh, then agency fallback
+        const { token: effectiveToken, tokenType, refreshed } = await getGHLToken(
+          supabase,
+          item.trainer_id,
           ghlPrivateApiKey,
-          config.token_expires_at
         );
         
-        console.log(`Using ${tokenType} token for push operation`);
+        console.log(`Using ${tokenType} token for push operation${refreshed ? ' (refreshed)' : ''}`);
 
         // Use effective token for all operations
         if (item.entity_type === 'contact') {

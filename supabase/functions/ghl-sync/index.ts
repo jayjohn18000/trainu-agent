@@ -1,7 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.76.1'
 import { jsonResponse, errorResponse, optionsResponse } from '../_shared/responses.ts'
 import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts'
-import { getEffectiveToken } from '../_shared/ghl-location-token.ts'
+import { getGHLToken } from '../_shared/ghl-token.ts'
 
 const GHL_API_BASE = Deno.env.get('GHL_API_BASE') || 'https://services.leadconnectorhq.com';
 
@@ -80,14 +80,14 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      // Get the best available token - prioritize location token over agency token
-      const { token: effectiveToken, tokenType } = getEffectiveToken(
-        access_token,
+      // Get the best available token - prioritize OAuth token with refresh, then agency
+      const { token: effectiveToken, tokenType, refreshed } = await getGHLToken(
+        supabase,
+        trainer_id,
         ghlPrivateApiKey,
-        token_expires_at
       );
       
-      console.log(`Using ${tokenType} token for trainer ${trainer_id}`);
+      console.log(`Using ${tokenType} token for trainer ${trainer_id}${refreshed ? ' (refreshed)' : ''}`);
 
       let contactsCount = 0;
       let conversationsCount = 0;

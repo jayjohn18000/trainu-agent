@@ -1,13 +1,10 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, CheckCircle, XCircle, RefreshCw, Wifi, WifiOff, AlertTriangle } from "lucide-react";
+import { Loader2, CheckCircle, RefreshCw, Wifi, WifiOff, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface GHLSettingsModalProps {
   open: boolean;
@@ -16,6 +13,8 @@ interface GHLSettingsModalProps {
 
 interface GHLConfig {
   location_id: string | null;
+  access_token: string | null;
+  token_expires_at: string | null;
   webhook_registered: boolean;
   last_sync_at: string | null;
   last_sync_status: string | null;
@@ -25,15 +24,22 @@ interface GHLConfig {
 
 export function GHLSettingsModal({ open, onOpenChange }: GHLSettingsModalProps) {
   const [loading, setLoading] = useState(false);
-  const [validating, setValidating] = useState(false);
   const [syncing, setSyncing] = useState(false);
-  const [locationId, setLocationId] = useState("");
   const [config, setConfig] = useState<GHLConfig | null>(null);
-  const [validationResult, setValidationResult] = useState<{ valid: boolean; location?: any; error?: string } | null>(null);
 
   useEffect(() => {
     if (open) {
       loadConfig();
+      // Check for OAuth callback result
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('oauth') === 'success') {
+        toast.success('GoHighLevel connected successfully!');
+        // Clean URL
+        window.history.replaceState({}, '', window.location.pathname);
+      } else if (urlParams.get('error')) {
+        toast.error(`Connection failed: ${urlParams.get('error')}`);
+        window.history.replaceState({}, '', window.location.pathname);
+      }
     }
   }, [open]);
 
@@ -44,118 +50,45 @@ export function GHLSettingsModal({ open, onOpenChange }: GHLSettingsModalProps) 
 
       const { data, error } = await supabase
         .from('ghl_config')
-        .select('location_id, webhook_registered, last_sync_at, last_sync_status, last_sync_error, contacts_synced')
+        .select('location_id, access_token, token_expires_at, webhook_registered, last_sync_at, last_sync_status, last_sync_error, contacts_synced')
         .eq('trainer_id', user.id)
         .maybeSingle();
 
       if (data) {
         setConfig(data);
-        setLocationId(data.location_id || "");
       }
     } catch (error) {
       console.error('Error loading GHL config:', error);
     }
   };
 
-  const handleValidateAndConnect = async () => {
-    if (!locationId.trim()) {
-      toast.error('Please enter a Location ID');
-      return;
-    }
-
-    setValidating(true);
-    setValidationResult(null);
-
+  const handleConnectGHL = async () => {
+    setLoading(true);
     try {
-      // Validate location ID via edge function
-      const { data, error } = await supabase.functions.invoke('ghl-validate-location', {
-        body: { locationId: locationId.trim() }
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error('Please log in first');
+        return;
+      }
+
+      // Call ghl-oauth-init with redirect back to settings
+      const { data, error } = await supabase.functions.invoke('ghl-oauth-init', {
+        body: { redirect: '/settings-agent' }
       });
 
       if (error) throw error;
 
-      setValidationResult(data);
-
-      if (!data.valid) {
-        toast.error(data.error || 'Invalid Location ID');
-        return;
+      if (data?.authUrl) {
+        // Redirect to GHL OAuth consent screen
+        window.location.href = data.authUrl;
+      } else {
+        throw new Error('No auth URL returned');
       }
-
-      // Location is valid - save config
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-
-      // Use upsert with onConflict to properly update existing rows
-      const { error: upsertError } = await supabase
-        .from('ghl_config')
-        .upsert({
-          trainer_id: user.id,
-          location_id: locationId.trim(),
-          updated_at: new Date().toISOString(),
-        }, {
-          onConflict: 'trainer_id',
-        });
-
-      if (upsertError) throw upsertError;
-
-      toast.success(`Connected to ${data.location?.name || 'GHL Location'}`);
-
-      // Attempt to exchange agency token for location-scoped token
-      // This gives full subaccount permissions without manual PIT setup
-      try {
-        const { data: tokenData, error: tokenError } = await supabase.functions.invoke('ghl-exchange-token', {
-          body: { locationId: locationId.trim() }
-        });
-        
-        if (tokenError) {
-          console.warn('Token exchange failed:', tokenError);
-          toast.info('Using agency token for sync (limited scopes may apply)');
-        } else if (tokenData?.success) {
-          toast.success('Location token obtained - full sync enabled');
-        } else {
-          console.log('Token exchange result:', tokenData);
-          // Not a critical error - sync will fall back to agency token
-        }
-      } catch (tokenExchangeError) {
-        console.warn('Token exchange error:', tokenExchangeError);
-        // Non-blocking - sync will work with agency token
-      }
-
-      // Register webhook - pass locationId directly
-      await handleRegisterWebhook(locationId.trim());
-
-      // Trigger initial sync
-      await handleSync();
-
-      // Reload config
-      await loadConfig();
-
     } catch (error: any) {
-      console.error('Validation error:', error);
-      toast.error(error.message || 'Failed to connect');
+      console.error('OAuth init error:', error);
+      toast.error(error.message || 'Failed to start OAuth flow');
     } finally {
-      setValidating(false);
-    }
-  };
-
-  const handleRegisterWebhook = async (locId?: string) => {
-    try {
-      const { data, error } = await supabase.functions.invoke('ghl-webhook-register', {
-        body: { locationId: locId || locationId.trim() }
-      });
-      
-      if (error) {
-        console.error('Webhook registration error:', error);
-        toast.error('Webhook registration failed - real-time sync may be limited');
-        return;
-      }
-      
-      if (data?.success) {
-        toast.success('Real-time sync enabled');
-      }
-    } catch (error: any) {
-      console.error('Webhook registration failed:', error);
-      toast.error('Webhook registration failed');
+      setLoading(false);
     }
   };
 
@@ -171,13 +104,7 @@ export function GHLSettingsModal({ open, onOpenChange }: GHLSettingsModalProps) 
 
       if (error) throw error;
 
-      // Check for scope errors in the response
-      if (data?.scopeErrors?.length > 0) {
-        toast.warning('Sync completed with limited data - see details below');
-      } else {
-        toast.success(`Synced ${data?.synced || 0} records from GHL`);
-      }
-      
+      toast.success(`Synced ${data?.synced || 0} records from GHL`);
       await loadConfig();
     } catch (error: any) {
       console.error('Sync error:', error);
@@ -187,15 +114,34 @@ export function GHLSettingsModal({ open, onOpenChange }: GHLSettingsModalProps) 
     }
   };
 
+  const handleRegisterWebhook = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('ghl-webhook-register', {
+        body: { locationId: config?.location_id }
+      });
+      
+      if (error) throw error;
+      
+      if (data?.success) {
+        toast.success('Real-time sync enabled');
+        await loadConfig();
+      }
+    } catch (error: any) {
+      console.error('Webhook registration failed:', error);
+      toast.error('Webhook registration failed');
+    }
+  };
+
   const formatLastSync = (dateStr: string | null) => {
     if (!dateStr) return 'Never';
     const date = new Date(dateStr);
     return date.toLocaleString();
   };
 
-  const isScopeError = config?.last_sync_error?.includes('scope') || 
-                       config?.last_sync_error?.includes('401') ||
-                       config?.last_sync_error?.includes('Unauthorized');
+  const isConnected = config?.location_id && config?.access_token;
+  const isTokenExpired = config?.token_expires_at 
+    ? new Date(config.token_expires_at) < new Date() 
+    : false;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -203,86 +149,61 @@ export function GHLSettingsModal({ open, onOpenChange }: GHLSettingsModalProps) 
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             GoHighLevel Integration
-            {config?.location_id ? (
+            {isConnected && !isTokenExpired ? (
               <Badge variant="default" className="bg-green-500">Connected</Badge>
+            ) : isConnected && isTokenExpired ? (
+              <Badge variant="secondary" className="bg-amber-500">Token Expired</Badge>
             ) : (
               <Badge variant="secondary">Not Connected</Badge>
             )}
           </DialogTitle>
           <DialogDescription>
-            Connect your GHL location to sync contacts, messages, and appointments.
+            Connect your GHL account to sync contacts, messages, and appointments.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Location ID Input */}
-          <div className="space-y-2">
-            <Label htmlFor="locationId">Location ID</Label>
-            <div className="flex gap-2">
-              <Input
-                id="locationId"
-                value={locationId}
-                onChange={(e) => {
-                  setLocationId(e.target.value);
-                  setValidationResult(null);
-                }}
-                placeholder="e.g., abc123XYZ"
-                className="flex-1"
-              />
-              <Button
-                onClick={handleValidateAndConnect}
-                disabled={validating || !locationId.trim()}
-              >
-                {validating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {config?.location_id ? 'Update' : 'Connect'}
-              </Button>
+          {/* OAuth Connect Button */}
+          {!isConnected ? (
+            <div className="space-y-4">
+              <div className="bg-muted/50 p-4 rounded-lg text-center space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Click below to securely connect your GoHighLevel account. You'll be redirected to GHL to authorize access.
+                </p>
+                <Button
+                  onClick={handleConnectGHL}
+                  disabled={loading}
+                  className="w-full"
+                  size="lg"
+                >
+                  {loading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                  )}
+                  Connect with GoHighLevel
+                </Button>
+              </div>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Find this in GHL → Settings → Business Info → Location ID
-            </p>
-            
-            {/* Validation Result */}
-            {validationResult && (
-              <div className={`p-3 rounded-lg text-sm ${validationResult.valid ? 'bg-green-50 dark:bg-green-950 text-green-700 dark:text-green-300' : 'bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300'}`}>
-                {validationResult.valid ? (
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4" />
-                    <span>Valid: {validationResult.location?.name}</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <XCircle className="h-4 w-4" />
-                    <span>{validationResult.error}</span>
+          ) : (
+            <div className="space-y-4">
+              {/* Connection Status */}
+              <div className="bg-muted/50 p-4 rounded-lg space-y-3">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-green-500" />
+                  <span className="font-medium">Connected to GHL</span>
+                </div>
+                
+                <div className="text-sm text-muted-foreground">
+                  Location ID: <code className="bg-muted px-1 rounded">{config.location_id}</code>
+                </div>
+
+                {isTokenExpired && (
+                  <div className="bg-amber-50 dark:bg-amber-950 p-3 rounded text-sm text-amber-700 dark:text-amber-300">
+                    Your access token has expired. Please reconnect to continue syncing.
                   </div>
                 )}
               </div>
-            )}
-          </div>
-
-          {/* Connection Status */}
-          {config?.location_id && (
-            <div className="space-y-4">
-              {/* Scope Error Warning */}
-              {isScopeError && (
-                <Alert variant="destructive" className="bg-amber-50 dark:bg-amber-950 border-amber-200 dark:border-amber-800">
-                  <AlertTriangle className="h-4 w-4 text-amber-600" />
-                  <AlertDescription className="text-amber-800 dark:text-amber-200">
-                    <p className="font-medium mb-2">Missing GHL API Scopes</p>
-                    <p className="text-xs mb-2">
-                      Your GHL Private Integration needs additional permissions. In GHL, go to:
-                    </p>
-                    <ol className="text-xs list-decimal list-inside space-y-1 mb-2">
-                      <li>Settings → Integrations → Private Integrations</li>
-                      <li>Select your integration</li>
-                      <li>Enable these scopes: <strong>contacts.readonly</strong>, <strong>contacts.write</strong>, <strong>conversations.readonly</strong>, <strong>calendars.readonly</strong></li>
-                      <li>Save and generate a new API key</li>
-                    </ol>
-                    <p className="text-xs text-amber-600 dark:text-amber-400">
-                      Contact support if you need help: hello@trainu.us
-                    </p>
-                  </AlertDescription>
-                </Alert>
-              )}
 
               {/* Sync Status */}
               <div className="bg-muted/50 p-4 rounded-lg space-y-3">
@@ -304,8 +225,7 @@ export function GHLSettingsModal({ open, onOpenChange }: GHLSettingsModalProps) 
                   </div>
                 </div>
 
-                {/* Sync Error Details */}
-                {config.last_sync_error && !isScopeError && (
+                {config.last_sync_error && (
                   <div className="text-xs text-destructive bg-destructive/10 p-2 rounded">
                     {config.last_sync_error}
                   </div>
@@ -325,7 +245,7 @@ export function GHLSettingsModal({ open, onOpenChange }: GHLSettingsModalProps) 
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        onClick={() => handleRegisterWebhook()}
+                        onClick={handleRegisterWebhook}
                         className="ml-auto text-xs"
                       >
                         Retry
@@ -335,20 +255,35 @@ export function GHLSettingsModal({ open, onOpenChange }: GHLSettingsModalProps) 
                 </div>
               </div>
 
-              {/* Manual Sync Button */}
-              <Button
-                onClick={handleSync}
-                disabled={syncing}
-                variant="outline"
-                className="w-full"
-              >
-                {syncing ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <RefreshCw className="mr-2 h-4 w-4" />
-                )}
-                Sync Now
-              </Button>
+              {/* Action Buttons */}
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleSync}
+                  disabled={syncing || isTokenExpired}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  {syncing ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                  )}
+                  Sync Now
+                </Button>
+                <Button
+                  onClick={handleConnectGHL}
+                  disabled={loading}
+                  variant={isTokenExpired ? "default" : "outline"}
+                  className="flex-1"
+                >
+                  {loading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                  )}
+                  {isTokenExpired ? 'Reconnect' : 'Reconnect'}
+                </Button>
+              </div>
             </div>
           )}
 
@@ -356,7 +291,7 @@ export function GHLSettingsModal({ open, onOpenChange }: GHLSettingsModalProps) 
           <div className="text-xs text-muted-foreground space-y-1">
             <p><strong>How it works:</strong></p>
             <ul className="list-disc list-inside space-y-1 ml-2">
-              <li>Enter your GHL Location ID to connect</li>
+              <li>Click connect to authorize via GoHighLevel</li>
               <li>Contacts, messages, and appointments sync automatically</li>
               <li>Changes in TrainU push back to GHL</li>
               <li>Real-time updates via webhooks</li>

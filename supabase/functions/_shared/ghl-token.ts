@@ -6,6 +6,12 @@
 const GHL_CLIENT_ID = Deno.env.get('GHL_CLIENT_ID');
 const GHL_CLIENT_SECRET = Deno.env.get('GHL_CLIENT_SECRET');
 
+export interface TokenResult {
+  token: string;
+  tokenType: 'oauth' | 'agency';
+  refreshed: boolean;
+}
+
 export async function refreshGHLToken(
   supabase: any,
   trainerId: string,
@@ -80,12 +86,37 @@ export async function refreshGHLToken(
   return access_token;
 }
 
+/**
+ * Get the best available GHL token for a trainer
+ * Prioritizes OAuth token over agency token, handles refresh if needed
+ */
 export async function getGHLToken(
   supabase: any,
   trainerId: string,
+  agencyToken?: string,
   logger?: { info: (msg: string, data?: any) => void; warn: (msg: string, data?: any) => void; error: (msg: string, data?: any) => void; debug: (msg: string, data?: any) => void },
-): Promise<string | null> {
-  // Try to get and refresh token if needed
-  return await refreshGHLToken(supabase, trainerId, logger);
+): Promise<TokenResult> {
+  // Try to get and refresh OAuth token if available
+  const oauthToken = await refreshGHLToken(supabase, trainerId, logger);
+  
+  if (oauthToken) {
+    return {
+      token: oauthToken,
+      tokenType: 'oauth',
+      refreshed: true,
+    };
+  }
+  
+  // Fall back to agency token
+  const fallbackToken = agencyToken || Deno.env.get('GHL_PRIVATE_API_KEY');
+  if (fallbackToken) {
+    logger?.info('Using agency token as fallback', { trainerId });
+    return {
+      token: fallbackToken,
+      tokenType: 'agency',
+      refreshed: false,
+    };
+  }
+  
+  throw new Error('No GHL token available');
 }
-

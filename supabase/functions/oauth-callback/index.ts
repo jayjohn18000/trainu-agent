@@ -55,14 +55,16 @@ serve(async (req) => {
       });
     }
 
-    const { trainerId, tier } = state;
+    const { trainerId, tier, redirect } = state;
+    // Use redirect from state, default to /onboarding
+    const redirectPath = redirect || '/onboarding';
 
     if (!trainerId) {
       console.error('Missing trainerId in state');
       return new Response(null, {
         status: 302,
         headers: {
-          'Location': `${APP_URL}/onboarding?error=invalid_state`,
+          'Location': `${APP_URL}${redirectPath}?error=invalid_state`,
         },
       });
     }
@@ -93,7 +95,7 @@ serve(async (req) => {
       return new Response(null, {
         status: 302,
         headers: {
-          'Location': `${APP_URL}/onboarding?error=token_exchange_failed`,
+          'Location': `${APP_URL}${redirectPath}?error=token_exchange_failed`,
         },
       });
     }
@@ -113,7 +115,7 @@ serve(async (req) => {
       return new Response(null, {
         status: 302,
         headers: {
-          'Location': `${APP_URL}/onboarding?error=incomplete_token_data`,
+          'Location': `${APP_URL}${redirectPath}?error=incomplete_token_data`,
         },
       });
     }
@@ -151,7 +153,7 @@ serve(async (req) => {
       return new Response(null, {
         status: 302,
         headers: {
-          'Location': `${APP_URL}/onboarding?error=storage_failed`,
+          'Location': `${APP_URL}${redirectPath}?error=storage_failed`,
         },
       });
     }
@@ -160,9 +162,59 @@ serve(async (req) => {
       trainerId,
       locationId,
       tier,
+      redirect: redirectPath,
     });
 
-    // Trigger provisioning automatically
+    // If redirecting to settings, skip provisioning (already onboarded)
+    if (redirectPath !== '/onboarding') {
+      // Register webhook for this location
+      try {
+        const webhookResponse = await fetch(
+          `${Deno.env.get('SUPABASE_URL')}/functions/v1/ghl-webhook-register`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ locationId, trainerId }),
+          }
+        );
+        if (webhookResponse.ok) {
+          console.log('Webhook registered for reconnected account');
+        }
+      } catch (webhookError) {
+        console.warn('Webhook registration failed:', webhookError);
+      }
+
+      // Trigger initial sync
+      try {
+        await fetch(
+          `${Deno.env.get('SUPABASE_URL')}/functions/v1/ghl-sync`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ trainerId }),
+          }
+        );
+        console.log('Initial sync triggered');
+      } catch (syncError) {
+        console.warn('Initial sync trigger failed:', syncError);
+      }
+
+      // Redirect to settings with success
+      return new Response(null, {
+        status: 302,
+        headers: {
+          'Location': `${APP_URL}${redirectPath}?oauth=success`,
+        },
+      });
+    }
+
+    // Trigger provisioning for new onboarding
     console.log('Triggering provisioning for trainer:', trainerId);
     
     // Fetch user metadata to pass to provisioning

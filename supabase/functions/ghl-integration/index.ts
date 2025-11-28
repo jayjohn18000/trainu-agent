@@ -93,12 +93,14 @@ serve(async (req) => {
     
     // Try to refresh token if config exists but no current access token
     if (!accessToken && hasOAuthTokens && ghlConfig) {
-      accessToken = await getGHLToken(supabase, user.id, {
-        info: (msg, data) => console.log(`[ghl-integration] ${msg}`, data),
-        warn: (msg, data) => console.warn(`[ghl-integration] ${msg}`, data),
-        error: (msg, data) => console.error(`[ghl-integration] ${msg}`, data),
-        debug: (msg, data) => console.debug(`[ghl-integration] ${msg}`, data),
-      });
+      const logger = {
+        info: (msg: string, data?: any) => console.log(`[ghl-integration] ${msg}`, data),
+        warn: (msg: string, data?: any) => console.warn(`[ghl-integration] ${msg}`, data),
+        error: (msg: string, data?: any) => console.error(`[ghl-integration] ${msg}`, data),
+        debug: (msg: string, data?: any) => console.debug(`[ghl-integration] ${msg}`, data),
+      };
+      const tokenResult = await getGHLToken(supabase, user.id, undefined, logger);
+      accessToken = tokenResult.token;
     }
 
     // DEMO MODE: If OAuth not completed or creds missing, return mock success
