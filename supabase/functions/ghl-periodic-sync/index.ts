@@ -2,6 +2,7 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.76.1';
 import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 import { corsHeaders } from '../_shared/responses.ts';
+import { getEffectiveToken } from '../_shared/ghl-location-token.ts';
 
 // Zod validation schemas for GHL API data
 const contactSchema = z.object({
@@ -90,10 +91,20 @@ serve(async (req) => {
 
     for (const config of configs) {
       try {
-        const result = await syncTrainerData(supabase, config, ghlPrivateApiKey);
+        // Get the best available token - prioritize location token over agency token
+        const { token: effectiveToken, tokenType } = getEffectiveToken(
+          config.access_token,
+          ghlPrivateApiKey,
+          config.token_expires_at
+        );
+        
+        console.log(`[ghl-periodic-sync] Using ${tokenType} token for trainer ${config.trainer_id}`);
+        
+        const result = await syncTrainerData(supabase, config, effectiveToken);
         results.push({
           trainerId: config.trainer_id,
           locationId: config.location_id,
+          tokenType,
           ...result
         });
       } catch (error) {
@@ -127,14 +138,14 @@ serve(async (req) => {
   }
 });
 
-async function syncTrainerData(supabase: any, config: any, ghlPrivateApiKey: string) {
+async function syncTrainerData(supabase: any, config: any, effectiveToken: string) {
   const { trainer_id, location_id } = config;
   
   console.log(`[ghl-periodic-sync] Syncing trainer ${trainer_id}, location ${location_id}`);
 
-  // Use GHL_PRIVATE_API_KEY for all requests
+  // Use effective token (location or agency) for all requests
   const headers = {
-    'Authorization': `Bearer ${ghlPrivateApiKey}`,
+    'Authorization': `Bearer ${effectiveToken}`,
     'Version': '2021-07-28',
     'Content-Type': 'application/json'
   };

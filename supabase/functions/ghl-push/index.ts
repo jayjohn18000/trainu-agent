@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.76.1'
 import { jsonResponse, errorResponse } from '../_shared/responses.ts'
+import { getEffectiveToken } from '../_shared/ghl-location-token.ts'
 
 const GHL_API_BASE = Deno.env.get('GHL_API_BASE') || 'https://services.leadconnectorhq.com';
 
@@ -26,7 +27,7 @@ Deno.serve(async (req) => {
 
     console.log(`Starting GHL push${trainerId ? ` for trainer ${trainerId}` : ''}...`);
 
-    // Use GHL_PRIVATE_API_KEY (agency-level token) for all API calls
+    // Get agency-level token as fallback
     const ghlPrivateApiKey = Deno.env.get('GHL_PRIVATE_API_KEY');
     if (!ghlPrivateApiKey) {
       console.error('GHL_PRIVATE_API_KEY not configured');
@@ -71,10 +72,10 @@ Deno.serve(async (req) => {
         .eq('id', item.id);
 
       try {
-        // Get trainer's GHL config for location_id
+        // Get trainer's GHL config for location_id and access_token
         const { data: config } = await supabase
           .from('ghl_config')
-          .select('location_id')
+          .select('location_id, access_token, token_expires_at')
           .eq('trainer_id', item.trainer_id)
           .single();
 
@@ -82,11 +83,20 @@ Deno.serve(async (req) => {
           throw new Error('No GHL location configured for trainer');
         }
 
-        // Use GHL_PRIVATE_API_KEY for all operations
+        // Get the best available token - prioritize location token over agency token
+        const { token: effectiveToken, tokenType } = getEffectiveToken(
+          config.access_token,
+          ghlPrivateApiKey,
+          config.token_expires_at
+        );
+        
+        console.log(`Using ${tokenType} token for push operation`);
+
+        // Use effective token for all operations
         if (item.entity_type === 'contact') {
-          await processContactSync(item, config.location_id, ghlPrivateApiKey, supabase);
+          await processContactSync(item, config.location_id, effectiveToken, supabase);
         } else if (item.entity_type === 'booking') {
-          await processBookingSync(item, config.location_id, ghlPrivateApiKey, supabase);
+          await processBookingSync(item, config.location_id, effectiveToken, supabase);
         }
 
         // Mark as completed

@@ -100,6 +100,27 @@ export function GHLSettingsModal({ open, onOpenChange }: GHLSettingsModalProps) 
 
       toast.success(`Connected to ${data.location?.name || 'GHL Location'}`);
 
+      // Attempt to exchange agency token for location-scoped token
+      // This gives full subaccount permissions without manual PIT setup
+      try {
+        const { data: tokenData, error: tokenError } = await supabase.functions.invoke('ghl-exchange-token', {
+          body: { locationId: locationId.trim() }
+        });
+        
+        if (tokenError) {
+          console.warn('Token exchange failed:', tokenError);
+          toast.info('Using agency token for sync (limited scopes may apply)');
+        } else if (tokenData?.success) {
+          toast.success('Location token obtained - full sync enabled');
+        } else {
+          console.log('Token exchange result:', tokenData);
+          // Not a critical error - sync will fall back to agency token
+        }
+      } catch (tokenExchangeError) {
+        console.warn('Token exchange error:', tokenExchangeError);
+        // Non-blocking - sync will work with agency token
+      }
+
       // Register webhook - pass locationId directly
       await handleRegisterWebhook(locationId.trim());
 

@@ -24,6 +24,9 @@ verify_jwt = true
 [functions.oauth-callback]
 verify_jwt = false
 
+[functions.ghl-exchange-token]
+verify_jwt = true
+
 [functions.ab-testing-framework]
 verify_jwt = true
 
