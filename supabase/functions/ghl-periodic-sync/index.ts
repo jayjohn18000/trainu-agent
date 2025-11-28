@@ -43,7 +43,7 @@ const GHL_API_BASE = Deno.env.get('GHL_API_BASE') || 'https://services.leadconne
  * Periodic backup sync from GHL to TrainU
  * Runs every 30 minutes as a safety net for missed webhooks
  * 
- * Schedule: Run via pg_cron or external scheduler
+ * Uses GHL_PRIVATE_API_KEY (agency-level) + per-trainer location_id
  */
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -53,15 +53,25 @@ serve(async (req) => {
   try {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     
+    // Use GHL_PRIVATE_API_KEY for all API calls
+    const ghlPrivateApiKey = Deno.env.get('GHL_PRIVATE_API_KEY');
+    if (!ghlPrivateApiKey) {
+      console.error('[ghl-periodic-sync] GHL_PRIVATE_API_KEY not configured');
+      return new Response(
+        JSON.stringify({ error: 'GHL_PRIVATE_API_KEY not configured' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
     console.log('[ghl-periodic-sync] Starting periodic sync', {
       timestamp: new Date().toISOString()
     });
 
-    // Get all active GHL configurations
+    // Get all GHL configurations with location_id set
     const { data: configs, error: configError } = await supabase
       .from('ghl_config')
       .select('*')
-      .eq('is_active', true);
+      .not('location_id', 'is', null);
 
     if (configError) {
       console.error('[ghl-periodic-sync] Error fetching configs:', configError);
@@ -69,7 +79,7 @@ serve(async (req) => {
     }
 
     if (!configs || configs.length === 0) {
-      console.log('[ghl-periodic-sync] No active GHL configurations found');
+      console.log('[ghl-periodic-sync] No GHL configurations found');
       return new Response(
         JSON.stringify({ success: true, message: 'No configurations to sync' }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -80,7 +90,7 @@ serve(async (req) => {
 
     for (const config of configs) {
       try {
-        const result = await syncTrainerData(supabase, config);
+        const result = await syncTrainerData(supabase, config, ghlPrivateApiKey);
         results.push({
           trainerId: config.trainer_id,
           locationId: config.location_id,
@@ -117,13 +127,14 @@ serve(async (req) => {
   }
 });
 
-async function syncTrainerData(supabase: any, config: any) {
-  const { trainer_id, location_id, access_token } = config;
+async function syncTrainerData(supabase: any, config: any, ghlPrivateApiKey: string) {
+  const { trainer_id, location_id } = config;
   
   console.log(`[ghl-periodic-sync] Syncing trainer ${trainer_id}, location ${location_id}`);
 
+  // Use GHL_PRIVATE_API_KEY for all requests
   const headers = {
-    'Authorization': `Bearer ${access_token}`,
+    'Authorization': `Bearer ${ghlPrivateApiKey}`,
     'Version': '2021-07-28',
     'Content-Type': 'application/json'
   };
@@ -167,11 +178,12 @@ async function syncTrainerData(supabase: any, config: any) {
           phone: validContact.phone || null,
           tags: validContact.tags || null,
           sync_source: 'ghl',
-          last_synced_at: new Date().toISOString(),
         }, { onConflict: 'ghl_contact_id' });
         
         contactsSynced++;
       }
+    } else {
+      console.error(`[ghl-periodic-sync] Failed to fetch contacts:`, await contactsRes.text());
     }
   } catch (error) {
     console.error(`[ghl-periodic-sync] Contacts sync error for ${trainer_id}:`, error);
@@ -213,7 +225,7 @@ async function syncTrainerData(supabase: any, config: any) {
           .select('id')
           .eq('ghl_contact_id', String(validAppt.contactId))
           .eq('trainer_id', trainer_id)
-          .single();
+          .maybeSingle();
 
         if (contact) {
           await supabase.from('bookings').upsert({
@@ -225,12 +237,13 @@ async function syncTrainerData(supabase: any, config: any) {
             session_type: validAppt.title || validAppt.name || 'Session',
             notes: validAppt.notes || null,
             sync_source: 'ghl',
-            last_synced_at: new Date().toISOString(),
           }, { onConflict: 'ghl_appointment_id' });
           
           appointmentsSynced++;
         }
       }
+    } else {
+      console.error(`[ghl-periodic-sync] Failed to fetch appointments:`, await appointmentsRes.text());
     }
   } catch (error) {
     console.error(`[ghl-periodic-sync] Appointments sync error for ${trainer_id}:`, error);
@@ -250,6 +263,8 @@ async function syncTrainerData(supabase: any, config: any) {
 
     if (contacts) {
       for (const contact of contacts) {
+        if (!contact.ghl_contact_id) continue;
+        
         const messagesUrl = `${GHL_API_BASE}/conversations/messages?contactId=${contact.ghl_contact_id}&startDate=${since.toISOString()}`;
         const messagesRes = await fetch(messagesUrl, { headers });
         
@@ -301,6 +316,12 @@ async function syncTrainerData(supabase: any, config: any) {
   } catch (error) {
     console.error(`[ghl-periodic-sync] Messages sync error for ${trainer_id}:`, error);
   }
+
+  // Update last sync time
+  await supabase
+    .from('ghl_config')
+    .update({ last_sync_at: new Date().toISOString() })
+    .eq('trainer_id', trainer_id);
 
   console.log(`[ghl-periodic-sync] Completed for trainer ${trainer_id}:`, {
     contacts: { synced: contactsSynced, skipped: contactsSkipped },

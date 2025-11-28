@@ -41,31 +41,34 @@ Deno.serve(async (req) => {
       return errorResponse('GHL not configured for this trainer', 400);
     }
 
-    const ghlAccessToken = Deno.env.get('GHL_ACCESS_TOKEN');
-    if (!ghlAccessToken) {
-      return errorResponse('GHL_ACCESS_TOKEN not configured', 500);
+    // Use GHL_PRIVATE_API_KEY (agency-level token)
+    const ghlPrivateApiKey = Deno.env.get('GHL_PRIVATE_API_KEY');
+    if (!ghlPrivateApiKey) {
+      return errorResponse('GHL_PRIVATE_API_KEY not configured', 500);
     }
 
-    // Generate webhook secret
-    const webhookSecret = crypto.randomUUID();
-    
-    // Register webhook with GHL for contact updates, messages, and appointments
+    // Use a single shared webhook URL for all locations
     const webhookUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/ghl-webhook`;
+    
+    // Events to subscribe to
     const events = [
-      'contact.created',
-      'contact.updated',
-      'contact.deleted',
-      'message.inbound',
-      'appointment.created',
-      'appointment.updated',
-      'appointment.cancelled'
+      'ContactCreate',
+      'ContactUpdate', 
+      'ContactDelete',
+      'InboundMessage',
+      'OutboundMessage',
+      'AppointmentCreate',
+      'AppointmentUpdate',
+      'AppointmentDelete'
     ];
 
+    // Register webhook with GHL using the shared URL
+    // Note: GHL webhooks are registered per-location but can all point to same URL
     const registerUrl = `${GHL_API_BASE}/webhooks/`;
     const registerResponse = await fetch(registerUrl, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${ghlAccessToken}`,
+        'Authorization': `Bearer ${ghlPrivateApiKey}`,
         'Version': '2021-07-28',
         'Content-Type': 'application/json',
       },
@@ -73,13 +76,36 @@ Deno.serve(async (req) => {
         locationId: config.location_id,
         url: webhookUrl,
         events: events,
-        name: `TrainU Webhook - ${user.id}`,
+        name: `TrainU Sync - ${config.location_id}`,
       }),
     });
 
     if (!registerResponse.ok) {
       const errorText = await registerResponse.text();
       console.error('Failed to register webhook:', errorText);
+      
+      // Check if webhook already exists (common error)
+      if (errorText.includes('already exists') || errorText.includes('duplicate')) {
+        // Update config to mark as registered anyway
+        await supabase
+          .from('ghl_config')
+          .update({
+            webhook_url: webhookUrl,
+            webhook_registered: true,
+          })
+          .eq('trainer_id', user.id);
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            message: 'Webhook already registered',
+            webhook_url: webhookUrl,
+            events: events,
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
       return errorResponse(`Failed to register webhook: ${errorText}`, 500);
     }
 
@@ -91,7 +117,6 @@ Deno.serve(async (req) => {
       .from('ghl_config')
       .update({
         webhook_url: webhookUrl,
-        webhook_secret: webhookSecret,
         webhook_registered: true,
       })
       .eq('trainer_id', user.id);
