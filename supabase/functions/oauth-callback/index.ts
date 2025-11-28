@@ -169,6 +169,43 @@ serve(async (req) => {
       redirect: redirectPath,
     });
 
+    // Fetch calendars and store the primary calendar widget ID
+    try {
+      const calendarsResponse = await fetch(
+        `https://services.leadconnectorhq.com/calendars/?locationId=${locationId}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${access_token}`,
+            'Version': '2021-07-28',
+            'Accept': 'application/json',
+          },
+        }
+      );
+
+      if (calendarsResponse.ok) {
+        const calendarsData = await calendarsResponse.json();
+        const calendars = calendarsData.calendars || [];
+        
+        if (calendars.length > 0) {
+          // Store the first calendar's ID as the booking widget ID
+          const primaryCalendarId = calendars[0].id;
+          console.log('Found calendar, storing widget ID:', primaryCalendarId);
+          
+          await supabase
+            .from('ghl_config')
+            .update({ booking_widget_id: primaryCalendarId })
+            .eq('trainer_id', trainerId);
+        } else {
+          console.log('No calendars found for location');
+        }
+      } else {
+        console.warn('Failed to fetch calendars:', calendarsResponse.status);
+      }
+    } catch (calendarError) {
+      console.warn('Error fetching calendars:', calendarError);
+      // Continue - calendar fetch is not critical for OAuth flow
+    }
+
     // If redirecting to settings, skip provisioning (already onboarded)
     if (redirectPath !== '/onboarding') {
       // Register webhook for this location

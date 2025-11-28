@@ -1,44 +1,15 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Calendar as CalendarIcon, Clock, Plus, ExternalLink } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { formatDistanceToNow } from "date-fns";
+import { Calendar as CalendarIcon, Plus, ExternalLink, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface CalendarModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
-
-// Mock sessions
-const mockSessions = [
-  {
-    id: "1",
-    clientName: "John Doe",
-    type: "Personal Training",
-    time: new Date(Date.now() + 2 * 60 * 60 * 1000), // 2 hours from now
-    duration: 60,
-    status: "upcoming" as const,
-  },
-  {
-    id: "2",
-    clientName: "Sarah Wilson",
-    type: "Strength Training",
-    time: new Date(Date.now() + 24 * 60 * 60 * 1000), // Tomorrow
-    duration: 45,
-    status: "upcoming" as const,
-  },
-  {
-    id: "3",
-    clientName: "Mike Johnson",
-    type: "Cardio Session",
-    time: new Date(Date.now() + 48 * 60 * 60 * 1000), // 2 days from now
-    duration: 30,
-    status: "upcoming" as const,
-  },
-];
 
 export function CalendarModal({ open, onOpenChange }: CalendarModalProps) {
   const [ghlUrl, setGhlUrl] = useState<string | null>(null);
@@ -55,18 +26,31 @@ export function CalendarModal({ open, onOpenChange }: CalendarModalProps) {
     setLoading(true);
     setError(null);
     try {
+      // Get authenticated user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setError('Not authenticated');
+        setLoading(false);
+        return;
+      }
+
+      // Fetch GHL config for this trainer
       const { data, error: fetchError } = await supabase
         .from('ghl_config')
-        .select('booking_widget_id')
-        .single();
+        .select('booking_widget_id, location_id')
+        .eq('trainer_id', user.id)
+        .maybeSingle();
 
       if (fetchError) throw fetchError;
 
       if (data?.booking_widget_id) {
-        // Construct URL from widget ID
-        setGhlUrl(`https://calendar.appoint.ly/${data.booking_widget_id}`);
+        // Correct GHL calendar widget URL format
+        setGhlUrl(`https://api.leadconnectorhq.com/widget/booking/${data.booking_widget_id}`);
+      } else if (data?.location_id) {
+        // Have location but no calendar widget - calendar may not be set up
+        setError('No calendar configured. Please set up your calendar in GHL.');
       } else {
-        setError('No GHL calendar configured');
+        setError('Connect GHL in Settings to enable calendar.');
       }
     } catch (err) {
       console.error('Failed to load GHL config:', err);
@@ -104,18 +88,31 @@ export function CalendarModal({ open, onOpenChange }: CalendarModalProps) {
               <CalendarIcon className="h-12 w-12 mx-auto opacity-50 text-muted-foreground" />
               <div>
                 <p className="text-muted-foreground mb-4">
-                  Can't load GHL calendar
+                  {error || 'Calendar not available'}
                 </p>
-                {ghlUrl && (
-                  <Button 
-                    variant="outline" 
-                    onClick={() => window.open(ghlUrl, '_blank')}
-                    className="gap-2"
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                    Open in new tab
-                  </Button>
-                )}
+                <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                  {error?.includes('Settings') && (
+                    <Button 
+                      variant="default" 
+                      asChild
+                    >
+                      <Link to="/settings" onClick={() => onOpenChange(false)}>
+                        <Settings className="h-4 w-4 mr-2" />
+                        Go to Settings
+                      </Link>
+                    </Button>
+                  )}
+                  {ghlUrl && (
+                    <Button 
+                      variant="outline" 
+                      onClick={() => window.open(ghlUrl, '_blank')}
+                      className="gap-2"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      Open in new tab
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
           ) : (
