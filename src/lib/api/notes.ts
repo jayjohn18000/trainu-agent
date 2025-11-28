@@ -17,12 +17,23 @@ export async function createNote(
   content: string, 
   noteType: NoteType = 'quick_note'
 ): Promise<Note> {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('Not authenticated');
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  
+  if (authError) {
+    console.error('[createNote] Auth error:', authError);
+    throw new Error('Authentication failed');
+  }
+  
+  if (!user) {
+    console.error('[createNote] No user found');
+    throw new Error('Not authenticated');
+  }
 
   if (content.length > 500) {
     throw new Error('Note content cannot exceed 500 characters');
   }
+
+  console.log('[createNote] Creating note for contact:', clientId, 'trainer:', user.id);
 
   const { data, error } = await supabase
     .from('client_notes')
@@ -35,7 +46,12 @@ export async function createNote(
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) {
+    console.error('[createNote] Supabase error:', error);
+    throw error;
+  }
+  
+  console.log('[createNote] Note created:', data);
   return data as Note;
 }
 
