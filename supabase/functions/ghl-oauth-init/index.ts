@@ -11,18 +11,19 @@ const GHL_CLIENT_ID = Deno.env.get('GHL_CLIENT_ID');
 const GHL_REDIRECT_URI = Deno.env.get('GHL_REDIRECT_URI');
 
 const GHL_OAUTH_BASE = 'https://marketplace.gohighlevel.com/oauth';
+// Scopes for Sub-Account app type (saas/ prefix for location-level access)
 const REQUIRED_SCOPES = [
-  'locations.readonly',
-  'locations.write',
   'contacts.readonly',
   'contacts.write',
   'calendars.readonly',
   'calendars.write',
-  'workflows.readonly',
+  'calendars/events.readonly',
+  'calendars/events.write',
   'conversations.readonly',
   'conversations.write',
-  'opportunities.readonly',
-  'opportunities.write',
+  'conversations/message.readonly',
+  'conversations/message.write',
+  'users.readonly',
 ].join(' ');
 
 serve(async (req) => {
