@@ -1758,6 +1758,7 @@ export type Database = {
           email_enabled: boolean | null
           frequency_cap_daily: number | null
           frequency_cap_weekly: number | null
+          ghl_calendars: Json | null
           id: string
           last_sync_at: string | null
           last_sync_error: string | null
@@ -1798,6 +1799,7 @@ export type Database = {
           email_enabled?: boolean | null
           frequency_cap_daily?: number | null
           frequency_cap_weekly?: number | null
+          ghl_calendars?: Json | null
           id?: string
           last_sync_at?: string | null
           last_sync_error?: string | null
@@ -1838,6 +1840,7 @@ export type Database = {
           email_enabled?: boolean | null
           frequency_cap_daily?: number | null
           frequency_cap_weekly?: number | null
+          ghl_calendars?: Json | null
           id?: string
           last_sync_at?: string | null
           last_sync_error?: string | null
