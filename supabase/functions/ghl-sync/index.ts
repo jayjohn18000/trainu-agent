@@ -162,20 +162,24 @@ Deno.serve(async (req) => {
               });
             }
 
-            await supabase.from('contacts').upsert({
+            const { error: upsertError } = await supabase.from('contacts').upsert({
               trainer_id,
               ghl_contact_id: validContact.id,
-              first_name: validContact.firstName || null,
+              first_name: validContact.firstName || 'Unknown',
               last_name: validContact.lastName || null,
               email: validContact.email || null,
               phone: validContact.phone || null,
               tags: validContact.tags || [],
               sync_source: 'ghl',
-              last_contacted_at: validContact.dateAdded ? new Date(validContact.dateAdded).toISOString() : null,
             }, {
-              onConflict: 'ghl_contact_id',
+              onConflict: 'trainer_id,ghl_contact_id',
               ignoreDuplicates: false,
             });
+            
+            if (upsertError) {
+              console.error(`Contact upsert failed for ${validContact.id}:`, upsertError);
+              continue;
+            }
           }
 
           contactsCount = contacts.length;
