@@ -10,7 +10,7 @@ export class HttpClientProvider implements ClientDataProvider {
 
     let query = supabase
       .from('contacts')
-      .select('id, first_name, last_name, email, phone, tags', { count: 'exact' })
+      .select('id, first_name, last_name, email, phone, tags, current_streak, last_checkin_at', { count: 'exact' })
       .eq('trainer_id', user.id);
 
     // Search filter
@@ -41,7 +41,7 @@ export class HttpClientProvider implements ClientDataProvider {
     }
 
     // Map contacts to Client format
-    const items: Client[] = (data || []).map(contact => ({
+    const items = (data || []).map(contact => ({
       id: contact.id,
       name: toTitleCase(`${contact.first_name || ''} ${contact.last_name || ''}`).trim(),
       email: contact.email || undefined,
@@ -50,6 +50,8 @@ export class HttpClientProvider implements ClientDataProvider {
       status: 'active' as const,
       risk: 0,
       lastActivity: new Date().toISOString(),
+      current_streak: contact.current_streak ?? 0,
+      last_checkin_at: contact.last_checkin_at ?? null,
     }));
 
     return { items, total: count || 0 };
