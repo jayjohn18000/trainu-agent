@@ -2943,9 +2943,12 @@ export type Database = {
           created_at: string | null
           description: string | null
           duration_weeks: number | null
+          external_id: string | null
           id: string
+          imported_at: string | null
           is_active: boolean | null
           name: string
+          source: string | null
           total_sessions: number | null
           trainer_id: string
           updated_at: string | null
@@ -2954,9 +2957,12 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           duration_weeks?: number | null
+          external_id?: string | null
           id?: string
+          imported_at?: string | null
           is_active?: boolean | null
           name: string
+          source?: string | null
           total_sessions?: number | null
           trainer_id: string
           updated_at?: string | null
@@ -2965,9 +2971,12 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           duration_weeks?: number | null
+          external_id?: string | null
           id?: string
+          imported_at?: string | null
           is_active?: boolean | null
           name?: string
+          source?: string | null
           total_sessions?: number | null
           trainer_id?: string
           updated_at?: string | null

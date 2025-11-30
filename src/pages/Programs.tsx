@@ -1,68 +1,21 @@
-import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuthStore } from "@/lib/store/useAuthStore";
+import { usePrograms } from "@/hooks/queries/usePrograms";
 import { ProgramCardSkeletonList } from "@/components/skeletons/ProgramCardSkeleton";
 import { ProgramBuilderCard } from "@/components/agent/ProgramBuilderCard";
-import { Folder, Plus, User, Calendar, CheckCircle2 } from "lucide-react";
+import { Folder, Plus, User, Calendar, CheckCircle2, Download, Upload } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { getFlags } from "@/lib/flags";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 export default function Programs() {
   const { user } = useAuthStore();
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: programs, isLoading } = usePrograms();
 
-  useEffect(() => {
-    // Simulate loading programs
-    const timer = setTimeout(() => setIsLoading(false), 900);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const clientPrograms = [
-    {
-      id: "1",
-      title: "12-Week Strength Building",
-      trainer: "Alex Carter",
-      startDate: "2025-09-15",
-      progress: 4,
-      totalWeeks: 12,
-      status: "active",
-    },
-    {
-      id: "2",
-      title: "Mobility & Recovery",
-      trainer: "Alex Carter",
-      startDate: "2025-10-01",
-      progress: 1,
-      totalWeeks: 6,
-      status: "active",
-    },
-  ];
-
-  const trainerTemplates = [
-    {
-      id: "t1",
-      title: "Beginner Strength Foundations",
-      weeks: 8,
-      assignedTo: 5,
-      lastUpdated: "2025-09-28",
-    },
-    {
-      id: "t2",
-      title: "Advanced Powerlifting Program",
-      weeks: 12,
-      assignedTo: 3,
-      lastUpdated: "2025-09-20",
-    },
-    {
-      id: "t3",
-      title: "Fat Loss & Conditioning",
-      weeks: 10,
-      assignedTo: 8,
-      lastUpdated: "2025-09-15",
-    },
-  ];
+  // Trainers and admins see the trainer view
+  const isTrainerView = user?.role === "trainer" || user?.role === "admin";
 
   return (
     <div className="space-y-6">
@@ -71,93 +24,69 @@ export default function Programs() {
           <h1 className="text-3xl font-bold mb-2">Programs</h1>
           <p className="text-muted-foreground">
             {user?.role === "client" && "Your personalized training programs"}
-            {user?.role === "trainer" && "Create and manage program templates"}
+            {isTrainerView && "Create and manage program templates"}
             {user?.role === "gym_admin" && "View all gym programs"}
           </p>
         </div>
-        {user?.role === "trainer" && (() => {
-          const flags = getFlags();
-          const enabled = !!flags.PROGRAMS_SHELL_ENABLED;
-          return (
+        {isTrainerView && (
+          <div className="flex gap-2">
+            {/* Import button placeholder for future integrations */}
             <Button
+              variant="outline"
               onClick={() =>
-                toast({ title: "Not Available", description: "This feature is not available in the demo.", variant: "destructive" })
+                toast({ 
+                  title: "Coming Soon", 
+                  description: "Import from Trainerize and other platforms coming soon!", 
+                })
               }
-              variant={enabled ? "default" : "outline"}
-              disabled={!enabled}
-              title={enabled ? "Create via Agent" : "Programs shell disabled"}
             >
-              <Plus className="h-4 w-4 mr-2" />
-              Create via Agent
+              <Download className="h-4 w-4 mr-2" />
+              Import
             </Button>
-          );
-        })()}
+            {(() => {
+              const flags = getFlags();
+              const enabled = !!flags.PROGRAMS_SHELL_ENABLED;
+              return (
+                <Button
+                  onClick={() =>
+                    toast({ title: "Not Available", description: "This feature is not available in the demo.", variant: "destructive" })
+                  }
+                  variant={enabled ? "default" : "outline"}
+                  disabled={!enabled}
+                  title={enabled ? "Create via Agent" : "Programs shell disabled"}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create via Agent
+                </Button>
+              );
+            })()}
+          </div>
+        )}
       </div>
 
       {user?.role === "client" && (
         <>
-          {/* Active Programs */}
+          {/* Active Programs - client view with mock data for now */}
           <div className="space-y-4">
             <h2 className="text-xl font-semibold">Active Programs</h2>
             {isLoading ? (
               <ProgramCardSkeletonList />
             ) : (
-              clientPrograms.map((program) => (
-              <Card key={program.id} className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h3 className="text-lg font-semibold mb-1">{program.title}</h3>
-                    <p className="text-sm text-muted-foreground flex items-center gap-2">
-                      <User className="h-3 w-3" />
-                      {program.trainer}
-                    </p>
-                  </div>
-                  <Badge variant={program.status === "active" ? "default" : "secondary"}>
-                    {program.status}
-                  </Badge>
-                </div>
-
-                <div className="space-y-2 mb-4">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Progress</span>
-                    <span className="font-medium">
-                      Week {program.progress} of {program.totalWeeks}
-                    </span>
-                  </div>
-                  <div className="w-full bg-secondary rounded-full h-2">
-                    <div
-                      className="bg-primary h-2 rounded-full transition-all"
-                      style={{ width: `${(program.progress / program.totalWeeks) * 100}%` }}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() =>
-                      toast({ title: "Not Available", description: "This feature is not available in the demo.", variant: "destructive" })
-                    }
-                  >
-                    View Program
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() =>
-                      toast({ title: "Not Available", description: "This feature is not available in the demo.", variant: "destructive" })
-                    }
-                  >
-                    <CheckCircle2 className="h-4 w-4 mr-2" />
-                    Log Today's Workout
-                  </Button>
-                </div>
-              </Card>
-              ))
+              <EmptyState
+                icon={Folder}
+                title="No Programs Yet"
+                description="Book a session with a trainer to get started with a personalized program"
+                action={{
+                  label: "Find a Trainer",
+                  onClick: () => toast({ title: "Not Available", description: "This feature is not available in the demo.", variant: "destructive" })
+                }}
+              />
             )}
           </div>
         </>
       )}
 
-      {user?.role === "trainer" && (
+      {isTrainerView && (
         <>
           {/* Program Templates */}
           <div className="space-y-4">
@@ -166,68 +95,70 @@ export default function Programs() {
               <div className="grid md:grid-cols-2 gap-4">
                 <ProgramCardSkeletonList count={3} />
               </div>
-            ) : (
+            ) : programs && programs.length > 0 ? (
               <div className="grid md:grid-cols-2 gap-4">
                 <ProgramBuilderCard />
-                {trainerTemplates.map((template) => (
-                <Card key={template.id} className="p-6">
-                  <div className="flex items-start justify-between mb-3">
-                    <Folder className="h-10 w-10 text-primary" />
-                    <Badge variant="secondary">{template.weeks} weeks</Badge>
-                  </div>
+                {programs.map((program) => (
+                  <Card key={program.id} className="p-6">
+                    <div className="flex items-start justify-between mb-3">
+                      <Folder className="h-10 w-10 text-primary" />
+                      {program.duration_weeks && (
+                        <Badge variant="secondary">{program.duration_weeks} weeks</Badge>
+                      )}
+                    </div>
 
-                  <h3 className="text-lg font-semibold mb-2">{template.title}</h3>
+                    <h3 className="text-lg font-semibold mb-2">{program.name}</h3>
+                    
+                    {program.description && (
+                      <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                        {program.description}
+                      </p>
+                    )}
 
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
-                    <span className="flex items-center gap-1">
-                      <User className="h-3 w-3" />
-                      {template.assignedTo} clients
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Calendar className="h-3 w-3" />
-                      Updated {template.lastUpdated}
-                    </span>
-                  </div>
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
+                      {program.total_sessions && (
+                        <span className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          {program.total_sessions} sessions
+                        </span>
+                      )}
+                    </div>
 
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      onClick={() =>
-                        toast({ title: "Not Available", description: "This feature is not available in the demo.", variant: "destructive" })
-                      }
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() =>
-                        toast({ title: "Not Available", description: "This feature is not available in the demo.", variant: "destructive" })
-                      }
-                    >
-                      Assign
-                    </Button>
-                  </div>
-                </Card>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        onClick={() =>
+                          toast({ title: "Not Available", description: "This feature is not available in the demo.", variant: "destructive" })
+                        }
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                          toast({ title: "Not Available", description: "This feature is not available in the demo.", variant: "destructive" })
+                        }
+                      >
+                        Assign
+                      </Button>
+                    </div>
+                  </Card>
                 ))}
               </div>
+            ) : (
+              <EmptyState
+                icon={Folder}
+                title="No Programs Yet"
+                description="Create your first program template to assign to clients, or import from other platforms."
+                action={{
+                  label: "Create Program",
+                  onClick: () => toast({ title: "Not Available", description: "This feature is not available in the demo.", variant: "destructive" })
+                }}
+              />
             )}
           </div>
         </>
-      )}
-
-      {/* Empty State */}
-      {user?.role === "client" && clientPrograms.length === 0 && (
-        <Card className="p-12 text-center">
-          <Folder className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-          <h3 className="text-lg font-semibold mb-2">No Programs Yet</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            Book a session with a trainer to get started with a personalized program
-          </p>
-          <Button onClick={() => toast({ title: "Not Available", description: "This feature is not available in the demo.", variant: "destructive" })}>
-            Find a Trainer
-          </Button>
-        </Card>
       )}
     </div>
   );
