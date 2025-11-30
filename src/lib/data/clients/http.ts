@@ -10,7 +10,11 @@ export class HttpClientProvider implements ClientDataProvider {
 
     let query = supabase
       .from('contacts')
-      .select('id, first_name, last_name, email, phone, tags, current_streak, last_checkin_at', { count: 'exact' })
+      .select(`
+        id, first_name, last_name, email, phone, tags, current_streak, last_checkin_at, program_id,
+        programs(id, name),
+        bookings!bookings_contact_id_fkey(scheduled_at, status)
+      `, { count: 'exact' })
       .eq('trainer_id', user.id);
 
     // Search filter
@@ -41,18 +45,30 @@ export class HttpClientProvider implements ClientDataProvider {
     }
 
     // Map contacts to Client format
-    const items = (data || []).map(contact => ({
-      id: contact.id,
-      name: toTitleCase(`${contact.first_name || ''} ${contact.last_name || ''}`).trim(),
-      email: contact.email || undefined,
-      phone: contact.phone || undefined,
-      tags: contact.tags || [],
-      status: 'active' as const,
-      risk: 0,
-      lastActivity: new Date().toISOString(),
-      current_streak: contact.current_streak ?? 0,
-      last_checkin_at: contact.last_checkin_at ?? null,
-    }));
+    const items = (data || []).map((contact: any) => {
+      // Find the next upcoming session (status = scheduled, in the future)
+      const now = new Date().toISOString();
+      const upcomingBookings = (contact.bookings || [])
+        .filter((b: any) => b.scheduled_at && b.scheduled_at > now && b.status === 'scheduled')
+        .sort((a: any, b: any) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
+      const nextSession = upcomingBookings[0]?.scheduled_at;
+
+      return {
+        id: contact.id,
+        name: toTitleCase(`${contact.first_name || ''} ${contact.last_name || ''}`).trim(),
+        email: contact.email || undefined,
+        phone: contact.phone || undefined,
+        tags: contact.tags || [],
+        status: 'active' as const,
+        risk: 0,
+        lastActivity: new Date().toISOString(),
+        current_streak: contact.current_streak ?? 0,
+        last_checkin_at: contact.last_checkin_at ?? null,
+        program_id: contact.program_id || undefined,
+        program: contact.programs?.name || undefined,
+        nextSession,
+      };
+    });
 
     return { items, total: count || 0 };
   }
