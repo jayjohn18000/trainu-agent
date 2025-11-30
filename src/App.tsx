@@ -69,14 +69,17 @@ function LoadingFallback() {
   );
 }
 
-// Protected route wrapper
+// Protected route wrapper - optimized for instant loading with persisted auth
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuthStore();
 
+  // If we have a persisted user, render immediately (auth validates in background)
+  if (user) return <>{children}</>;
+  
+  // Only show loading on first-time auth check (no persisted user)
   if (loading) return <LoadingFallback />;
-  if (!user) return <Navigate to="/login" replace />;
-
-  return <>{children}</>;
+  
+  return <Navigate to="/login" replace />;
 }
 
 export default function App() {
