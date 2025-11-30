@@ -7,6 +7,7 @@ import { usePrograms, Program } from "@/hooks/queries/usePrograms";
 import { ProgramCardSkeletonList } from "@/components/skeletons/ProgramCardSkeleton";
 import { ProgramBuilderCard } from "@/components/agent/ProgramBuilderCard";
 import { ProgramAssignDialog } from "@/components/programs/ProgramAssignDialog";
+import { ProgramEditDialog } from "@/components/programs/ProgramEditDialog";
 import { Folder, Plus, Calendar, Download } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { getFlags } from "@/lib/flags";
@@ -16,6 +17,7 @@ export default function Programs() {
   const { user } = useAuthStore();
   const { data: programs, isLoading } = usePrograms();
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
 
   // Trainers and admins see the trainer view
@@ -24,6 +26,11 @@ export default function Programs() {
   const handleAssignClick = (program: Program) => {
     setSelectedProgram(program);
     setAssignDialogOpen(true);
+  };
+
+  const handleEditClick = (program: Program) => {
+    setSelectedProgram(program);
+    setEditDialogOpen(true);
   };
 
   return (
@@ -136,9 +143,7 @@ export default function Programs() {
                     <div className="flex gap-2">
                       <Button
                         size="sm"
-                        onClick={() =>
-                          toast({ title: "Not Available", description: "This feature is not available in the demo.", variant: "destructive" })
-                        }
+                        onClick={() => handleEditClick(program)}
                       >
                         Edit
                       </Button>
@@ -172,6 +177,12 @@ export default function Programs() {
         program={selectedProgram}
         open={assignDialogOpen}
         onOpenChange={setAssignDialogOpen}
+      />
+
+      <ProgramEditDialog
+        program={selectedProgram}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
       />
     </div>
   );
