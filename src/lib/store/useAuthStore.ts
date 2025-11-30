@@ -31,6 +31,14 @@ export const useAuthStore = create<AuthState>()(
         set({ user: null });
       },
       initialize: async () => {
+        const state = get();
+        
+        // If we have a persisted user, trust it immediately for fast rendering
+        // Then verify in background
+        if (state.user) {
+          set({ loading: false });
+        }
+
         try {
           const { data: { session }, error } = await supabase.auth.getSession();
           
@@ -58,20 +66,22 @@ export const useAuthStore = create<AuthState>()(
           }
 
           // Listen for auth changes
-          supabase.auth.onAuthStateChange(async (_event, session) => {
+          supabase.auth.onAuthStateChange((_event, session) => {
             if (session?.user) {
-              // Fetch user role from server
-              const role = await fetchUserRole(session.user.id);
-              set({
-                user: {
-                  id: session.user.id,
-                  name: session.user.email?.split('@')[0] || 'User',
-                  email: session.user.email || '',
-                  role,
-                  avatarUrl: session.user.user_metadata?.avatar_url,
-                },
-                loading: false,
-              });
+              // Defer role fetch to avoid deadlock
+              setTimeout(async () => {
+                const role = await fetchUserRole(session.user.id);
+                set({
+                  user: {
+                    id: session.user.id,
+                    name: session.user.email?.split('@')[0] || 'User',
+                    email: session.user.email || '',
+                    role,
+                    avatarUrl: session.user.user_metadata?.avatar_url,
+                  },
+                  loading: false,
+                });
+              }, 0);
             } else {
               set({ user: null, loading: false });
             }
@@ -84,6 +94,12 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: "trainu-auth",
+      onRehydrateStorage: () => (state) => {
+        // When store rehydrates from localStorage, if user exists, set loading false
+        if (state?.user) {
+          state.loading = false;
+        }
+      },
     }
   )
 );
