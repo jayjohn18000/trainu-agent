@@ -1,11 +1,13 @@
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuthStore } from "@/lib/store/useAuthStore";
-import { usePrograms } from "@/hooks/queries/usePrograms";
+import { usePrograms, Program } from "@/hooks/queries/usePrograms";
 import { ProgramCardSkeletonList } from "@/components/skeletons/ProgramCardSkeleton";
 import { ProgramBuilderCard } from "@/components/agent/ProgramBuilderCard";
-import { Folder, Plus, User, Calendar, CheckCircle2, Download, Upload } from "lucide-react";
+import { ProgramAssignDialog } from "@/components/programs/ProgramAssignDialog";
+import { Folder, Plus, Calendar, Download } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { getFlags } from "@/lib/flags";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -13,9 +15,16 @@ import { EmptyState } from "@/components/ui/EmptyState";
 export default function Programs() {
   const { user } = useAuthStore();
   const { data: programs, isLoading } = usePrograms();
+  const [assignDialogOpen, setAssignDialogOpen] = useState(false);
+  const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
 
   // Trainers and admins see the trainer view
   const isTrainerView = user?.role === "trainer" || user?.role === "admin";
+
+  const handleAssignClick = (program: Program) => {
+    setSelectedProgram(program);
+    setAssignDialogOpen(true);
+  };
 
   return (
     <div className="space-y-6">
@@ -136,9 +145,7 @@ export default function Programs() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() =>
-                          toast({ title: "Not Available", description: "This feature is not available in the demo.", variant: "destructive" })
-                        }
+                        onClick={() => handleAssignClick(program)}
                       >
                         Assign
                       </Button>
@@ -160,6 +167,12 @@ export default function Programs() {
           </div>
         </>
       )}
+
+      <ProgramAssignDialog
+        program={selectedProgram}
+        open={assignDialogOpen}
+        onOpenChange={setAssignDialogOpen}
+      />
     </div>
   );
 }

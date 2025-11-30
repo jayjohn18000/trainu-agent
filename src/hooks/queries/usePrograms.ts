@@ -5,9 +5,9 @@ import { queryKeys } from '@/lib/query/keys';
 export interface Program {
   id: string;
   name: string;
-  description?: string;
-  duration_weeks?: number;
-  total_sessions?: number;
+  description?: string | null;
+  duration_weeks?: number | null;
+  total_sessions?: number | null;
 }
 
 async function fetchPrograms(): Promise<Program[]> {
