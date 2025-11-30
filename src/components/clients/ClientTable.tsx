@@ -22,7 +22,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Client } from "@/lib/data/clients/types";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format } from "date-fns";
 import { ArrowUpDown, Eye, MoreVertical, Copy, ExternalLink } from "lucide-react";
 import { resolveGhlLink } from "@/lib/ghl/links";
 import { useToast } from "@/hooks/use-toast";
@@ -31,8 +31,11 @@ import { getRiskVariant, statusBadgeVariants } from "@/lib/design-system/colors"
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query/keys";
 import { clientProvider } from "@/lib/data/clients/provider";
-import { useCallback, memo } from "react";
+import { useCallback } from "react";
 import { StreakCell } from "./StreakCell";
+import { ProgramSelector } from "./ProgramSelector";
+import { TagPickerPopover } from "./TagPickerPopover";
+import { useAssignProgram, useUpdateClientTagsInline } from "@/hooks/mutations/useClientMutations";
 
 interface ExtendedClient extends Client {
   current_streak?: number;
@@ -84,6 +87,8 @@ export function ClientTable({
 }: ClientTableProps) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const assignProgram = useAssignProgram();
+  const updateTags = useUpdateClientTagsInline();
 
   const handleRowHover = useCallback((clientId: string) => {
     queryClient.prefetchQuery({
@@ -202,14 +207,31 @@ export function ClientTable({
               <TableCell className="text-sm text-muted-foreground">
                 {formatDistanceToNow(new Date(client.lastActivity), { addSuffix: true })}
               </TableCell>
-              <TableCell className="text-sm">{client.program || "—"}</TableCell>
-              <TableCell className="text-sm">
-                {client.nextSession
-                  ? formatDistanceToNow(new Date(client.nextSession), { addSuffix: true })
-                  : "—"}
+              <TableCell onClick={(e) => e.stopPropagation()}>
+                <ProgramSelector
+                  value={client.program_id}
+                  onChange={(programId) => assignProgram.mutate({ clientId: client.id, programId })}
+                  disabled={assignProgram.isPending}
+                />
               </TableCell>
-              <TableCell>
-                <div className="flex gap-1 flex-wrap max-w-[200px]">
+              <TableCell className="text-sm">
+                {client.nextSession ? (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger className="text-left">
+                        {formatDistanceToNow(new Date(client.nextSession), { addSuffix: true })}
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {format(new Date(client.nextSession), "PPp")}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : (
+                  "—"
+                )}
+              </TableCell>
+              <TableCell onClick={(e) => e.stopPropagation()}>
+                <div className="flex gap-1 flex-wrap items-center max-w-[200px]">
                   {client.tags.slice(0, 2).map((tag) => (
                     <Badge key={tag} variant="secondary" className="text-xs">
                       {tag}
@@ -220,6 +242,11 @@ export function ClientTable({
                       +{client.tags.length - 2}
                     </Badge>
                   )}
+                  <TagPickerPopover
+                    tags={client.tags}
+                    onSave={(tags) => updateTags.mutate({ id: client.id, tags })}
+                    disabled={updateTags.isPending}
+                  />
                 </div>
               </TableCell>
               <TableCell onClick={(e) => e.stopPropagation()}>
@@ -331,21 +358,27 @@ export function ClientTable({
             </div>
           </div>
 
-          {client.program && (
-            <div className="text-sm mb-2">
-              <span className="text-muted-foreground">Program:</span> {client.program}
-            </div>
-          )}
+          <div className="text-sm mb-2" onClick={(e) => e.stopPropagation()}>
+            <span className="text-muted-foreground">Program:</span>{" "}
+            <ProgramSelector
+              value={client.program_id}
+              onChange={(programId) => assignProgram.mutate({ clientId: client.id, programId })}
+              disabled={assignProgram.isPending}
+            />
+          </div>
 
-          {client.tags.length > 0 && (
-            <div className="flex gap-1 flex-wrap">
-              {client.tags.map((tag) => (
-                <Badge key={tag} variant="secondary" className="text-xs">
-                  {tag}
-                </Badge>
-              ))}
-            </div>
-          )}
+          <div className="flex gap-1 flex-wrap items-center" onClick={(e) => e.stopPropagation()}>
+            {client.tags.map((tag) => (
+              <Badge key={tag} variant="secondary" className="text-xs">
+                {tag}
+              </Badge>
+            ))}
+            <TagPickerPopover
+              tags={client.tags}
+              onSave={(tags) => updateTags.mutate({ id: client.id, tags })}
+              disabled={updateTags.isPending}
+            />
+          </div>
         </Card>
       ))}
     </div>

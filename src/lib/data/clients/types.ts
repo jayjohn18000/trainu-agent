@@ -10,7 +10,10 @@ export type Client = {
   lastActivity: string; // ISO
   nextSession?: string; // ISO
   program?: string;
+  program_id?: string;
   notes?: string;
+  current_streak?: number;
+  last_checkin_at?: string | null;
 };
 
 export type ClientDetail = Client & {
