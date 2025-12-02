@@ -37,7 +37,6 @@ import { ComplianceTrendChart } from "@/components/dashboard/ComplianceTrendChar
 import { QuickActionsPills } from "@/components/dashboard/QuickActionsPills";
 import { UpcomingSessions } from "@/components/dashboard/UpcomingSessions";
 import { RecentUpdates } from "@/components/dashboard/RecentUpdates";
-
 import { markTourComplete, shouldShowAiTour } from "@/lib/utils/tourManager";
 import type { TourType } from "@/components/onboarding/TourOverlay";
 import { Zap, Keyboard, X, Clock, AlertTriangle, Target, Layers, ListChecks, ArrowRight } from "lucide-react";
@@ -45,7 +44,6 @@ import { analytics } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import type { QueueItem } from "@/types/agent";
 import { formatDistanceToNow } from "date-fns";
-
 export default function Today() {
   const navigate = useNavigate();
   const [queue, setQueue] = useState<QueueItem[]>([]);
@@ -65,22 +63,45 @@ export default function Today() {
   const [isLoading, setIsLoading] = useState(true);
   const [previousLevel, setPreviousLevel] = useState<number | null>(null);
   const [insights, setInsights] = useState<Awaited<ReturnType<typeof getRecentInsightsWithDrafts>>>([]);
-  const { toast } = useToast();
-  const { awardXP, progress } = useTrainerGamification();
-  const { updateStats, newlyUnlockedAchievements, userStats } = useAchievementTracker();
+  const {
+    toast
+  } = useToast();
+  const {
+    awardXP,
+    progress
+  } = useTrainerGamification();
+  const {
+    updateStats,
+    newlyUnlockedAchievements,
+    userStats
+  } = useAchievementTracker();
   const isMobile = useIsMobile();
-  
+
   // Real data hooks - Updated with ROI metrics
-  const { data: dashboardStats, isLoading: statsLoading } = useTrainerDashboardStats();
-  const { data: roiMetrics, isLoading: roiLoading } = useTrainerROIMetrics();
-  const { data: upcomingSessions, isLoading: sessionsLoading } = useUpcomingSessions();
-  const { data: recentUpdates, isLoading: updatesLoading } = useRecentUpdates();
-  
+  const {
+    data: dashboardStats,
+    isLoading: statsLoading
+  } = useTrainerDashboardStats();
+  const {
+    data: roiMetrics,
+    isLoading: roiLoading
+  } = useTrainerROIMetrics();
+  const {
+    data: upcomingSessions,
+    isLoading: sessionsLoading
+  } = useUpcomingSessions();
+  const {
+    data: recentUpdates,
+    isLoading: updatesLoading
+  } = useRecentUpdates();
+
   // Transform upcoming sessions for the component
   const formattedSessions = (upcomingSessions || []).map(session => ({
     client: session.clientName,
-    time: formatDistanceToNow(session.time, { addSuffix: true }),
-    type: session.type,
+    time: formatDistanceToNow(session.time, {
+      addSuffix: true
+    }),
+    type: session.type
   }));
 
   // Data fetching & effects
@@ -88,36 +109,26 @@ export default function Today() {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const [queueDataRaw, feedData, insightsData] = await Promise.all([
-          listDraftsAndQueued(),
-          getFeed(),
-          getRecentInsightsWithDrafts(),
-        ]);
-        
+        const [queueDataRaw, feedData, insightsData] = await Promise.all([listDraftsAndQueued(), getFeed(), getRecentInsightsWithDrafts()]);
+
         // Transform Message[] to QueueItem[]
-        const queueData: QueueItem[] = await Promise.all(
-          queueDataRaw.map(async (msg) => {
-            // Get contact name
-            const { data: contact } = await supabase
-              .from('contacts')
-              .select('first_name, last_name')
-              .eq('id', msg.contact_id)
-              .single();
-            
-            return {
-              id: msg.id,
-              clientId: msg.contact_id,
-              clientName: contact ? `${contact.first_name} ${contact.last_name || ''}`.trim() : 'Unknown',
-              preview: msg.content,
-              confidence: msg.confidence || 0.5,
-              status: msg.status === 'draft' ? 'review' : 'sent',
-              why: msg.why_reasons || [],
-              createdAt: msg.created_at,
-              edit_count: msg.edit_count,
-            } as QueueItem;
-          })
-        );
-        
+        const queueData: QueueItem[] = await Promise.all(queueDataRaw.map(async msg => {
+          // Get contact name
+          const {
+            data: contact
+          } = await supabase.from('contacts').select('first_name, last_name').eq('id', msg.contact_id).single();
+          return {
+            id: msg.id,
+            clientId: msg.contact_id,
+            clientName: contact ? `${contact.first_name} ${contact.last_name || ''}`.trim() : 'Unknown',
+            preview: msg.content,
+            confidence: msg.confidence || 0.5,
+            status: msg.status === 'draft' ? 'review' : 'sent',
+            why: msg.why_reasons || [],
+            createdAt: msg.created_at,
+            edit_count: msg.edit_count
+          } as QueueItem;
+        }));
         setQueue(queueData);
         setFeed(feedData);
         setInsights(insightsData);
@@ -126,25 +137,21 @@ export default function Today() {
         toast({
           title: "Error",
           description: "Failed to load data. Please try again.",
-          variant: "destructive",
+          variant: "destructive"
         });
       } finally {
         setIsLoading(false);
       }
     };
-
     fetchData();
   }, [toast]);
-
   useEffect(() => {
     const checkTourStatus = async () => {
       const shouldShow = await shouldShowAiTour();
       setShowAiTourPrompt(shouldShow);
     };
-
     checkTourStatus();
   }, []);
-
   useEffect(() => {
     // Check if the user has just leveled up
     if (progress && progress.level && previousLevel !== null && progress.level > previousLevel) {
@@ -161,19 +168,16 @@ export default function Today() {
     setTourActive(true);
     setCurrentTourType('main');
   };
-
   const handleStartAiTour = () => {
     setAiTourActive(true);
     setCurrentTourType('ai-agent');
     setShowAiTourPrompt(false);
   };
-
   const handleCompleteTour = async () => {
     setTourActive(false);
     setAiTourActive(false);
     await markTourComplete('main');
   };
-
   const handleSkipTour = async () => {
     setTourActive(false);
     setAiTourActive(false);
@@ -184,101 +188,92 @@ export default function Today() {
   const handleSelectItem = (index: number) => {
     setSelectedIndex(index);
   };
-
   const handleEditItem = (item: QueueItem) => {
     setEditingItem(item);
   };
-
   const handleSaveEdit = async (updatedItem: QueueItem) => {
     setQueue(queue.map(item => item.id === updatedItem.id ? updatedItem : item));
     setEditingItem(null);
     toast({
       title: "Message Updated",
-      description: "Your message has been updated successfully.",
+      description: "Your message has been updated successfully."
     });
   };
-
   const handleApproveItem = async (item: QueueItem) => {
     try {
       await approveMessage(item.id);
       setQueue(queue.filter(i => i.id !== item.id));
-      updateStats({ messagesSentTotal: (userStats.messagesSentTotal || 0) + 1 });
+      updateStats({
+        messagesSentTotal: (userStats.messagesSentTotal || 0) + 1
+      });
       toast({
         title: "Message Approved",
-        description: "The message has been approved and will be sent.",
+        description: "The message has been approved and will be sent."
       });
     } catch (error: any) {
       console.error("Error approving message:", error);
       toast({
         title: "Error",
         description: "Failed to approve message. Please try again.",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
-
   const handleSendNow = async (item: QueueItem) => {
     try {
       await sendNow(item.id);
       setQueue(queue.filter(i => i.id !== item.id));
-      updateStats({ messagesSentTotal: (userStats.messagesSentTotal || 0) + 1 });
+      updateStats({
+        messagesSentTotal: (userStats.messagesSentTotal || 0) + 1
+      });
       toast({
         title: "Message Sent",
-        description: "The message has been sent immediately.",
+        description: "The message has been sent immediately."
       });
     } catch (error: any) {
       console.error("Error sending message:", error);
       toast({
         title: "Error",
         description: "Failed to send message. Please try again.",
-        variant: "destructive",
+        variant: "destructive"
       });
     }
   };
 
   // Keyboard shortcuts
-  useKeyboardShortcuts([
-    { 
-      key: 'q', 
-      ctrl: true, 
-      callback: () => navigate('/queue'), 
-      description: 'Open Queue' 
-    },
-    { 
-      key: 'c', 
-      ctrl: true, 
-      callback: () => navigate('/clients'), 
-      description: 'Open Clients' 
-    },
-    { 
-      key: 's', 
-      ctrl: true, 
-      callback: () => setSettingsOpen(true), 
-      description: 'Open Settings' 
-    },
-    { 
-      key: 'm', 
-      ctrl: true, 
-      callback: () => setMessagesOpen(true), 
-      description: 'Open Messages' 
-    },
-    { 
-      key: 'k', 
-      ctrl: true, 
-      callback: () => setCalendarOpen(true), 
-      description: 'Open Calendar' 
-    },
-    { 
-      key: '?', 
-      callback: () => setShortcutsOpen(true), 
-      description: 'Show Shortcuts' 
-    },
-  ]);
-
+  useKeyboardShortcuts([{
+    key: 'q',
+    ctrl: true,
+    callback: () => navigate('/queue'),
+    description: 'Open Queue'
+  }, {
+    key: 'c',
+    ctrl: true,
+    callback: () => navigate('/clients'),
+    description: 'Open Clients'
+  }, {
+    key: 's',
+    ctrl: true,
+    callback: () => setSettingsOpen(true),
+    description: 'Open Settings'
+  }, {
+    key: 'm',
+    ctrl: true,
+    callback: () => setMessagesOpen(true),
+    description: 'Open Messages'
+  }, {
+    key: 'k',
+    ctrl: true,
+    callback: () => setCalendarOpen(true),
+    description: 'Open Calendar'
+  }, {
+    key: '?',
+    callback: () => setShortcutsOpen(true),
+    description: 'Show Shortcuts'
+  }]);
   const handleViewAllSessions = () => {
     navigate('/calendar');
   };
-
   const handleViewAllUpdates = () => {
     navigate('/clients');
   };
@@ -295,13 +290,11 @@ export default function Today() {
               Your AI-powered coaching command center
             </p>
           </div>
-          {queue.length > 0 && (
-            <Button onClick={() => navigate('/queue')} variant="outline" className="gap-2">
+          {queue.length > 0 && <Button onClick={() => navigate('/queue')} variant="outline" className="gap-2">
               <ListChecks className="h-4 w-4" />
               Review Queue ({queue.length})
               <ArrowRight className="h-4 w-4" />
-            </Button>
-          )}
+            </Button>}
         </div>
 
         {/* Quick Action Pills */}
@@ -309,46 +302,17 @@ export default function Today() {
 
         {/* ROI Metrics Row - Phase 1 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {roiLoading ? (
-            <>
+          {roiLoading ? <>
               <Skeleton className="h-32 rounded-xl" />
               <Skeleton className="h-32 rounded-xl" />
               <Skeleton className="h-32 rounded-xl" />
               <Skeleton className="h-32 rounded-xl" />
-            </>
-          ) : (
-            <>
-              <MetricCard
-                title="Hours Saved"
-                value={roiMetrics?.hoursSaved || 0}
-                subtitle="via AI automation"
-                icon={Clock}
-                variant="default"
-              />
-              <MetricCard
-                title="Churn Risk"
-                value={roiMetrics?.churnRisk || 0}
-                subtitle="clients at risk"
-                icon={AlertTriangle}
-                variant={roiMetrics && roiMetrics.churnRisk > 5 ? "danger" : "success"}
-                onClick={() => navigate("/clients?filter=at-risk")}
-              />
-              <MetricCard
-                title="Avg Compliance"
-                value={`${roiMetrics?.avgCompliance || 0}%`}
-                subtitle="last 7 days"
-                icon={Target}
-                variant={roiMetrics && roiMetrics.avgCompliance >= 70 ? "success" : "warning"}
-              />
-              <MetricCard
-                title="Active Programs"
-                value={roiMetrics?.activePrograms || 0}
-                subtitle="training programs"
-                icon={Layers}
-                onClick={() => navigate("/programs")}
-              />
-            </>
-          )}
+            </> : <>
+              <MetricCard title="Hours Saved" value={roiMetrics?.hoursSaved || 0} subtitle="via AI automation" icon={Clock} variant="default" />
+              <MetricCard title="Churn Risk" value={roiMetrics?.churnRisk || 0} subtitle="clients at risk" icon={AlertTriangle} variant={roiMetrics && roiMetrics.churnRisk > 5 ? "danger" : "success"} onClick={() => navigate("/clients?filter=at-risk")} />
+              <MetricCard title="Avg Compliance" value={`${roiMetrics?.avgCompliance || 0}%`} subtitle="last 7 days" icon={Target} variant={roiMetrics && roiMetrics.avgCompliance >= 70 ? "success" : "warning"} />
+              <MetricCard title="Active Programs" value={roiMetrics?.activePrograms || 0} subtitle="training programs" icon={Layers} onClick={() => navigate("/programs")} />
+            </>}
         </div>
 
         {/* Compliance Trend Chart - Phase 1 */}
@@ -362,18 +326,10 @@ export default function Today() {
 
         {/* Legacy content preserved for existing functionality */}
         {!isMobile && <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 space-y-6">
-              {/* Insights preserved */}
-              {insights.length > 0 && <div className="space-y-4">
-                  {insights.map(insight => <InsightCard key={insight.id} insight={insight} onViewDraft={(draftId) => navigate(`/queue#${draftId}`)} />)}
-                </div>}
-            </div>
+            
 
             {/* Right sidebar widgets preserved */}
-            <div className="space-y-6">
-              <CalendarWidget onOpenCalendar={() => setCalendarOpen(true)} />
-              <AtRiskWidget />
-            </div>
+            
           </div>}
 
         {/* Activity Feed preserved */}
@@ -418,9 +374,12 @@ export default function Today() {
         </div>}
 
       {editingItem && <MessageEditor open={!!editingItem} onOpenChange={open => !open && setEditingItem(null)} queueItem={editingItem} onSave={(message, tone) => {
-        const updated = { ...editingItem, preview: message };
-        handleSaveEdit(updated);
-      }} />}
+      const updated = {
+        ...editingItem,
+        preview: message
+      };
+      handleSaveEdit(updated);
+    }} />}
 
       <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
       <CalendarModal open={calendarOpen} onOpenChange={setCalendarOpen} />
