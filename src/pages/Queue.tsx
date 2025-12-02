@@ -3,12 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { QueueCard } from "@/components/agent/QueueCard";
 import { MessageEditor } from "@/components/agent/MessageEditor";
 import { AutoApprovalCountdown } from "@/components/agent/AutoApprovalCountdown";
-import { EnhancedInsightCard } from "@/components/queue/EnhancedInsightCard";
+import { CollapsibleInsightCard } from "@/components/queue/CollapsibleInsightCard";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useTrainerGamification } from "@/hooks/useTrainerGamification";
+import { useQueueInsights } from "@/hooks/queries/useQueueInsights";
 import { ArrowLeft, Zap, CheckCircle, Loader2, Sparkles, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { listDraftsAndQueued, approveMessage, sendNow, type Message } from "@/lib/api/messages";
@@ -22,28 +23,19 @@ export default function Queue() {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [ghlConnected, setGhlConnected] = useState(true);
-  const [insights, setInsights] = useState([
-    {
-      id: '1',
-      title: '3 clients haven\'t checked in this week',
-      description: 'Sarah, Mike, and Jessica missed their last scheduled sessions.',
-      riskLevel: 'high' as const,
-      rootCause: 'Declining engagement patterns detected over past 14 days',
-      dataSource: 'GHL Activity + Session History',
-      actions: ['Send check-in messages', 'Offer flexible reschedule', 'Review program difficulty'],
-    },
-    {
-      id: '2',
-      title: 'Positive momentum with 5 clients',
-      description: '5 clients maintained perfect attendance this month.',
-      riskLevel: 'low' as const,
-      rootCause: 'Consistent engagement and positive feedback',
-      dataSource: 'Session Compliance + Message Sentiment',
-      actions: ['Send congratulations message', 'Ask for testimonial', 'Suggest advanced program'],
-    },
-  ]);
   const { toast } = useToast();
   const { awardXP } = useTrainerGamification();
+  
+  // Fetch AI-powered insights from real data
+  const { data: aiInsights = [], isLoading: insightsLoading } = useQueueInsights();
+  const [insights, setInsights] = useState(aiInsights);
+
+  // Update insights when AI data arrives
+  useEffect(() => {
+    if (aiInsights.length > 0) {
+      setInsights(aiInsights);
+    }
+  }, [aiInsights]);
 
   const handleInsightActionsChange = (insightId: string, newActions: string[]) => {
     setInsights(prev =>
@@ -368,30 +360,8 @@ export default function Queue() {
         </Alert>
       )}
 
-      {/* AI Insights Section */}
-      {insights.length > 0 && (
-        <div className="space-y-4 mb-8">
-          <h2 className="text-xl font-semibold flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-primary" />
-            AI Insights
-          </h2>
-          {insights.map((insight) => (
-            <EnhancedInsightCard
-              key={insight.id}
-              title={insight.title}
-              description={insight.description}
-              riskLevel={insight.riskLevel}
-              rootCause={insight.rootCause}
-              dataSource={insight.dataSource}
-              actions={insight.actions}
-              onActionsChange={(actions) => handleInsightActionsChange(insight.id, actions)}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Stats Bar */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      {/* Stats Bar - MOVED ABOVE AI INSIGHTS */}
+      <div className="grid grid-cols-3 gap-4 mb-8">
         <Card className="p-4">
           <div className="text-2xl font-bold">{messages.length}</div>
           <div className="text-sm text-muted-foreground">Total in Queue</div>
@@ -407,6 +377,35 @@ export default function Queue() {
           <div className="text-sm text-muted-foreground">Needs Review</div>
         </Card>
       </div>
+
+      {/* AI Insights Section - NOW BELOW STATS BAR */}
+      {insightsLoading ? (
+        <Card className="p-8 mb-8 text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2 text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">Analyzing client data...</p>
+        </Card>
+      ) : insights.length > 0 ? (
+        <div className="space-y-4 mb-8">
+          <h2 className="text-xl font-semibold flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-primary" />
+            AI Insights
+          </h2>
+          {insights.map((insight) => (
+            <CollapsibleInsightCard
+              key={insight.id}
+              title={insight.title}
+              clientCount={insight.clientNames?.length || 0}
+              description={insight.description}
+              riskLevel={insight.riskLevel}
+              rootCause={insight.rootCause}
+              dataSource={insight.dataSource}
+              actions={insight.actions}
+              onActionsChange={(actions) => handleInsightActionsChange(insight.id, actions)}
+              defaultOpen={false}
+            />
+          ))}
+        </div>
+      ) : null}
 
       {/* Queue Items */}
       {loading ? (
