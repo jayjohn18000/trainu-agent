@@ -32,6 +32,7 @@ import { cn } from "@/lib/utils";
 import { useGamification } from "@/hooks/useGamification";
 import { XPNotification, LevelUpNotification } from "@/components/ui/XPNotification";
 import { AchievementUnlockNotification } from "@/components/ui/AchievementUnlockNotification";
+import { useClientInsights } from "@/hooks/queries/useClientInsights";
 
 export default function ClientDashboardNew() {
   const navigate = useNavigate();
@@ -52,6 +53,9 @@ export default function ClientDashboardNew() {
   const [showCheckInDialog, setShowCheckInDialog] = useState(false);
   const [trainerName, setTrainerName] = useState("");
   const [showCelebration, setShowCelebration] = useState(false);
+  
+  // Fetch AI-powered client insights
+  const { data: clientInsights = [], isLoading: insightsLoading, error: insightsError, refetch: refetchInsights } = useClientInsights(user?.id);
 
   useEffect(() => {
     if (!user) return;
@@ -357,14 +361,27 @@ export default function ClientDashboardNew() {
           <Zap className="h-5 w-5 text-purple-500" />
           <h3 className="text-lg font-semibold">AI Insights</h3>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <AIInsightCard 
-            insight="You're 2 sessions away from hitting a 4-week streak! Clients with 4+ week streaks see 3x better results."
-          />
-          <AIInsightCard 
-            insight="Your consistency on Monday/Wednesday sessions is 95%. Keep up this pattern for optimal progress!"
-          />
-        </div>
+        {insightsLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <AIInsightCard insight="" loading={true} />
+            <AIInsightCard insight="" loading={true} />
+          </div>
+        ) : insightsError ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <AIInsightCard insight="" error={true} onRetry={() => refetchInsights()} />
+          </div>
+        ) : clientInsights.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {clientInsights.slice(0, 2).map((insight, index) => (
+              <AIInsightCard key={index} insight={insight} />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <AIInsightCard insight="Keep up the great work! Your consistency is key to achieving your fitness goals." />
+            <AIInsightCard insight="Schedule your next session to maintain momentum." />
+          </div>
+        )}
       </div>
 
       {/* Community Leaderboard Preview */}

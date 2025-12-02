@@ -7,6 +7,9 @@ export interface QueueInsight {
   description: string;
   riskLevel: 'low' | 'medium' | 'high';
   rootCause: string;
+  evidence?: string[];
+  diagnosticQuestions?: string[];
+  strategies?: Array<{ strategy: string; successProbability: number }>;
   dataSource: string;
   actions: string[];
   clientNames: string[];

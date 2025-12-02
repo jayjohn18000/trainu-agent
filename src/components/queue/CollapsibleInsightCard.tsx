@@ -11,6 +11,9 @@ interface CollapsibleInsightCardProps {
   riskLevel: 'low' | 'medium' | 'high';
   description: string;
   rootCause?: string;
+  evidence?: string[];
+  diagnosticQuestions?: string[];
+  strategies?: Array<{ strategy: string; successProbability: number }>;
   dataSource?: string;
   actions: string[];
   onActionsChange: (actions: string[]) => void;
@@ -41,6 +44,9 @@ export function CollapsibleInsightCard({
   riskLevel,
   description,
   rootCause,
+  evidence,
+  diagnosticQuestions,
+  strategies,
   dataSource,
   actions,
   onActionsChange,
@@ -88,6 +94,44 @@ export function CollapsibleInsightCard({
               <div className="text-sm">
                 <span className="font-medium text-foreground">Root Cause: </span>
                 <span className="text-muted-foreground">{rootCause}</span>
+              </div>
+            )}
+
+            {evidence && evidence.length > 0 && (
+              <div className="text-sm space-y-1">
+                <span className="font-medium text-foreground">Supporting Evidence: </span>
+                <ul className="list-disc list-inside text-muted-foreground space-y-1">
+                  {evidence.map((item, idx) => (
+                    <li key={idx}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {diagnosticQuestions && diagnosticQuestions.length > 0 && (
+              <div className="text-sm space-y-1 pt-2 border-t border-border/50">
+                <span className="font-medium text-foreground">Diagnostic Questions: </span>
+                <ul className="list-disc list-inside text-muted-foreground space-y-1">
+                  {diagnosticQuestions.map((q, idx) => (
+                    <li key={idx}>{q}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {strategies && strategies.length > 0 && (
+              <div className="text-sm space-y-2 pt-2 border-t border-border/50">
+                <span className="font-medium text-foreground">Recommended Strategies: </span>
+                <div className="space-y-2">
+                  {strategies.map((strategy, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-2 bg-muted/50 rounded">
+                      <span className="text-muted-foreground">{strategy.strategy}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {Math.round(strategy.successProbability * 100)}% success
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 

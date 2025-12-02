@@ -398,6 +398,9 @@ export default function Queue() {
               description={insight.description}
               riskLevel={insight.riskLevel}
               rootCause={insight.rootCause}
+              evidence={insight.evidence}
+              diagnosticQuestions={insight.diagnosticQuestions}
+              strategies={insight.strategies}
               dataSource={insight.dataSource}
               actions={insight.actions}
               onActionsChange={(actions) => handleInsightActionsChange(insight.id, actions)}

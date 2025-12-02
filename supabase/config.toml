@@ -131,3 +131,18 @@ verify_jwt = true
 
 [functions.message-dispatcher]
 verify_jwt = false
+
+[functions.generate-client-insights]
+verify_jwt = true
+
+[functions.mindbody-oauth-init]
+verify_jwt = true
+
+[functions.mindbody-sync]
+verify_jwt = false
+
+[functions.mindbody-webhook]
+verify_jwt = false
+
+[functions.generate-queue-insights]
+verify_jwt = true
