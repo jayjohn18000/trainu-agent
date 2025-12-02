@@ -59,7 +59,7 @@ export default function Contact() {
           >
             <source src="/contact-hero-video.mp4" type="video/mp4" />
           </video>
-          <div className="absolute inset-0 bg-black/90" />
+          <div className="absolute inset-0 bg-black/70" />
         </div>
         <div className="container mx-auto px-4 relative z-10">
           <ScrollReveal className="max-w-3xl mx-auto text-center">
