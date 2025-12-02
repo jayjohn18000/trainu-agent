@@ -35,12 +35,15 @@ export async function getCachedOrGenerate<T>(
   }
 
   if (cached) {
+    console.log(`[insight-cache] Cache HIT for ${insightType} (trainer: ${trainerId})`);
     // Update hit count - cast entire chain due to type generation issues
     const hitCount = ((cached as any).hit_count || 0) + 1;
     const updateQuery: any = supabase.from('insight_cache');
     await updateQuery.update({ hit_count: hitCount }).eq('id', (cached as any).id);
     return { data: (cached as any).response as T, fromCache: true };
   }
+
+  console.log(`[insight-cache] Cache MISS for ${insightType} (trainer: ${trainerId}), generating...`);
 
   // Generate new
   const result = await generateFn();
@@ -58,7 +61,9 @@ export async function getCachedOrGenerate<T>(
   } as any);
 
   if (insertError) {
-    console.error('Cache insert error:', insertError);
+    console.error('[insight-cache] Cache insert error:', insertError);
+  } else {
+    console.log(`[insight-cache] Cached ${insightType} for ${ttlMinutes}min (trainer: ${trainerId})`);
   }
 
   return { data: result, fromCache: false };
@@ -81,7 +86,7 @@ export async function logAIUsage(
   cacheHit: boolean = false,
   promptVersion: string = '1.0'
 ) {
-  await supabase.from('ai_analytics').insert({
+  const { error: logError } = await supabase.from('ai_analytics').insert({
     trainer_id: trainerId,
     function_name: functionName,
     prompt_version: promptVersion,
@@ -90,5 +95,11 @@ export async function logAIUsage(
     cache_hit: cacheHit,
     error_message: result.error || null,
   } as any);
+
+  if (logError) {
+    console.error('[ai-analytics] Failed to log AI usage:', logError);
+  } else {
+    console.log(`[ai-analytics] Logged ${functionName} (${result.latencyMs}ms, cache: ${cacheHit}, fallback: ${result.usedFallback})`);
+  }
 }
 

@@ -258,6 +258,13 @@ serve(async (req) => {
     const newDrafts = [];
     let skippedCount = 0;
     
+    // Helper function for title case
+    const toTitleCase = (str: string) => {
+      return str.toLowerCase().split(' ').map(word => 
+        word.charAt(0).toUpperCase() + word.slice(1)
+      ).join(' ');
+    };
+
     for (const candidate of selected) {
       // Skip if this contact already has a draft
       if (existingDraftContactIds.has(candidate.contactId)) {
@@ -268,8 +275,9 @@ serve(async (req) => {
 
       const templateList = templates[candidate.trigger] || templates.general_check_in;
       const template = templateList[Math.floor(Math.random() * templateList.length)];
+      const firstName = toTitleCase(candidate.contactName.split(" ")[0]);
       const content = template
-        .replace("{name}", candidate.contactName.split(" ")[0])
+        .replace("{name}", firstName)
         .replace("{sessions}", insightMap.get(candidate.contactId)?.total_sessions.toString() || "0");
 
       const { data: draft, error: draftError } = await supabase

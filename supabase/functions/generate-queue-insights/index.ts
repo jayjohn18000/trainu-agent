@@ -76,95 +76,28 @@ serve(async (req) => {
       console.error('Error fetching positive clients:', positiveError);
     }
 
-    // Fetch detailed data for at-risk clients
-    const atRiskDetails = await Promise.all(
-      (atRiskClients || []).slice(0, 3).map(async (c) => {
-        const daysAgo = c.last_checkin_at
-          ? Math.floor((Date.now() - new Date(c.last_checkin_at).getTime()) / 86400000)
-          : 999;
+    // Simplified details for at-risk clients (avoid heavy queries)
+    const atRiskDetails = (atRiskClients || []).slice(0, 3).map((c) => {
+      const daysAgo = c.last_checkin_at
+        ? Math.floor((Date.now() - new Date(c.last_checkin_at).getTime()) / 86400000)
+        : 999;
 
-        // Fetch recent messages
-        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-        const { data: messages } = await supabase
-          .from('messages')
-          .select('content, created_at, status')
-          .eq('contact_id', c.id)
-          .gte('created_at', thirtyDaysAgo.toISOString())
-          .order('created_at', { ascending: false })
-          .limit(10);
+      return {
+        name: `${c.first_name} ${c.last_name || ''}`.trim(),
+        daysAgo,
+        streak: c.current_streak || 0,
+        lastMessageAt: c.last_message_sent_at || null,
+      };
+    });
 
-        const recentMessages = messages
-          ?.map((m) => `${new Date(m.created_at).toLocaleDateString()}: ${m.content.substring(0, 50)}...`)
-          .join('; ') || 'No recent messages';
-
-        // Simple sentiment analysis (count positive/negative words)
-        const positiveWords = ['great', 'good', 'excited', 'love', 'thanks', 'awesome', 'amazing'];
-        const negativeWords = ['can\'t', 'won\'t', 'busy', 'sorry', 'tired', 'hard', 'difficult'];
-        const messageText = messages?.map((m) => m.content.toLowerCase()).join(' ') || '';
-        const positiveCount = positiveWords.filter((w) => messageText.includes(w)).length;
-        const negativeCount = negativeWords.filter((w) => messageText.includes(w)).length;
-        const sentimentTrend = negativeCount > positiveCount ? 'declining' : positiveCount > negativeCount ? 'positive' : 'neutral';
-
-        // Fetch booking pattern
-        const { data: bookings } = await supabase
-          .from('bookings')
-          .select('scheduled_at, status')
-          .eq('contact_id', c.id)
-          .order('scheduled_at', { ascending: false })
-          .limit(10);
-
-        const bookingPattern = bookings
-          ?.map((b) => `${b.status}: ${new Date(b.scheduled_at).toLocaleDateString()}`)
-          .join('; ') || 'No recent bookings';
-
-        // Calculate response time change
-        const responseTimes: number[] = [];
-        if (messages && messages.length > 1) {
-          for (let i = 0; i < messages.length - 1; i++) {
-            const sent = new Date(messages[i].created_at).getTime();
-            const received = new Date(messages[i + 1].created_at).getTime();
-            if (received > sent) {
-              responseTimes.push((received - sent) / (1000 * 60 * 60));
-            }
-          }
-        }
-        const responseTimeChange =
-          responseTimes.length > 2
-            ? responseTimes[0] > responseTimes[responseTimes.length - 1]
-              ? 'improving'
-              : 'declining'
-            : 'stable';
-
-        return {
-          name: `${c.first_name} ${c.last_name || ''}`.trim(),
-          daysAgo,
-          recentMessages,
-          sentimentTrend,
-          bookingPattern,
-          responseTimeChange,
-        };
-      })
-    );
-
-    // Fetch detailed data for positive clients
-    const positiveDetails = await Promise.all(
-      (positiveClients || []).slice(0, 5).map(async (c) => {
-        const { data: messages } = await supabase
-          .from('messages')
-          .select('status')
-          .eq('contact_id', c.id)
-          .limit(20);
-
-        const engagementScore = messages ? (messages.filter((m) => m.status === 'read').length / messages.length) * 100 : 0;
-
-        return {
-          name: `${c.first_name} ${c.last_name || ''}`.trim(),
-          streak: c.current_streak || 0,
-          engagementScore: Math.round(engagementScore),
-          progressIndicators: `${c.current_streak} week streak, ${Math.round(engagementScore)}% engagement`,
-        };
-      })
-    );
+    // Simplified details for positive clients
+    const positiveDetails = (positiveClients || []).slice(0, 5).map((c) => {
+      return {
+        name: `${c.first_name} ${c.last_name || ''}`.trim(),
+        streak: c.current_streak || 0,
+        daysSinceCreated: Math.floor((Date.now() - new Date(c.created_at).getTime()) / 86400000),
+      };
+    });
 
     // Prepare data for AI
     const queueData: QueueData = {
