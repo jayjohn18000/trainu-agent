@@ -46,38 +46,6 @@ import { cn } from "@/lib/utils";
 import type { QueueItem } from "@/types/agent";
 import { formatDistanceToNow } from "date-fns";
 
-interface QueueListProps {
-  queue: QueueItem[];
-  selectedIndex: number;
-  onSelectItem: (index: number) => void;
-  onEdit: (item: QueueItem) => void;
-  onApprove: (item: QueueItem) => Promise<void>;
-  onSendNow: (item: QueueItem) => Promise<void>;
-}
-
-const QueueList = memo(
-  ({ queue, selectedIndex, onSelectItem, onEdit, onApprove, onSendNow }: QueueListProps) => {
-    if (!queue || queue.length === 0) {
-      return <p className="text-sm text-muted-foreground">No messages in the queue.</p>;
-    }
-
-    return (
-      <div className="space-y-2">
-        {queue.map((item, index) => (
-          <QueueCard
-            key={item.id}
-            item={item}
-            isSelected={index === selectedIndex}
-            onEdit={() => handleEditItem(item)}
-            onApprove={async () => handleApproveItem(item)}
-            onSendNow={async () => handleSendNow(item)}
-          />
-        ))}
-      </div>
-    );
-  }
-);
-
 export default function Today() {
   const navigate = useNavigate();
   const [queue, setQueue] = useState<QueueItem[]>([]);
@@ -120,11 +88,36 @@ export default function Today() {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const [queueData, feedData, insightsData] = await Promise.all([
+        const [queueDataRaw, feedData, insightsData] = await Promise.all([
           listDraftsAndQueued(),
           getFeed(),
           getRecentInsightsWithDrafts(),
         ]);
+        
+        // Transform Message[] to QueueItem[]
+        const queueData: QueueItem[] = await Promise.all(
+          queueDataRaw.map(async (msg) => {
+            // Get contact name
+            const { data: contact } = await supabase
+              .from('contacts')
+              .select('first_name, last_name')
+              .eq('id', msg.contact_id)
+              .single();
+            
+            return {
+              id: msg.id,
+              clientId: msg.contact_id,
+              clientName: contact ? `${contact.first_name} ${contact.last_name || ''}`.trim() : 'Unknown',
+              preview: msg.content,
+              confidence: msg.confidence || 0.5,
+              status: msg.status === 'draft' ? 'review' : 'sent',
+              why: msg.why_reasons || [],
+              createdAt: msg.created_at,
+              edit_count: msg.edit_count,
+            } as QueueItem;
+          })
+        );
+        
         setQueue(queueData);
         setFeed(feedData);
         setInsights(insightsData);
