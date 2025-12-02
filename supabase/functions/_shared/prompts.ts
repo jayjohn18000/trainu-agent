@@ -31,16 +31,13 @@ export interface QueueData {
   atRiskClients: Array<{
     name: string;
     daysAgo: number;
-    recentMessages: string;
-    sentimentTrend: string;
-    bookingPattern: string;
-    responseTimeChange: string;
+    streak: number;
+    lastMessageAt: string | null;
   }>;
   positiveClients: Array<{
     name: string;
     streak: number;
-    engagementScore: number;
-    progressIndicators: string;
+    daysSinceCreated: number;
   }>;
 }
 
@@ -119,17 +116,14 @@ Output ONLY valid JSON:
 AT-RISK CLIENTS:
 ${data.atRiskClients.map(c => `
 - ${c.name}: ${c.daysAgo} days since check-in
-  Recent Messages: ${c.recentMessages}
-  Sentiment Trend: ${c.sentimentTrend}
-  Booking Pattern: ${c.bookingPattern}
-  Response Time Change: ${c.responseTimeChange}
+  Current Streak: ${c.streak} weeks
+  Last Message: ${c.lastMessageAt ? new Date(c.lastMessageAt).toLocaleDateString() : 'Never'}
 `).join('\n')}
 
 POSITIVE MOMENTUM CLIENTS:
 ${data.positiveClients.map(c => `
 - ${c.name}: ${c.streak} week streak
-  Engagement Score: ${c.engagementScore}
-  Progress Indicators: ${c.progressIndicators}
+  Days Active: ${c.daysSinceCreated}
 `).join('\n')}
 
 Generate exactly 2 insights with deep analysis:
