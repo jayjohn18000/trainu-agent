@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { QueueCard } from "@/components/agent/QueueCard";
 import { MessageEditor } from "@/components/agent/MessageEditor";
 import { AutoApprovalCountdown } from "@/components/agent/AutoApprovalCountdown";
+import { EnhancedInsightCard } from "@/components/queue/EnhancedInsightCard";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -21,8 +22,36 @@ export default function Queue() {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [ghlConnected, setGhlConnected] = useState(true);
+  const [insights, setInsights] = useState([
+    {
+      id: '1',
+      title: '3 clients haven\'t checked in this week',
+      description: 'Sarah, Mike, and Jessica missed their last scheduled sessions.',
+      riskLevel: 'high' as const,
+      rootCause: 'Declining engagement patterns detected over past 14 days',
+      dataSource: 'GHL Activity + Session History',
+      actions: ['Send check-in messages', 'Offer flexible reschedule', 'Review program difficulty'],
+    },
+    {
+      id: '2',
+      title: 'Positive momentum with 5 clients',
+      description: '5 clients maintained perfect attendance this month.',
+      riskLevel: 'low' as const,
+      rootCause: 'Consistent engagement and positive feedback',
+      dataSource: 'Session Compliance + Message Sentiment',
+      actions: ['Send congratulations message', 'Ask for testimonial', 'Suggest advanced program'],
+    },
+  ]);
   const { toast } = useToast();
   const { awardXP } = useTrainerGamification();
+
+  const handleInsightActionsChange = (insightId: string, newActions: string[]) => {
+    setInsights(prev =>
+      prev.map(insight =>
+        insight.id === insightId ? { ...insight, actions: newActions } : insight
+      )
+    );
+  };
 
   const checkGhlConnection = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -337,6 +366,28 @@ export default function Queue() {
             </Button>
           </AlertDescription>
         </Alert>
+      )}
+
+      {/* AI Insights Section */}
+      {insights.length > 0 && (
+        <div className="space-y-4 mb-8">
+          <h2 className="text-xl font-semibold flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-primary" />
+            AI Insights
+          </h2>
+          {insights.map((insight) => (
+            <EnhancedInsightCard
+              key={insight.id}
+              title={insight.title}
+              description={insight.description}
+              riskLevel={insight.riskLevel}
+              rootCause={insight.rootCause}
+              dataSource={insight.dataSource}
+              actions={insight.actions}
+              onActionsChange={(actions) => handleInsightActionsChange(insight.id, actions)}
+            />
+          ))}
+        </div>
       )}
 
       {/* Stats Bar */}

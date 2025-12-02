@@ -45,6 +45,7 @@ const WorkoutLogger = lazyWithRetry(() => import("@/pages/WorkoutLogger"));
 const Progress = lazyWithRetry(() => import("@/pages/Progress"));
 const Challenges = lazyWithRetry(() => import("@/pages/Challenges"));
 const Programs = lazyWithRetry(() => import("@/pages/Programs"));
+const Integrations = lazyWithRetry(() => import("@/pages/Integrations"));
 const Community = lazyWithRetry(() => import("@/pages/Community"));
 const Events = lazyWithRetry(() => import("@/pages/Events"));
 const CommunityEvents = lazyWithRetry(() => import("@/pages/community/Events"));
@@ -121,6 +122,7 @@ export default function App() {
               <Route path="/queue" element={<Queue />} />
               <Route path="/clients" element={<Clients />} />
               <Route path="/programs" element={<Programs />} />
+              <Route path="/integrations" element={<Integrations />} />
               <Route path="/growth" element={<Growth />} />
               <Route path="/settings-agent" element={<SettingsAgent />} />
               {/* Modal route handler for legacy routes */}
