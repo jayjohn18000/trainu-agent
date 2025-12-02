@@ -37,6 +37,7 @@ import { useDraftsStore } from "@/lib/store/useDraftsStore";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthStore } from "@/lib/store/useAuthStore";
 import { TemplateEditor } from "./TemplateEditor";
+import { ClientDataTab } from "./ClientDataTab";
 import { createDraftMessage, type Message, type MessageChannel } from "@/lib/api/messages";
 import { createEvent, createOrUpdateInsight } from "@/lib/api/events";
 import { createNote, listNotes, deleteNote, type Note, type NoteType } from "@/lib/api/notes";
@@ -44,7 +45,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { resolveGhlLink } from "@/lib/ghl/links";
 import { ProgramsTab } from "./ProgramsTab";
-import { DataTab } from "./DataTab";
 
 interface ClientInspectorProps {
   open: boolean;
@@ -578,10 +578,13 @@ export function ClientInspector({
             </TabsContent>
 
             <TabsContent value="data" className="space-y-3 mt-4">
-              <DataTab
-                ghlConnected={!!client.ghlContactId}
-                messageCount={dbMessages.length}
-              />
+              {client?.id ? (
+                <ClientDataTab contactId={client.id} />
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  Select a client to view data sources
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="sessions" className="space-y-3 mt-4">
@@ -775,6 +778,7 @@ export function ClientInspector({
                 </p>
               )}
             </TabsContent>
+
           </Tabs>
         </div>
       </SheetContent>

@@ -33,3 +33,31 @@ export interface ClientData {
   tags?: string[];
 }
 
+export type IntegrationSource = 'ghl' | 'mindbody' | 'trainerize' | 'truecoach' | 'apple_health' | 'oura';
+
+export interface IntegrationStatus {
+  id: string;
+  trainer_id: string;
+  integration_name: IntegrationSource;
+  connection_status: 'connected' | 'disconnected' | 'error' | 'syncing' | 'warning';
+  last_sync_at?: string;
+  next_sync_at?: string;
+  last_error?: string;
+  last_error_at?: string;
+  error_count: number;
+  records_synced: number;
+  records_updated: number;
+  sync_duration_ms?: number;
+  api_calls_used?: number;
+}
+
+export interface IntegrationActivityLog {
+  id: string;
+  trainer_id: string;
+  integration_name: IntegrationSource;
+  activity_type: string;
+  activity_message: string;
+  activity_data?: Record<string, any>;
+  created_at: string;
+}
+

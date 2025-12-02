@@ -546,11 +546,20 @@ export default function SettingsAgent() {
         <TabsContent value="integrations" className="mt-6">
           <div className="metric-card max-w-2xl space-y-6">
             <div>
-              <h3 className="text-lg font-semibold mb-2">GoHighLevel Integration</h3>
+              <h3 className="text-lg font-semibold mb-2">Integrations</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Connect your GHL account to sync contacts and automate workflows
+                Connect your training platforms to unlock insights and automate workflows
               </p>
-              <Button onClick={() => setGhlModalOpen(true)}>
+              <Button onClick={() => navigate('/integrations')}>
+                Manage Integrations
+              </Button>
+            </div>
+            <div className="pt-4 border-t">
+              <h4 className="text-sm font-semibold mb-2">GoHighLevel</h4>
+              <p className="text-sm text-muted-foreground mb-4">
+                Configure your GHL account settings
+              </p>
+              <Button variant="outline" onClick={() => setGhlModalOpen(true)}>
                 Configure GoHighLevel
               </Button>
             </div>

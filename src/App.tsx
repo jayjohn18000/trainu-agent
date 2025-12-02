@@ -39,6 +39,7 @@ const Queue = lazyWithRetry(() => import("@/pages/Queue"));
 const Clients = lazyWithRetry(() => import("@/pages/Clients"));
 const Growth = lazyWithRetry(() => import("@/pages/Growth"));
 const SettingsAgent = lazyWithRetry(() => import("@/pages/SettingsAgent"));
+const Integrations = lazyWithRetry(() => import("@/pages/Integrations"));
 const ClientDashboard = lazyWithRetry(() => import("@/pages/ClientDashboard"));
 const ClientDashboardNew = lazyWithRetry(() => import("@/pages/ClientDashboardNew"));
 const WorkoutLogger = lazyWithRetry(() => import("@/pages/WorkoutLogger"));
@@ -125,6 +126,7 @@ export default function App() {
               <Route path="/integrations" element={<Integrations />} />
               <Route path="/growth" element={<Growth />} />
               <Route path="/settings-agent" element={<SettingsAgent />} />
+              <Route path="/integrations" element={<Integrations />} />
               {/* Modal route handler for legacy routes */}
               <Route path="/messages" element={<ModalRouteHandler />} />
               <Route path="/calendar" element={<ModalRouteHandler />} />
