@@ -109,7 +109,7 @@ export async function listDraftsAndQueued(limit = 20): Promise<Message[]> {
   const { data, error } = await supabase
     .from("messages")
     .select("id, trainer_id, contact_id, status, content, channel, confidence, why_reasons, scheduled_for, created_at, updated_at, auto_approval_at, edit_count")
-    .eq("status", "draft")
+    .in("status", ["draft", "queued"])
     .order("updated_at", { ascending: false })
     .order("confidence", { ascending: false })
     .limit(limit);

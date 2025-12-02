@@ -1,19 +1,17 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { QueueCard } from "@/components/agent/QueueCard";
 import { MessageEditor } from "@/components/agent/MessageEditor";
-import { AutoApprovalCountdown } from "@/components/agent/AutoApprovalCountdown";
 import { CollapsibleInsightCard } from "@/components/queue/CollapsibleInsightCard";
+import { ClientQueueGroup } from "@/components/queue/ClientQueueGroup";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useTrainerGamification } from "@/hooks/useTrainerGamification";
 import { useQueueInsights } from "@/hooks/queries/useQueueInsights";
-import { ArrowLeft, Zap, CheckCircle, Loader2, Sparkles, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Zap, CheckCircle, Loader2, Sparkles, AlertTriangle, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { listDraftsAndQueued, approveMessage, sendNow, type Message } from "@/lib/api/messages";
-import type { QueueItem } from "@/types/agent";
 
 export default function Queue() {
   const navigate = useNavigate();
@@ -28,22 +26,6 @@ export default function Queue() {
   
   // Fetch AI-powered insights from real data
   const { data: aiInsights = [], isLoading: insightsLoading } = useQueueInsights();
-  const [insights, setInsights] = useState(aiInsights);
-
-  // Update insights when AI data arrives
-  useEffect(() => {
-    if (aiInsights.length > 0) {
-      setInsights(aiInsights);
-    }
-  }, [aiInsights]);
-
-  const handleInsightActionsChange = (insightId: string, newActions: string[]) => {
-    setInsights(prev =>
-      prev.map(insight =>
-        insight.id === insightId ? { ...insight, actions: newActions } : insight
-      )
-    );
-  };
 
   const checkGhlConnection = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -304,7 +286,7 @@ export default function Queue() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => navigate('/today')}
+          onClick={() => navigate('/')}
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
@@ -384,13 +366,13 @@ export default function Queue() {
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">Analyzing client data...</p>
         </Card>
-      ) : insights.length > 0 ? (
+      ) : aiInsights.length > 0 ? (
         <div className="space-y-4 mb-8">
           <h2 className="text-xl font-semibold flex items-center gap-2">
             <Sparkles className="h-5 w-5 text-primary" />
             AI Insights
           </h2>
-          {insights.map((insight) => (
+          {aiInsights.map((insight) => (
             <CollapsibleInsightCard
               key={insight.id}
               title={insight.title}
@@ -403,12 +385,21 @@ export default function Queue() {
               strategies={insight.strategies}
               dataSource={insight.dataSource}
               actions={insight.actions}
-              onActionsChange={(actions) => handleInsightActionsChange(insight.id, actions)}
+              onActionsChange={() => {}}
               defaultOpen={false}
             />
           ))}
         </div>
-      ) : null}
+      ) : (
+        <Card className="p-6 mb-8 flex items-start gap-3">
+          <Info className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm text-muted-foreground">
+              No AI insights available yet. As clients check in and engage, AI insights will appear here to help you identify patterns and opportunities.
+            </p>
+          </div>
+        </Card>
+      )}
 
       {/* Queue Items */}
       {loading ? (
@@ -426,47 +417,39 @@ export default function Queue() {
                 Great work! No pending items in your queue.
               </p>
             </div>
-            <Button onClick={() => navigate('/today')}>
-              Back to Today
+            <Button onClick={() => navigate('/')}>
+              Back to Home
             </Button>
           </div>
         </Card>
       ) : (
         <div className="space-y-4">
-          {messages.map((msg) => {
-            const contact = contacts[msg.contact_id];
-            const clientName = contact 
-              ? `${contact.first_name} ${contact.last_name}`.trim()
-              : "Unknown Client";
-            
-            return (
-              <div key={msg.id} className="space-y-2">
-                {msg.auto_approval_at && (
-                  <AutoApprovalCountdown
-                    messageId={msg.id}
-                    autoApprovalAt={msg.auto_approval_at}
-                    onCancel={loadQueue}
-                  />
-                )}
-                <QueueCard
-                  item={{
-                    id: msg.id,
-                    clientId: msg.contact_id,
-                    clientName,
-                    preview: msg.content,
-                    confidence: msg.confidence || 0.8,
-                    status: msg.status as any,
-                    why: msg.why_reasons || [],
-                    createdAt: msg.created_at,
-                  }}
-                  onApprove={() => handleApprove(msg.id)}
-                  onReject={() => handleReject(msg.id)}
-                  onEdit={() => handleEdit(msg.id)}
-                  onSendNow={() => handleSendNow(msg.id)}
-                />
-              </div>
-            );
-          })}
+          {Object.entries(
+            messages.reduce((groups, msg) => {
+              const contact = contacts[msg.contact_id];
+              const clientName = contact 
+                ? `${contact.first_name} ${contact.last_name}`.trim()
+                : "Unknown Client";
+              
+              if (!groups[msg.contact_id]) {
+                groups[msg.contact_id] = { clientName, messages: [] };
+              }
+              groups[msg.contact_id].messages.push(msg);
+              return groups;
+            }, {} as Record<string, { clientName: string; messages: Message[] }>)
+          ).map(([contactId, { clientName, messages: clientMessages }]) => (
+            <ClientQueueGroup
+              key={contactId}
+              clientId={contactId}
+              clientName={clientName}
+              messages={clientMessages}
+              onApprove={handleApprove}
+              onReject={handleReject}
+              onEdit={handleEdit}
+              onSendNow={handleSendNow}
+              onRefresh={loadQueue}
+            />
+          ))}
         </div>
       )}
 

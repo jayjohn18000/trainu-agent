@@ -89,6 +89,16 @@ serve(async (req) => {
 
     const totalCleaned = (draftDeletedCount || 0) + (queuedDeletedCount || 0);
 
+    // Step 2.5: Check existing drafts to prevent duplicates
+    const { data: existingDrafts } = await supabase
+      .from("messages")
+      .select("contact_id")
+      .eq("trainer_id", user.id)
+      .eq("status", "draft");
+
+    const existingDraftContactIds = new Set(existingDrafts?.map(d => d.contact_id) || []);
+    console.log(`[daily-draft-generator] Found ${existingDraftContactIds.size} contacts with existing drafts`);
+
     // Step 3: Fetch contacts with insights and bookings
     const { data: contacts, error: contactsError } = await supabase
       .from("contacts")
@@ -246,7 +256,16 @@ serve(async (req) => {
     expiresAt.setDate(expiresAt.getDate() + 7);
 
     const newDrafts = [];
+    let skippedCount = 0;
+    
     for (const candidate of selected) {
+      // Skip if this contact already has a draft
+      if (existingDraftContactIds.has(candidate.contactId)) {
+        console.log(`[daily-draft-generator] Skipped ${candidate.contactName} - already has a draft`);
+        skippedCount++;
+        continue;
+      }
+
       const templateList = templates[candidate.trigger] || templates.general_check_in;
       const template = templateList[Math.floor(Math.random() * templateList.length)];
       const content = template
@@ -281,9 +300,10 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         generated: newDrafts.length,
+        skipped: skippedCount,
         cleaned: totalCleaned,
         candidates: candidates.length,
-        message: `Generated ${newDrafts.length} new drafts, cleaned ${totalCleaned} expired/orphaned messages`,
+        message: `Generated ${newDrafts.length} new drafts, skipped ${skippedCount} duplicates, cleaned ${totalCleaned} expired/orphaned messages`,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
