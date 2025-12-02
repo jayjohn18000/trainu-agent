@@ -18,7 +18,9 @@ export default function Programs() {
   const { data: programs, isLoading } = usePrograms();
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [customizeDialogOpen, setCustomizeDialogOpen] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
+  const [customizeClientName, setCustomizeClientName] = useState("");
 
   // Trainers and admins see the trainer view
   const isTrainerView = user?.role === "trainer" || user?.role === "admin";
@@ -31,6 +33,17 @@ export default function Programs() {
   const handleEditClick = (program: Program) => {
     setSelectedProgram(program);
     setEditDialogOpen(true);
+  };
+
+  const handleCustomizeClick = (program: Program, clientName: string) => {
+    setSelectedProgram(program);
+    setCustomizeClientName(clientName);
+    setCustomizeDialogOpen(true);
+  };
+
+  const handleSaveCustomization = async (customizations: { notes: string; adjustments: string }) => {
+    console.log('Saving customizations:', customizations);
+    // TODO: Save customizations to database
   };
 
   return (

@@ -43,6 +43,8 @@ import { createNote, listNotes, deleteNote, type Note, type NoteType } from "@/l
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { resolveGhlLink } from "@/lib/ghl/links";
+import { ProgramsTab } from "./ProgramsTab";
+import { DataTab } from "./DataTab";
 
 interface ClientInspectorProps {
   open: boolean;
@@ -456,9 +458,11 @@ export function ClientInspector({
           </div>
 
           <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="sessions">Sessions</TabsTrigger>
+              <TabsTrigger value="programs">Programs</TabsTrigger>
+              <TabsTrigger value="data">Data</TabsTrigger>
               <TabsTrigger value="messages">Messages</TabsTrigger>
               <TabsTrigger value="notes">Notes</TabsTrigger>
             </TabsList>
@@ -561,6 +565,23 @@ export function ClientInspector({
                   Edit tags in GHL to sync changes
                 </p>
               </Card>
+            </TabsContent>
+
+            <TabsContent value="programs" className="space-y-3 mt-4">
+              <ProgramsTab
+                programName={client.program || undefined}
+                programDuration={client.programDuration}
+                sessionsCompleted={client.programSessionsCompleted}
+                totalSessions={client.programTotalSessions}
+                compliance={client.metrics?.responseRate30d}
+              />
+            </TabsContent>
+
+            <TabsContent value="data" className="space-y-3 mt-4">
+              <DataTab
+                ghlConnected={!!client.ghlContactId}
+                messageCount={dbMessages.length}
+              />
             </TabsContent>
 
             <TabsContent value="sessions" className="space-y-3 mt-4">
