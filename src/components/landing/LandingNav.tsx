@@ -51,7 +51,8 @@ export function LandingNav() {
                 to={item.href}
                 className={cn(
                   "text-sm font-medium transition-colors hover:text-primary",
-                  location.pathname === item.href ? "text-primary" : "text-muted-foreground"
+                  location.pathname === item.href ? "text-primary" : "text-muted-foreground",
+                  item.label === "Contact" && "px-3 py-1.5 rounded-full bg-primary/5 shadow-[0_0_12px_hsl(var(--primary)/0.3)] hover:shadow-[0_0_16px_hsl(var(--primary)/0.5)]"
                 )}
               >
                 {item.label}

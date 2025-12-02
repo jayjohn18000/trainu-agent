@@ -1,9 +1,12 @@
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import { LandingLayout } from "@/components/landing/LandingLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Mail, MessageSquare, Phone, MapPin, Instagram, Facebook } from "lucide-react";
 import { FaXTwitter, FaTiktok } from "react-icons/fa6";
 import {
@@ -14,7 +17,6 @@ import {
 } from "@/components/ui/accordion";
 import { ScrollReveal } from "@/components/landing/ScrollReveal";
 import trainerOverheadImage from "@/assets/trainer-client-overhead.jpg";
-import gradientBg from "@/assets/gradient-mesh-bg.svg";
 
 const faqs = [
   {
@@ -40,6 +42,9 @@ const faqs = [
 ];
 
 export default function Contact() {
+  const [transactionalConsent, setTransactionalConsent] = useState(false);
+  const [marketingConsent, setMarketingConsent] = useState(false);
+
   return (
     <LandingLayout>
       {/* Hero */}
@@ -162,9 +167,43 @@ export default function Contact() {
                     />
                   </div>
 
+                  {/* Consent Checkboxes */}
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <Checkbox 
+                        id="transactional" 
+                        checked={transactionalConsent}
+                        onCheckedChange={(checked) => setTransactionalConsent(checked as boolean)}
+                        className="mt-1"
+                      />
+                      <Label htmlFor="transactional" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
+                        By checking this box, I consent to receive transactional messages related to my account, orders, or services I have requested. These messages may include appointment reminders, order confirmations, and account notifications among others. Message frequency may vary. Message & Data rates may apply. Reply HELP for help or STOP to opt-out.
+                      </Label>
+                    </div>
+
+                    <div className="flex items-start gap-3">
+                      <Checkbox 
+                        id="marketing" 
+                        checked={marketingConsent}
+                        onCheckedChange={(checked) => setMarketingConsent(checked as boolean)}
+                        className="mt-1"
+                      />
+                      <Label htmlFor="marketing" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
+                        By checking this box, I consent to receive marketing and promotional messages, including special offers, discounts, new product updates among others. Message frequency may vary. Message & Data rates may apply. Reply HELP for help or STOP to opt-out.
+                      </Label>
+                    </div>
+                  </div>
+
                   <Button type="submit" className="w-full shadow-glow">
                     Send Message
                   </Button>
+
+                  {/* Privacy & Terms Links */}
+                  <p className="text-xs text-muted-foreground text-center">
+                    <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>
+                    {" | "}
+                    <Link to="/terms" className="text-primary hover:underline">Terms of Service</Link>
+                  </p>
 
                   <p className="text-xs text-muted-foreground text-center">
                     We typically respond within 24 hours during business days
