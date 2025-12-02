@@ -19,11 +19,20 @@ Deno.serve(async (req) => {
 
   const syncStartTime = Date.now();
   
+  // Validate internal service call - require service role key header
+  const authHeader = req.headers.get('x-service-key');
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+  
+  if (!authHeader || authHeader !== serviceRoleKey) {
+    console.error('Unauthorized: Invalid or missing service key');
+    return errorResponse('Unauthorized', 401);
+  }
+  
   try {
     // Use service role client (no JWT required)
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      serviceRoleKey,
     );
 
     // Get trainer_id from request body for internal calls

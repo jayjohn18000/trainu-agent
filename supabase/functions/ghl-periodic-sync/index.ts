@@ -51,6 +51,17 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Validate internal service call - require service role key header
+  const authHeader = req.headers.get('x-service-key');
+  
+  if (!authHeader || authHeader !== SUPABASE_SERVICE_ROLE_KEY) {
+    console.error('[ghl-periodic-sync] Unauthorized: Invalid or missing service key');
+    return new Response(
+      JSON.stringify({ error: 'Unauthorized' }),
+      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+
   try {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     

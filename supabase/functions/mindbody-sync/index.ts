@@ -50,6 +50,15 @@ serve(async (req) => {
 
   const logger = createLogger('mindbody-sync');
 
+  // Validate internal service call - require service role key header
+  const authHeader = req.headers.get('x-service-key');
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+  
+  if (!authHeader || authHeader !== serviceRoleKey) {
+    logger.error('Unauthorized: Invalid or missing service key');
+    return errorResponse('Unauthorized', 401);
+  }
+
   try {
     const { trainerId } = await req.json().catch(() => {
       // Try to get from query params if body parsing fails
