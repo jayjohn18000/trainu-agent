@@ -233,13 +233,13 @@ serve(async (req) => {
     await updateIntegrationStatus(supabase, trainerId, 'mindbody', {
       connection_status: errors.length > 0 ? 'warning' : 'connected',
       last_sync_at: new Date().toISOString(),
-      sync_error_message: errors.length > 0 ? errors.join('; ') : null,
+      sync_error_message: errors.length > 0 ? errors.join('; ') : undefined,
       records_synced: recordsSynced,
       records_updated: recordsUpdated,
       sync_duration_ms: durationMs,
       error_count: errors.length,
-      last_error: errors.length > 0 ? errors[0] : null,
-      last_error_at: errors.length > 0 ? new Date().toISOString() : null,
+      last_error: errors.length > 0 ? errors[0] : undefined,
+      last_error_at: errors.length > 0 ? new Date().toISOString() : undefined,
     });
 
     // Update config last_sync_at

@@ -40,23 +40,41 @@ export interface IntegrationConfig {
 
 /**
  * Get all integration statuses for the current trainer
+ * Currently only supports GHL (uses ghl_config table)
  */
 export async function getIntegrationStatus(): Promise<IntegrationStatus[]> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
-  const { data, error } = await supabase
-    .from('integration_status')
+  // Get GHL config if exists
+  const { data: ghlConfig } = await supabase
+    .from('ghl_config')
     .select('*')
     .eq('trainer_id', user.id)
-    .order('integration_name');
+    .maybeSingle();
 
-  if (error) throw error;
-  return data || [];
+  const statuses: IntegrationStatus[] = [];
+
+  // Add GHL status if configured
+  if (ghlConfig) {
+    statuses.push({
+      id: ghlConfig.id,
+      trainer_id: user.id,
+      integration_name: 'ghl',
+      connection_status: ghlConfig.access_token ? 'connected' : 'disconnected',
+      last_sync_at: ghlConfig.last_sync_at,
+      error_count: 0,
+      records_synced: 0,
+      records_updated: 0,
+    });
+  }
+
+  return statuses;
 }
 
 /**
  * Get status for a specific integration
+ * Currently only GHL is supported with real data
  */
 export async function getIntegrationStatusByName(
   integrationName: IntegrationSource
@@ -64,41 +82,46 @@ export async function getIntegrationStatusByName(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
-  const { data, error } = await supabase
-    .from('integration_status')
+  // Only GHL is supported with real data
+  if (integrationName !== 'ghl') {
+    return null;
+  }
+
+  const { data: ghlConfig } = await supabase
+    .from('ghl_config')
     .select('*')
     .eq('trainer_id', user.id)
-    .eq('integration_name', integrationName)
     .maybeSingle();
 
-  if (error) throw error;
-  return data;
+  if (!ghlConfig) return null;
+
+  return {
+    id: ghlConfig.id,
+    trainer_id: user.id,
+    integration_name: 'ghl',
+    connection_status: ghlConfig.access_token ? 'connected' : 'disconnected',
+    last_sync_at: ghlConfig.last_sync_at,
+    error_count: 0,
+    records_synced: 0,
+    records_updated: 0,
+  };
 }
 
 /**
  * Get recent activity log for an integration
+ * Returns empty array for now (activity logging not implemented)
  */
 export async function getIntegrationActivityLog(
   integrationName: IntegrationSource,
   limit: number = 10
 ): Promise<IntegrationActivityLog[]> {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('Not authenticated');
-
-  const { data, error } = await supabase
-    .from('integration_activity_log')
-    .select('*')
-    .eq('trainer_id', user.id)
-    .eq('integration_name', integrationName)
-    .order('created_at', { ascending: false })
-    .limit(limit);
-
-  if (error) throw error;
-  return data || [];
+  // Activity logging not yet implemented
+  return [];
 }
 
 /**
  * Get integration config (without sensitive tokens)
+ * Currently only GHL is supported
  */
 export async function getIntegrationConfig(
   integrationName: IntegrationSource
@@ -106,15 +129,27 @@ export async function getIntegrationConfig(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
-  const { data, error } = await supabase
-    .from('integration_configs')
-    .select('id, trainer_id, integration_name, external_account_id, external_location_id, last_sync_at, sync_status, sync_error_message')
+  if (integrationName !== 'ghl') {
+    return null;
+  }
+
+  const { data: ghlConfig } = await supabase
+    .from('ghl_config')
+    .select('id, trainer_id, location_id, last_sync_at')
     .eq('trainer_id', user.id)
-    .eq('integration_name', integrationName)
     .maybeSingle();
 
-  if (error) throw error;
-  return data;
+  if (!ghlConfig) return null;
+
+  return {
+    id: ghlConfig.id,
+    trainer_id: user.id,
+    integration_name: 'ghl',
+    external_account_id: ghlConfig.location_id || '',
+    external_location_id: ghlConfig.location_id || undefined,
+    last_sync_at: ghlConfig.last_sync_at || undefined,
+    sync_status: 'connected',
+  };
 }
 
 /**
@@ -150,6 +185,7 @@ export async function triggerManualSync(
 
 /**
  * Disconnect an integration (revoke OAuth)
+ * Currently only GHL is supported
  */
 export async function disconnectIntegration(
   integrationName: IntegrationSource
@@ -157,28 +193,17 @@ export async function disconnectIntegration(
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
-  // Delete integration config
-  const { error: configError } = await supabase
-    .from('integration_configs')
+  if (integrationName !== 'ghl') {
+    throw new Error(`Disconnect not supported for ${integrationName}`);
+  }
+
+  // Delete GHL config
+  const { error } = await supabase
+    .from('ghl_config')
     .delete()
-    .eq('trainer_id', user.id)
-    .eq('integration_name', integrationName);
+    .eq('trainer_id', user.id);
 
-  if (configError) throw configError;
-
-  // Update integration status to disconnected
-  const { error: statusError } = await supabase
-    .from('integration_status')
-    .update({
-      connection_status: 'disconnected',
-      last_sync_at: null,
-      last_error: null,
-      last_error_at: null,
-    })
-    .eq('trainer_id', user.id)
-    .eq('integration_name', integrationName);
-
-  if (statusError) throw statusError;
+  if (error) throw error;
 }
 
 /**
@@ -232,4 +257,3 @@ export async function getIntegrationHealthSummary(): Promise<{
     errors: statuses.filter(s => s.connection_status === 'error' || s.connection_status === 'warning').length,
   };
 }
-
