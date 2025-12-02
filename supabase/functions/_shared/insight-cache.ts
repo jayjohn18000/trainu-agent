@@ -17,27 +17,29 @@ export async function getCachedOrGenerate<T>(
   const dataHash = await createDataHash(JSON.stringify(inputData));
 
   // Check cache (use service role client for cache operations)
-  const { data: cached, error: cacheError } = await supabase
+  const cacheQuery = supabase
     .from('insight_cache')
     .select('id, response, hit_count')
     .eq('trainer_id', trainerId)
-    .eq('contact_id', contactId === null ? null : contactId)
     .eq('insight_type', insightType)
     .eq('data_hash', dataHash)
-    .gt('expires_at', new Date().toISOString())
-    .maybeSingle();
+    .gt('expires_at', new Date().toISOString());
+
+  // Handle null contact_id properly
+  const { data: cached, error: cacheError } = contactId === null
+    ? await cacheQuery.is('contact_id', null).maybeSingle()
+    : await cacheQuery.eq('contact_id', contactId).maybeSingle();
 
   if (cacheError) {
     console.error('Cache lookup error:', cacheError);
   }
 
   if (cached) {
-    // Update hit count
-    await supabase
-      .from('insight_cache')
-      .update({ hit_count: (cached.hit_count || 0) + 1 })
-      .eq('id', cached.id);
-    return { data: cached.response as T, fromCache: true };
+    // Update hit count - cast entire chain due to type generation issues
+    const hitCount = ((cached as any).hit_count || 0) + 1;
+    const updateQuery: any = supabase.from('insight_cache');
+    await updateQuery.update({ hit_count: hitCount }).eq('id', (cached as any).id);
+    return { data: (cached as any).response as T, fromCache: true };
   }
 
   // Generate new
@@ -51,9 +53,9 @@ export async function getCachedOrGenerate<T>(
     insight_type: insightType,
     prompt_version: '1.0',
     data_hash: dataHash,
-    response: result,
+    response: result as any,
     expires_at: expiresAt,
-  });
+  } as any);
 
   if (insertError) {
     console.error('Cache insert error:', insertError);
@@ -87,6 +89,6 @@ export async function logAIUsage(
     used_fallback: result.usedFallback,
     cache_hit: cacheHit,
     error_message: result.error || null,
-  });
+  } as any);
 }
 

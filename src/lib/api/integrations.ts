@@ -62,7 +62,11 @@ export async function getIntegrationStatus(): Promise<IntegrationStatus[]> {
     .eq('trainer_id', user.id)
     .maybeSingle();
 
-  const result: IntegrationStatus[] = statuses || [];
+  const result: IntegrationStatus[] = (statuses || []).map(s => ({
+    ...s,
+    integration_name: s.integration_name as IntegrationSource,
+    connection_status: s.connection_status as IntegrationStatus['connection_status']
+  }));
 
   // Add GHL status if configured but not in integration_status table
   if (ghlConfig && !result.find(s => s.integration_name === 'ghl')) {
