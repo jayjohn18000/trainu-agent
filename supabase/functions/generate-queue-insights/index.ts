@@ -62,12 +62,12 @@ serve(async (req) => {
       console.error('Error fetching at-risk clients:', atRiskError);
     }
 
-    // Query positive momentum clients (streak >= 2 AND recent check-in)
+    // Query positive momentum clients (streak >= 1 AND recent check-in)
     const { data: positiveClients, error: positiveError } = await supabase
       .from('contacts')
       .select('id, first_name, last_name, last_checkin_at, current_streak, created_at')
       .eq('trainer_id', trainerId)
-      .gte('current_streak', 2)
+      .gte('current_streak', 1)
       .gte('last_checkin_at', sevenDaysAgo.toISOString())
       .order('current_streak', { ascending: false })
       .limit(10);
