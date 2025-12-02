@@ -119,7 +119,7 @@ Rules:
 - Be specific and actionable
 - Keep all text concise`;
 
-    const aiResponse = await fetch('https://api.lovable.app/v1/ai/completions', {
+    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${LOVABLE_API_KEY}`,
