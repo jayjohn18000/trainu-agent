@@ -72,8 +72,9 @@ export async function callAI<T>(
       let parsed: T;
       try {
         parsed = JSON.parse(content) as T;
-      } catch (parseError) {
-        throw new Error(`Invalid JSON response: ${parseError.message}`);
+    } catch (parseError) {
+      const errorMsg = parseError instanceof Error ? parseError.message : 'Unknown error';
+      throw new Error(`Invalid JSON response: ${errorMsg}`);
       }
 
       return {

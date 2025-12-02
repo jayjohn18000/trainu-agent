@@ -119,7 +119,7 @@ serve(async (req) => {
           .eq('id', contactId)
           .single();
 
-        const programName = programAssignment?.programs?.name || null;
+        const programName = (programAssignment?.programs as any)?.name || null;
         const programCompletion = 0; // TODO: Calculate from program progress
         const exercisesLogged = 0; // TODO: Calculate from exercise logs
 
@@ -169,8 +169,8 @@ serve(async (req) => {
         let latencyMs = 0;
         let usedFallback = false;
 
-        const cacheResult = await getCachedOrGenerate(
-          supabase,
+      const cacheResult = await getCachedOrGenerate(
+        supabase as any,
           trainerId,
           contactId,
           'churn',
@@ -190,7 +190,7 @@ serve(async (req) => {
 
         // Log AI usage
         await logAIUsage(
-          supabase,
+          supabase as any,
           trainerId,
           'calculate-insights',
           {

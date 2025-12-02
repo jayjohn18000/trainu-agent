@@ -204,7 +204,7 @@ serve(async (req) => {
     let usedFallback = false;
 
     const cacheResult = await getCachedOrGenerate(
-      supabase,
+      supabase as any,
       trainerId,
       null,
       'queue',
@@ -223,7 +223,7 @@ serve(async (req) => {
 
     // Log AI usage
     await logAIUsage(
-      supabase,
+      supabase as any,
       trainerId,
       'generate-queue-insights',
       {

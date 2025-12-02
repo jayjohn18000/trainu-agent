@@ -390,6 +390,45 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_analytics: {
+        Row: {
+          cache_hit: boolean | null
+          created_at: string | null
+          error_message: string | null
+          function_name: string
+          id: string
+          latency_ms: number | null
+          prompt_version: string | null
+          tokens_used: number | null
+          trainer_id: string
+          used_fallback: boolean | null
+        }
+        Insert: {
+          cache_hit?: boolean | null
+          created_at?: string | null
+          error_message?: string | null
+          function_name: string
+          id?: string
+          latency_ms?: number | null
+          prompt_version?: string | null
+          tokens_used?: number | null
+          trainer_id: string
+          used_fallback?: boolean | null
+        }
+        Update: {
+          cache_hit?: boolean | null
+          created_at?: string | null
+          error_message?: string | null
+          function_name?: string
+          id?: string
+          latency_ms?: number | null
+          prompt_version?: string | null
+          tokens_used?: number | null
+          trainer_id?: string
+          used_fallback?: boolean | null
+        }
+        Relationships: []
+      }
       ai_insights: {
         Row: {
           actionable_recommendations: Json | null
@@ -1055,68 +1094,133 @@ export type Database = {
           },
         ]
       }
+      contact_sources: {
+        Row: {
+          contact_id: string
+          created_at: string
+          data_hash: string | null
+          external_id: string
+          id: string
+          source: string
+          source_data: Json | null
+          synced_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          contact_id: string
+          created_at?: string
+          data_hash?: string | null
+          external_id: string
+          id?: string
+          source: string
+          source_data?: Json | null
+          synced_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          contact_id?: string
+          created_at?: string
+          data_hash?: string | null
+          external_id?: string
+          id?: string
+          source?: string
+          source_data?: Json | null
+          synced_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contact_sources_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contacts: {
         Row: {
+          compliance_rate: number | null
           consent_status: Database["public"]["Enums"]["consent_status"] | null
           created_at: string | null
           current_streak: number | null
+          data_completeness: number | null
           email: string | null
           first_name: string
           ghl_contact_id: string | null
           id: string
           last_checkin_at: string | null
+          last_insight_at: string | null
           last_message_sent_at: string | null
           last_name: string | null
           last_synced_to_ghl_at: string | null
           messages_sent_this_week: number | null
           messages_sent_today: number | null
+          mindbody_id: string | null
           phone: string | null
           program_id: string | null
+          risk_score: number | null
           sync_source: string | null
           tags: string[] | null
           trainer_id: string
+          trainerize_id: string | null
+          truecoach_id: string | null
           updated_at: string | null
         }
         Insert: {
+          compliance_rate?: number | null
           consent_status?: Database["public"]["Enums"]["consent_status"] | null
           created_at?: string | null
           current_streak?: number | null
+          data_completeness?: number | null
           email?: string | null
           first_name: string
           ghl_contact_id?: string | null
           id?: string
           last_checkin_at?: string | null
+          last_insight_at?: string | null
           last_message_sent_at?: string | null
           last_name?: string | null
           last_synced_to_ghl_at?: string | null
           messages_sent_this_week?: number | null
           messages_sent_today?: number | null
+          mindbody_id?: string | null
           phone?: string | null
           program_id?: string | null
+          risk_score?: number | null
           sync_source?: string | null
           tags?: string[] | null
           trainer_id: string
+          trainerize_id?: string | null
+          truecoach_id?: string | null
           updated_at?: string | null
         }
         Update: {
+          compliance_rate?: number | null
           consent_status?: Database["public"]["Enums"]["consent_status"] | null
           created_at?: string | null
           current_streak?: number | null
+          data_completeness?: number | null
           email?: string | null
           first_name?: string
           ghl_contact_id?: string | null
           id?: string
           last_checkin_at?: string | null
+          last_insight_at?: string | null
           last_message_sent_at?: string | null
           last_name?: string | null
           last_synced_to_ghl_at?: string | null
           messages_sent_this_week?: number | null
           messages_sent_today?: number | null
+          mindbody_id?: string | null
           phone?: string | null
           program_id?: string | null
+          risk_score?: number | null
           sync_source?: string | null
           tags?: string[] | null
           trainer_id?: string
+          trainerize_id?: string | null
+          truecoach_id?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -2005,45 +2109,114 @@ export type Database = {
         }
         Relationships: []
       }
+      insight_cache: {
+        Row: {
+          contact_id: string | null
+          created_at: string | null
+          data_hash: string
+          expires_at: string
+          hit_count: number | null
+          id: string
+          insight_type: string
+          prompt_version: string
+          response: Json
+          trainer_id: string
+        }
+        Insert: {
+          contact_id?: string | null
+          created_at?: string | null
+          data_hash: string
+          expires_at: string
+          hit_count?: number | null
+          id?: string
+          insight_type: string
+          prompt_version: string
+          response: Json
+          trainer_id: string
+        }
+        Update: {
+          contact_id?: string | null
+          created_at?: string | null
+          data_hash?: string
+          expires_at?: string
+          hit_count?: number | null
+          id?: string
+          insight_type?: string
+          prompt_version?: string
+          response?: Json
+          trainer_id?: string
+        }
+        Relationships: []
+      }
       insights: {
         Row: {
+          ai_reasoning: string | null
+          churn_probability: number | null
+          confidence_level: string | null
           contact_id: string
           current_streak: number | null
           engagement_score: number | null
           id: string
           last_activity_at: string | null
           missed_sessions: number | null
+          positive_indicators: Json | null
+          prompt_version: string | null
+          recommended_actions: Json | null
           response_rate: number | null
+          risk_category: string | null
+          risk_factors: Json | null
           risk_score: number | null
           total_sessions: number | null
           trainer_id: string
           updated_at: string | null
+          used_fallback: boolean | null
+          warning_signals: Json | null
         }
         Insert: {
+          ai_reasoning?: string | null
+          churn_probability?: number | null
+          confidence_level?: string | null
           contact_id: string
           current_streak?: number | null
           engagement_score?: number | null
           id?: string
           last_activity_at?: string | null
           missed_sessions?: number | null
+          positive_indicators?: Json | null
+          prompt_version?: string | null
+          recommended_actions?: Json | null
           response_rate?: number | null
+          risk_category?: string | null
+          risk_factors?: Json | null
           risk_score?: number | null
           total_sessions?: number | null
           trainer_id: string
           updated_at?: string | null
+          used_fallback?: boolean | null
+          warning_signals?: Json | null
         }
         Update: {
+          ai_reasoning?: string | null
+          churn_probability?: number | null
+          confidence_level?: string | null
           contact_id?: string
           current_streak?: number | null
           engagement_score?: number | null
           id?: string
           last_activity_at?: string | null
           missed_sessions?: number | null
+          positive_indicators?: Json | null
+          prompt_version?: string | null
+          recommended_actions?: Json | null
           response_rate?: number | null
+          risk_category?: string | null
+          risk_factors?: Json | null
           risk_score?: number | null
           total_sessions?: number | null
           trainer_id?: string
           updated_at?: string | null
+          used_fallback?: boolean | null
+          warning_signals?: Json | null
         }
         Relationships: [
           {
@@ -2054,6 +2227,87 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      integration_activity_log: {
+        Row: {
+          activity_data: Json | null
+          activity_message: string
+          activity_type: string
+          created_at: string
+          id: string
+          integration_name: string
+          trainer_id: string
+        }
+        Insert: {
+          activity_data?: Json | null
+          activity_message: string
+          activity_type: string
+          created_at?: string
+          id?: string
+          integration_name: string
+          trainer_id: string
+        }
+        Update: {
+          activity_data?: Json | null
+          activity_message?: string
+          activity_type?: string
+          created_at?: string
+          id?: string
+          integration_name?: string
+          trainer_id?: string
+        }
+        Relationships: []
+      }
+      integration_configs: {
+        Row: {
+          access_token: string
+          config_data: Json | null
+          created_at: string
+          expires_at: string | null
+          external_account_id: string
+          external_location_id: string | null
+          id: string
+          integration_name: string
+          last_sync_at: string | null
+          refresh_token: string | null
+          sync_error_message: string | null
+          sync_status: string | null
+          trainer_id: string
+          updated_at: string
+        }
+        Insert: {
+          access_token: string
+          config_data?: Json | null
+          created_at?: string
+          expires_at?: string | null
+          external_account_id: string
+          external_location_id?: string | null
+          id?: string
+          integration_name: string
+          last_sync_at?: string | null
+          refresh_token?: string | null
+          sync_error_message?: string | null
+          sync_status?: string | null
+          trainer_id: string
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string
+          config_data?: Json | null
+          created_at?: string
+          expires_at?: string | null
+          external_account_id?: string
+          external_location_id?: string | null
+          id?: string
+          integration_name?: string
+          last_sync_at?: string | null
+          refresh_token?: string | null
+          sync_error_message?: string | null
+          sync_status?: string | null
+          trainer_id?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       integration_events: {
         Row: {
@@ -2158,6 +2412,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      integration_status: {
+        Row: {
+          api_calls_used: number | null
+          connection_status: string | null
+          created_at: string
+          error_count: number | null
+          id: string
+          integration_name: string
+          last_error: string | null
+          last_error_at: string | null
+          last_sync_at: string | null
+          next_sync_at: string | null
+          records_synced: number | null
+          records_updated: number | null
+          sync_duration_ms: number | null
+          trainer_id: string
+          updated_at: string
+        }
+        Insert: {
+          api_calls_used?: number | null
+          connection_status?: string | null
+          created_at?: string
+          error_count?: number | null
+          id?: string
+          integration_name: string
+          last_error?: string | null
+          last_error_at?: string | null
+          last_sync_at?: string | null
+          next_sync_at?: string | null
+          records_synced?: number | null
+          records_updated?: number | null
+          sync_duration_ms?: number | null
+          trainer_id: string
+          updated_at?: string
+        }
+        Update: {
+          api_calls_used?: number | null
+          connection_status?: string | null
+          created_at?: string
+          error_count?: number | null
+          id?: string
+          integration_name?: string
+          last_error?: string | null
+          last_error_at?: string | null
+          last_sync_at?: string | null
+          next_sync_at?: string | null
+          records_synced?: number | null
+          records_updated?: number | null
+          sync_duration_ms?: number | null
+          trainer_id?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       integrations: {
         Row: {
