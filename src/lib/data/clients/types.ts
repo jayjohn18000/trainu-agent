@@ -35,6 +35,12 @@ export type ClientDetail = Client & {
     type: string;
     status: "upcoming" | "done" | "missed";
   }[];
+  // Additional fields for programs tab
+  programDuration?: number;
+  programSessionsCompleted?: number;
+  programTotalSessions?: number;
+  // GHL integration field
+  ghlContactId?: string;
 };
 
 export interface ClientListParams {

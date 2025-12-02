@@ -67,11 +67,10 @@ const QueueList = memo(
           <QueueCard
             key={item.id}
             item={item}
-            selected={index === selectedIndex}
-            onSelect={() => onSelectItem(index)}
-            onEdit={() => onEdit(item)}
-            onApprove={() => onApprove(item)}
-            onSendNow={() => onSendNow(item)}
+            isSelected={index === selectedIndex}
+            onEdit={() => handleEditItem(item)}
+            onApprove={async () => handleApproveItem(item)}
+            onSendNow={async () => handleSendNow(item)}
           />
         ))}
       </div>
@@ -100,7 +99,7 @@ export default function Today() {
   const [insights, setInsights] = useState<Awaited<ReturnType<typeof getRecentInsightsWithDrafts>>>([]);
   const { toast } = useToast();
   const { awardXP, progress } = useTrainerGamification();
-  const { updateStats, newlyUnlockedAchievements } = useAchievementTracker();
+  const { updateStats, newlyUnlockedAchievements, userStats } = useAchievementTracker();
   const isMobile = useIsMobile();
   
   // Real data hooks - Updated with ROI metrics
@@ -168,28 +167,24 @@ export default function Today() {
   const handleStartTour = () => {
     setTourActive(true);
     setCurrentTourType('main');
-    analytics.track("Started Main Tour");
   };
 
   const handleStartAiTour = () => {
     setAiTourActive(true);
-    setCurrentTourType('ai');
+    setCurrentTourType('ai-agent');
     setShowAiTourPrompt(false);
-    analytics.track("Started AI Tour");
   };
 
   const handleCompleteTour = async () => {
     setTourActive(false);
     setAiTourActive(false);
-    await markTourComplete();
-    analytics.track("Completed Tour");
+    await markTourComplete('main');
   };
 
   const handleSkipTour = async () => {
     setTourActive(false);
     setAiTourActive(false);
-    await markTourComplete();
-    analytics.track("Skipped Tour");
+    await markTourComplete('main');
   };
 
   // Queue management handlers
@@ -214,7 +209,7 @@ export default function Today() {
     try {
       await approveMessage(item.id);
       setQueue(queue.filter(i => i.id !== item.id));
-      updateStats({ messagesApproved: 1 });
+      updateStats({ messagesSentTotal: (userStats.messagesSentTotal || 0) + 1 });
       toast({
         title: "Message Approved",
         description: "The message has been approved and will be sent.",
@@ -233,7 +228,7 @@ export default function Today() {
     try {
       await sendNow(item.id);
       setQueue(queue.filter(i => i.id !== item.id));
-      updateStats({ messagesSent: 1 });
+      updateStats({ messagesSentTotal: (userStats.messagesSentTotal || 0) + 1 });
       toast({
         title: "Message Sent",
         description: "The message has been sent immediately.",
@@ -249,14 +244,43 @@ export default function Today() {
   };
 
   // Keyboard shortcuts
-  useKeyboardShortcuts({
-    'ctrl+q': () => navigate('/queue'),
-    'ctrl+c': () => navigate('/clients'),
-    'ctrl+s': () => setSettingsOpen(true),
-    'ctrl+m': () => setMessagesOpen(true),
-    'ctrl+k': () => setCalendarOpen(true),
-    '?': () => setShortcutsOpen(true),
-  });
+  useKeyboardShortcuts([
+    { 
+      key: 'q', 
+      ctrl: true, 
+      callback: () => navigate('/queue'), 
+      description: 'Open Queue' 
+    },
+    { 
+      key: 'c', 
+      ctrl: true, 
+      callback: () => navigate('/clients'), 
+      description: 'Open Clients' 
+    },
+    { 
+      key: 's', 
+      ctrl: true, 
+      callback: () => setSettingsOpen(true), 
+      description: 'Open Settings' 
+    },
+    { 
+      key: 'm', 
+      ctrl: true, 
+      callback: () => setMessagesOpen(true), 
+      description: 'Open Messages' 
+    },
+    { 
+      key: 'k', 
+      ctrl: true, 
+      callback: () => setCalendarOpen(true), 
+      description: 'Open Calendar' 
+    },
+    { 
+      key: '?', 
+      callback: () => setShortcutsOpen(true), 
+      description: 'Show Shortcuts' 
+    },
+  ]);
 
   const handleViewAllSessions = () => {
     navigate('/calendar');
@@ -268,7 +292,7 @@ export default function Today() {
 
   // Updated render with new V2 components
   return <>
-      {showConfetti && <Confetti />}
+      {showConfetti && <Confetti active={showConfetti} />}
       <div className="space-y-6 pb-20 md:pb-6 animate-fade-in">
         {/* Header */}
         <div className="flex items-start justify-between">
@@ -348,13 +372,13 @@ export default function Today() {
             <div className="lg:col-span-2 space-y-6">
               {/* Insights preserved */}
               {insights.length > 0 && <div className="space-y-4">
-                  {insights.map(insight => <InsightCard key={insight.id} insight={insight.insight} action={insight.draft_summary || ''} confidence={insight.confidence} onViewDraft={() => navigate('/queue')} />)}
+                  {insights.map(insight => <InsightCard key={insight.id} insight={insight} onViewDraft={(draftId) => navigate(`/queue#${draftId}`)} />)}
                 </div>}
             </div>
 
             {/* Right sidebar widgets preserved */}
             <div className="space-y-6">
-              <CalendarWidget />
+              <CalendarWidget onOpenCalendar={() => setCalendarOpen(true)} />
               <AtRiskWidget />
             </div>
           </div>}
@@ -363,7 +387,7 @@ export default function Today() {
         {isLoading ? <ActivityFeedSkeleton /> : <Card>
             <CardContent className="p-6">
               <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
-              <ActivityFeed feed={feed} />
+              <ActivityFeed items={feed} />
             </CardContent>
           </Card>}
       </div>
@@ -374,7 +398,7 @@ export default function Today() {
       setTimeout(() => handleStartTour(), 300);
     }} />
 
-      <TourOverlay active={tourActive || aiTourActive} type={currentTourType} onComplete={handleCompleteTour} onSkip={handleSkipTour} />
+      <TourOverlay active={tourActive || aiTourActive} tourType={currentTourType} onComplete={handleCompleteTour} onSkip={handleSkipTour} />
 
       {showAiTourPrompt && <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowAiTourPrompt(false)}>
           <Card className="max-w-md w-full p-6" onClick={e => e.stopPropagation()}>
@@ -400,7 +424,10 @@ export default function Today() {
           </Card>
         </div>}
 
-      {editingItem && <MessageEditor open={!!editingItem} onOpenChange={open => !open && setEditingItem(null)} queueItem={editingItem} onSave={handleSaveEdit} />}
+      {editingItem && <MessageEditor open={!!editingItem} onOpenChange={open => !open && setEditingItem(null)} queueItem={editingItem} onSave={(message, tone) => {
+        const updated = { ...editingItem, preview: message };
+        handleSaveEdit(updated);
+      }} />}
 
       <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
       <CalendarModal open={calendarOpen} onOpenChange={setCalendarOpen} />
@@ -409,6 +436,6 @@ export default function Today() {
       <KeyboardShortcutsOverlay open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
 
       <TrainerXPNotification />
-      {newlyUnlockedAchievements?.map(achievement => <AchievementUnlockNotification key={achievement.id} achievement={achievement} />)}
+      {newlyUnlockedAchievements?.map(achievement => <AchievementUnlockNotification key={achievement.id} achievement={achievement as any} show={true} />)}
     </>;
 }
