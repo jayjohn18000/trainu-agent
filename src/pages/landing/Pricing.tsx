@@ -61,7 +61,7 @@ const tiers = [
     price: 497,
     checkoutUrl: "https://buy.stripe.com/00waEZ3DV0hL6mX2jEfrW02",
     tier: "growth",
-    description: "Full GHL power + white-glove support",
+    description: "Full GHL power + white-glove support + AD Management",
     popular: false,
     features: [
       { name: "Everything in Professional, plus:", included: true },
