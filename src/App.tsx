@@ -104,8 +104,9 @@ export default function App() {
             <Route path="/resources" element={<Resources />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
-            <Route path="/challenge" element={<Challenge />} />
-            <Route path="/challenge/rate" element={<ChallengeRating />} />
+            {/* Challenge pages hidden */}
+            {/* <Route path="/challenge" element={<Challenge />} /> */}
+            {/* <Route path="/challenge/rate" element={<ChallengeRating />} /> */}
             
             {/* Public app routes */}
             <Route path="/login" element={<Login />} />

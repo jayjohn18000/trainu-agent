@@ -27,7 +27,6 @@ export function LandingFooter() {
               <li><Link to="/product" className="hover:text-primary transition-colors">Features</Link></li>
               <li><Link to="/pricing" className="hover:text-primary transition-colors">Pricing</Link></li>
               <li><Link to="/how-it-works" className="hover:text-primary transition-colors">How It Works</Link></li>
-              <li><Link to="/challenge" className="hover:text-primary transition-colors">Rate Your Trainer</Link></li>
             </ul>
           </div>
 
