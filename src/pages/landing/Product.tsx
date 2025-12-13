@@ -119,9 +119,11 @@ export default function Product() {
                   <Check className="h-7 w-7 text-success" />
                 </div>
                 <h3 className="text-xl font-bold mb-3">Catch up on admin at night</h3>
-                <p className="text-foreground/80 leading-relaxed">
-                  5 minutes in the morning. That's your total daily investment.
-                </p>
+                <p className="text-foreground/80 leading-relaxed">5 minutes in the morning. That's your total daily investment.
+
+
+
+              </p>
               </Card>
             </ScrollReveal>
           </div>
