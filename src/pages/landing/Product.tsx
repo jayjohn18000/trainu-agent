@@ -94,9 +94,9 @@ export default function Product() {
                   <Check className="h-7 w-7 text-success" />
                 </div>
                 <h3 className="text-xl font-bold mb-3">Chase down no-shows</h3>
-                <p className="text-foreground/80 leading-relaxed">
-                  Re-engagement messages go out before you'd even notice they stopped.
-                </p>
+                <p className="text-foreground/80 leading-relaxed">Re-engagement messages go out before you'd even notice they stopped.
+
+              </p>
               </Card>
             </ScrollReveal>
 
