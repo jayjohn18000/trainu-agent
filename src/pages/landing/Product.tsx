@@ -69,8 +69,9 @@ export default function Product() {
                   <Check className="h-7 w-7 text-success" />
                 </div>
                 <h3 className="text-xl font-bold mb-3">Remember follow-ups</h3>
-                <p className="text-foreground/80 leading-relaxed">No mental lists. No sticky notes. Check-ins are drafted automatically
-.</p>
+                <p className="text-foreground/80 leading-relaxed">No mental lists. No sticky notes. Check-ins are drafted automatically .
+
+              </p>
               </Card>
             </ScrollReveal>
 
