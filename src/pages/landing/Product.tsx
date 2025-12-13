@@ -57,9 +57,7 @@ export default function Product() {
                   <Check className="h-7 w-7 text-success" />
                 </div>
                 <h3 className="text-xl font-bold mb-3">Notice who needs attention</h3>
-                <p className="text-foreground/80 leading-relaxed">
-                  The system notices for you. At-risk clients are flagged before they ghost.
-                </p>
+                <p className="text-foreground/80 leading-relaxed">At-risk clients are flagged before they ghost.</p>
               </Card>
             </ScrollReveal>
 
@@ -68,10 +66,9 @@ export default function Product() {
                 <div className="h-14 w-14 rounded-2xl bg-success/10 flex items-center justify-center mb-6">
                   <Check className="h-7 w-7 text-success" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">Remember follow-ups</h3>
-                <p className="text-foreground/80 leading-relaxed">No mental lists. No sticky notes. Check-ins are drafted automatically .
-
-              </p>
+                <h3 className="text-xl font-bold mb-3">Remember manual
+follow-ups</h3>
+                <p className="text-foreground/80 leading-relaxed">No mental lists. No sticky notes. Check-ins are automatic.</p>
               </Card>
             </ScrollReveal>
 
@@ -80,7 +77,7 @@ export default function Product() {
                 <div className="h-14 w-14 rounded-2xl bg-success/10 flex items-center justify-center mb-6">
                   <Check className="h-7 w-7 text-success" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">Think about what to say</h3>
+                <h3 className="text-xl font-bold mb-3">Repeat the same sentence 100+ times</h3>
                 <p className="text-foreground/80 leading-relaxed">Messages are written for you. Review, edit if needed, send.
 
 
@@ -94,10 +91,9 @@ export default function Product() {
                 <div className="h-14 w-14 rounded-2xl bg-success/10 flex items-center justify-center mb-6">
                   <Check className="h-7 w-7 text-success" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">Chase down no-shows</h3>
-                <p className="text-foreground/80 leading-relaxed">Re-engagement messages go out before you'd even notice they stopped.
-
-              </p>
+                <h3 className="text-xl font-bold mb-3">Chase down no-shows
+.</h3>
+                <p className="text-foreground/80 leading-relaxed">Re-engagement messages go out before churn starts</p>
               </Card>
             </ScrollReveal>
 
@@ -106,10 +102,8 @@ export default function Product() {
                 <div className="h-14 w-14 rounded-2xl bg-success/10 flex items-center justify-center mb-6">
                   <Check className="h-7 w-7 text-success" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">Manually track engagement</h3>
-                <p className="text-foreground/80 leading-relaxed">
-                  Patterns are tracked automatically. You see the summary, not the spreadsheets.
-                </p>
+                <h3 className="text-xl font-bold mb-3">Track engagement</h3>
+                <p className="text-foreground/80 leading-relaxed">Patterns are tracked automatically. No more spreadsheets</p>
               </Card>
             </ScrollReveal>
 
