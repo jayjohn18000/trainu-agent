@@ -9,10 +9,8 @@ import { AnimatedCounter } from "@/components/landing/AnimatedCounter";
 import trainerClientGym from "@/assets/trainer-client-gym.jpg";
 import trainerOverhead from "@/assets/trainer-client-overhead.jpg";
 import groupTraining from "@/assets/group-training-class.jpg";
-
 export default function Product() {
-  return (
-    <LandingLayout>
+  return <LandingLayout>
       {/* Hero */}
       <section className="relative overflow-hidden py-24">
         <div className="absolute inset-0 bg-gradient-to-b from-card/30 to-transparent" />
@@ -25,7 +23,9 @@ export default function Product() {
               </div>
               <h1 className="text-6xl md:text-7xl font-black mb-8 leading-[1.1]">
                 Set It Once.{" "}
-                <span className="bg-gradient-to-r from-primary via-primary-hover to-primary bg-clip-text text-transparent animate-gradient-shift" style={{ backgroundSize: '200% auto' }}>
+                <span className="bg-gradient-to-r from-primary via-primary-hover to-primary bg-clip-text text-transparent animate-gradient-shift" style={{
+                backgroundSize: '200% auto'
+              }}>
                   Stop Thinking About It.
                 </span>
               </h1>
@@ -81,9 +81,11 @@ export default function Product() {
                   <Check className="h-7 w-7 text-success" />
                 </div>
                 <h3 className="text-xl font-bold mb-3">Think about what to say</h3>
-                <p className="text-foreground/80 leading-relaxed">
-                  Messages are written for you. Review, edit if needed, send.
-                </p>
+                <p className="text-foreground/80 leading-relaxed">Messages are written for you. Review, edit if needed, send.
+
+
+
+              </p>
               </Card>
             </ScrollReveal>
 
@@ -206,11 +208,7 @@ export default function Product() {
           <div className="grid md:grid-cols-2 gap-12 max-w-5xl mx-auto">
             <ScrollReveal delay={100}>
               <div className="rounded-3xl overflow-hidden border border-primary/30 shadow-xl relative group">
-                <img 
-                  src={trainerClientGym} 
-                  alt="Client experience" 
-                  className="w-full h-80 object-cover transition-transform duration-500 group-hover:scale-105"
-                />
+                <img src={trainerClientGym} alt="Client experience" className="w-full h-80 object-cover transition-transform duration-500 group-hover:scale-105" />
                 <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-6">
                   <div className="backdrop-blur-xl bg-card/80 p-6 rounded-2xl border border-primary/30">
@@ -225,11 +223,7 @@ export default function Product() {
 
             <ScrollReveal delay={200}>
               <div className="rounded-3xl overflow-hidden border border-warning/30 shadow-xl relative group">
-                <img 
-                  src={groupTraining} 
-                  alt="Group engagement" 
-                  className="w-full h-80 object-cover transition-transform duration-500 group-hover:scale-105"
-                />
+                <img src={groupTraining} alt="Group engagement" className="w-full h-80 object-cover transition-transform duration-500 group-hover:scale-105" />
                 <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-6">
                   <div className="backdrop-blur-xl bg-card/80 p-6 rounded-2xl border border-warning/30">
@@ -322,6 +316,5 @@ export default function Product() {
           </ScrollReveal>
         </div>
       </section>
-    </LandingLayout>
-  );
+    </LandingLayout>;
 }
