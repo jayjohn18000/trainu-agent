@@ -52,8 +52,8 @@ export function LandingNav() {
               </Button>
             </Link>
             <Link to="/pricing">
-              <Button size="sm" className="shadow-glow">
-                Reclaim Time
+              <Button size="sm" className="shadow-glow bg-success hover:bg-success/90 text-success-foreground">
+                Start Earning More
               </Button>
             </Link>
           </div>
@@ -76,8 +76,8 @@ export function LandingNav() {
                 </Button>
               </Link>
               <Link to="/pricing" className="block">
-                <Button size="sm" className="w-full shadow-glow">
-                  Get Your Time Back
+                <Button size="sm" className="w-full shadow-glow bg-success hover:bg-success/90 text-success-foreground">
+                  Start Earning More
                 </Button>
               </Link>
             </div>
