@@ -8,21 +8,21 @@ const testimonials = [
     role: "Personal Trainer, Chicago",
     image: "/placeholder.svg",
     rating: 5,
-    text: "TrainU added $1,400/mo to my income through the affiliate store alone. Plus my retention rate went from 65% to 92%—that's another $2k I'm not losing.",
+    text: "TrainU saved me 15 hours a week. The AI knows exactly when to reach out to clients, and they actually respond. My retention rate went from 65% to 92% in 3 months.",
   },
   {
     name: "Marcus Rodriguez",
     role: "Studio Owner, 4 Trainers",
     image: "/placeholder.svg",
     rating: 5,
-    text: "My starter program sold 47 copies on autopilot last month. TrainU's no-show recovery pays for itself—revenue up 34% this quarter.",
+    text: "We were drowning in no-shows and cancellations. TrainU's predictive alerts caught at-risk clients before they ghosted. Revenue up 34% this quarter.",
   },
   {
     name: "Jessica Lee",
-    role: "Online Coach",
+    role: "Fitness Coach, GHL User",
     image: "/placeholder.svg",
     rating: 5,
-    text: "I set up my affiliate store in 10 minutes. Now I earn while I sleep. The automated follow-ups keep clients engaged so they keep buying.",
+    text: "The GHL integration is seamless. Setup took 10 minutes. Now my clients are engaged, my schedule is full, and I'm not chasing people down anymore.",
   },
 ];
 

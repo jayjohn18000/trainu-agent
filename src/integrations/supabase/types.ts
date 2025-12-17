@@ -877,13 +877,6 @@ export type Database = {
             referencedRelation: "challenge_ratings"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "challenge_fraud_checks_rating_id_fkey"
-            columns: ["rating_id"]
-            isOneToOne: false
-            referencedRelation: "challenge_ratings_public"
-            referencedColumns: ["id"]
-          },
         ]
       }
       challenge_rate_limits: {
@@ -4231,28 +4224,6 @@ export type Database = {
         }
         Relationships: []
       }
-      challenge_ratings_public: {
-        Row: {
-          created_at: string | null
-          id: string | null
-          rater_display_name: string | null
-          rating_communication: number | null
-          rating_expertise: number | null
-          rating_motivation: number | null
-          rating_overall: number | null
-          rating_results: number | null
-          rating_value: number | null
-          review_text: string | null
-          trainer_city: string | null
-          trainer_gym: string | null
-          trainer_id: string | null
-          trainer_name: string | null
-          trainer_slug: string | null
-          trainer_state: string | null
-          updated_at: string | null
-        }
-        Relationships: []
-      }
       ghl_sync_health: {
         Row: {
           appointments_synced: number | null
@@ -4324,7 +4295,6 @@ export type Database = {
         Returns: string
       }
       refresh_challenge_leaderboard: { Args: never; Returns: undefined }
-      refresh_challenge_ratings_public: { Args: never; Returns: undefined }
       user_in_organization: {
         Args: { _organization_id: string; _user_id: string }
         Returns: boolean

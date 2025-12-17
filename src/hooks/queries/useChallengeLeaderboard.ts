@@ -40,14 +40,14 @@ export function useChallengeStats() {
   return useQuery({
     queryKey: ["challenge-stats"],
     queryFn: async () => {
-      // Get total ratings count from the public-safe view (no PII exposed)
+      // Get total ratings count
       const { count: totalRatings } = await supabase
-        .from("challenge_ratings_public")
+        .from("challenge_ratings")
         .select("*", { count: "exact", head: true });
 
-      // Get unique trainers count from the public-safe view
+      // Get unique trainers count
       const { data: uniqueTrainers } = await supabase
-        .from("challenge_ratings_public")
+        .from("challenge_ratings")
         .select("trainer_name");
 
       const uniqueTrainersCount = new Set(

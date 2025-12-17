@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { Zap } from "lucide-react";
 
 export function LandingFooter() {
   return (
@@ -11,8 +12,12 @@ export function LandingFooter() {
               TrainU
             </div>
             <p className="text-sm text-muted-foreground mb-4">
-              One system. 8 hours back every week. Stop juggling admin.
+              Stop losing clients. Start growing faster with AI-powered retention automation.
             </p>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Zap className="h-4 w-4 text-primary" />
+              <span>Built for GHL Users</span>
+            </div>
           </div>
 
           {/* Product */}
@@ -21,6 +26,8 @@ export function LandingFooter() {
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li><Link to="/product" className="hover:text-primary transition-colors">Features</Link></li>
               <li><Link to="/pricing" className="hover:text-primary transition-colors">Pricing</Link></li>
+              <li><Link to="/how-it-works" className="hover:text-primary transition-colors">How It Works</Link></li>
+              <li><Link to="/challenge" className="hover:text-primary transition-colors">Rate Your Trainer</Link></li>
             </ul>
           </div>
 
@@ -29,35 +36,33 @@ export function LandingFooter() {
             <h3 className="font-semibold text-foreground mb-4">Company</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li><Link to="/about" className="hover:text-primary transition-colors">About</Link></li>
+              <li><Link to="/resources" className="hover:text-primary transition-colors">Resources</Link></li>
               <li><Link to="/contact" className="hover:text-primary transition-colors">Contact</Link></li>
+              <li><a href="https://docs.trainu.com" className="hover:text-primary transition-colors">Documentation</a></li>
             </ul>
           </div>
 
-          {/* Legal & Technical */}
+          {/* Legal */}
           <div>
             <h3 className="font-semibold text-foreground mb-4">Legal</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li><a href="/privacy" className="hover:text-primary transition-colors">Privacy Policy</a></li>
               <li><a href="/terms" className="hover:text-primary transition-colors">Terms of Service</a></li>
+              <li><a href="/compliance" className="hover:text-primary transition-colors">TCPA Compliance</a></li>
+              <li><a href="/security" className="hover:text-primary transition-colors">Security</a></li>
             </ul>
           </div>
         </div>
 
-        {/* Technical footnote */}
-        <div className="border-t border-border mt-8 pt-8">
-          <p className="text-xs text-muted-foreground text-center mb-4">
-            Works with GoHighLevel · TCPA Compliant · SOC 2 Certified · All data encrypted
+        <div className="border-t border-border mt-8 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-sm text-muted-foreground">
+            © {new Date().getFullYear()} TrainU. All rights reserved.
           </p>
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} TrainU. All rights reserved.
-            </p>
-            <div className="flex gap-4 text-sm text-muted-foreground">
-              <a href="https://twitter.com/official_trainu" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">X</a>
-              <a href="https://instagram.com/official.trainu" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Instagram</a>
-              <a href="https://tiktok.com/@trainu8" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">TikTok</a>
-              <a href="https://facebook.com/TrainU" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Facebook</a>
-            </div>
+          <div className="flex gap-4 text-sm text-muted-foreground">
+            <a href="https://twitter.com/official_trainu" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">X (Twitter)</a>
+            <a href="https://instagram.com/official.trainu" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Instagram</a>
+            <a href="https://tiktok.com/@trainu8" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">TikTok</a>
+            <a href="https://facebook.com/TrainU" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Facebook</a>
           </div>
         </div>
       </div>
