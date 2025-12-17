@@ -44,8 +44,8 @@ export default function Home() {
 
                 <div className="flex flex-col sm:flex-row gap-4 mb-8">
                   <Link to="/pricing">
-                    <Button size="lg" className="shadow-glow hover:shadow-glow-intense w-full sm:w-auto text-lg px-8 py-6 transition-all duration-300 hover:scale-105">
-                      Get Your Time Back
+                    <Button size="lg" className="shadow-glow hover:shadow-glow-intense w-full sm:w-auto text-lg px-8 py-6 transition-all duration-300 hover:scale-105 bg-success hover:bg-success/90 text-success-foreground">
+                      Start Earning More
                     </Button>
                   </Link>
                   <Link to="/pricing">
@@ -457,7 +457,7 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <ScrollReveal>
             <h2 className="text-4xl font-bold text-center mb-4">
-              Pick a Plan. Get Your Week Back.
+              Pick a Plan. Start Earning More.
             </h2>
             <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
               All plans include 14-day free trial. Cancel anytime.
@@ -472,7 +472,7 @@ export default function Home() {
                   price: 79,
                   description: "All your messages in one place. Never miss a follow-up.",
                   highlights: ["One inbox for everything", "Follow-ups handled", "At-risk alerts"],
-                  roi: "4 hours/week saved",
+                  roi: "Avg +$500/mo from saved clients",
                 }}
               />
             </ScrollReveal>
@@ -481,9 +481,9 @@ export default function Home() {
                 tier={{
                   name: "Professional",
                   price: 99,
-                  description: "Everything runs automatically. You just approve.",
-                  highlights: ["Everything in Starter", "Full automation", "Priority support"],
-                  roi: "8 hours/week saved",
+                  description: "Full automation + affiliate store. You just approve.",
+                  highlights: ["Everything in Starter", "Affiliate storefront", "Full automation"],
+                  roi: "Avg +$1,200/mo revenue",
                   popular: true,
                 }}
               />
@@ -495,7 +495,7 @@ export default function Home() {
                   price: 497,
                   description: "We handle everything, including your marketing.",
                   highlights: ["Everything in Pro", "Ad management", "White-glove support"],
-                  roi: "10+ hours/week saved",
+                  roi: "Avg +$3,000/mo revenue",
                 }}
               />
             </ScrollReveal>

@@ -41,8 +41,8 @@ export function PricingPreviewCard({ tier }: PricingPreviewCardProps) {
         ))}
       </ul>
 
-      <div className="text-center mb-4">
-        <p className="text-xs font-semibold text-primary">{tier.roi}</p>
+      <div className="text-center mb-4 p-2 rounded-lg bg-success/10 border border-success/20">
+        <p className="text-xs font-semibold text-success">{tier.roi}</p>
       </div>
 
       <Link to="/pricing" className="block">

@@ -31,6 +31,7 @@ const About = lazyWithRetry(() => import("@/pages/landing/About"));
 const Contact = lazyWithRetry(() => import("@/pages/landing/Contact"));
 const Challenge = lazyWithRetry(() => import("@/pages/landing/Challenge"));
 const ChallengeRating = lazyWithRetry(() => import("@/pages/ChallengeRating"));
+const Revenue = lazyWithRetry(() => import("@/pages/landing/Revenue"));
 const Onboarding = lazyWithRetry(() => import("@/pages/Onboarding"));
 
 const Directory = lazyWithRetry(() => import("@/pages/Directory"));
@@ -104,6 +105,7 @@ export default function App() {
             <Route path="/resources" element={<Resources />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/revenue" element={<Revenue />} />
             {/* Challenge pages hidden */}
             {/* <Route path="/challenge" element={<Challenge />} /> */}
             {/* <Route path="/challenge/rate" element={<ChallengeRating />} /> */}
