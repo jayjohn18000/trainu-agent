@@ -2,57 +2,38 @@ import { LandingLayout } from "@/components/landing/LandingLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Zap,
-  PhoneCall,
-  Upload,
-  Rocket,
-  ThumbsUp,
-  Play,
-  MessageSquare,
-  FileText,
-  Clock3
-} from "lucide-react";
+import { Zap, PhoneCall, Upload, Rocket, ThumbsUp, Play, MessageSquare, FileText, Clock3 } from "lucide-react";
 import { ScrollReveal } from "@/components/landing/ScrollReveal";
 import gradientBg from "@/assets/gradient-mesh-bg.svg";
 import groupTrainingImage from "@/assets/group-training-class.jpg";
-
-const steps = [
-  {
-    title: "Ad or lead opts in",
-    description: "Prospects claim the offer from your ad or funnel. We capture intent and route them instantly.",
-    duration: "Instant",
-    icon: Zap
-  },
-  {
-    title: "15-min setup call",
-    description: "We book a quick alignment call to lock messaging, offer positioning, and the follow-up plan.",
-    duration: "15 min",
-    icon: PhoneCall
-  },
-  {
-    title: "Upload your assets",
-    description: "Drop brand voice notes, testimonials, and offer details. We use them to personalize every touchpoint.",
-    duration: "Same day",
-    icon: Upload
-  },
-  {
-    title: "24-hour draft build",
-    description: "We draft the full outreach sequence (SMS, email, DMs) plus landing copy and automations within 24 hours.",
-    duration: "24 hours",
-    icon: Rocket
-  },
-  {
-    title: "Approve and launch",
-    description: "Review the draft, request tweaks, and go live. We handle sending, routing, and attribution tracking.",
-    duration: "Go live",
-    icon: ThumbsUp
-  }
-];
-
+const steps = [{
+  title: "Ad or lead opts in",
+  description: "Prospects claim the offer from your ad or funnel. We capture intent and route them instantly.",
+  duration: "Instant",
+  icon: Zap
+}, {
+  title: "15-min setup call",
+  description: "We book a quick alignment call to lock messaging, offer positioning, and the follow-up plan.",
+  duration: "15 min",
+  icon: PhoneCall
+}, {
+  title: "Upload your assets",
+  description: "Drop brand voice notes, testimonials, and offer details. We use them to personalize every touchpoint.",
+  duration: "Same day",
+  icon: Upload
+}, {
+  title: "24-hour draft build",
+  description: "We draft the full outreach sequence (SMS, email, DMs) plus landing copy and automations within 24 hours.",
+  duration: "24 hours",
+  icon: Rocket
+}, {
+  title: "Approve and launch",
+  description: "Review the draft, request tweaks, and go live. We handle sending, routing, and attribution tracking.",
+  duration: "Go live",
+  icon: ThumbsUp
+}];
 export default function HowItWorks() {
-  return (
-    <LandingLayout>
+  return <LandingLayout>
       {/* Hero */}
       <section className="relative overflow-hidden py-20">
         <div className="absolute inset-0 opacity-30">
@@ -69,11 +50,7 @@ Active Use in 10 Minutes</span>
             Automated onboarding eliminates setup time. Our system handles account creation, configuration, and provisioning so you can start retaining clients immediately.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a
-              href="https://my.trainu.us/claim"
-              target="_blank"
-              rel="noreferrer"
-            >
+            <a href="https://my.trainu.us/claim" target="_blank" rel="noreferrer">
               <Button size="lg" className="shadow-glow">
                 Book Setup Call
               </Button>
@@ -102,8 +79,7 @@ Active Use in 10 Minutes</span>
           </ScrollReveal>
 
           <div className="grid lg:grid-cols-5 gap-6">
-            {steps.map((step, index) => (
-              <ScrollReveal key={step.title} delay={index * 80}>
+            {steps.map((step, index) => <ScrollReveal key={step.title} delay={index * 80}>
                 <Card className="p-5 h-full flex flex-col gap-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
@@ -117,8 +93,7 @@ Active Use in 10 Minutes</span>
                   </div>
                   <Badge variant="outline" className="w-fit text-xs">{step.duration}</Badge>
                 </Card>
-              </ScrollReveal>
-            ))}
+              </ScrollReveal>)}
           </div>
         </div>
       </section>
@@ -162,76 +137,7 @@ Active Use in 10 Minutes</span>
       </section>
 
       {/* Visual Reference Flow */}
-      <section className="py-20">
-        <div className="container mx-auto px-4">
-          <ScrollReveal>
-            <h2 className="text-3xl font-bold text-center mb-4">
-              The Complete Customer Journey
-            </h2>
-            <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
-              From landing page to active use - every step is automated
-            </p>
-          </ScrollReveal>
-
-          <div className="max-w-3xl mx-auto">
-            <ScrollReveal>
-              <Card className="p-8">
-                <div className="space-y-6">
-                  <div className="flex items-start gap-4">
-                    <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold flex-shrink-0">1</div>
-                    <div>
-                      <h3 className="font-bold mb-1">Landing Page (trainu.us)</h3>
-                      <p className="text-sm text-muted-foreground">User browses pricing, features, and clicks "Book Setup Call" to schedule onboarding</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-4">
-                    <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold flex-shrink-0">2</div>
-                    <div>
-                      <h3 className="font-bold mb-1">GHL Order Form / Checkout</h3>
-                      <p className="text-sm text-muted-foreground">Redirected to secure GHL funnel. Stripe processes payment. GHL receives order confirmation.</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-4">
-                    <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold flex-shrink-0">3</div>
-                    <div>
-                      <h3 className="font-bold mb-1">Automated Provisioning (GHL SaaS Mode)</h3>
-                      <p className="text-sm text-muted-foreground">New sub-account created automatically. Snapshots install best-practice automations. Tags, pipelines, calendars configured. Billing automation activated.</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-4">
-                    <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold flex-shrink-0">4</div>
-                    <div>
-                      <h3 className="font-bold mb-1">Welcome Messages</h3>
-                      <p className="text-sm text-muted-foreground">Email: Login link + credentials. SMS: Quick start guide. Both include app.trainu.us login URL.</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-4">
-                    <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold flex-shrink-0">5</div>
-                    <div>
-                      <h3 className="font-bold mb-1">First Login at app.trainu.us</h3>
-                      <p className="text-sm text-muted-foreground">Dashboard walkthrough appears. Setup checklist highlights key features. Optional GHL connection prompt.</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-4">
-                    <div className="w-8 h-8 rounded-full bg-success text-success-foreground flex items-center justify-center font-bold flex-shrink-0">✓</div>
-                    <div>
-                      <h3 className="font-bold mb-1">Ready to Use</h3>
-                      <p className="text-sm text-muted-foreground">All SaaS features active. CRM automations running. AI learning client patterns. Support accessible via menu.</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-4">
-                    <div className="w-8 h-8 rounded-full bg-muted text-muted-foreground flex items-center justify-center font-bold flex-shrink-0">∞</div>
-                    <div>
-                      <h3 className="font-bold mb-1">Ongoing Operations</h3>
-                      <p className="text-sm text-muted-foreground">Billing automation handles renewals. Failed payment recovery (native to SaaS Mode). Account lockouts if needed. Custom menu links always accessible.</p>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-            </ScrollReveal>
-          </div>
-        </div>
-      </section>
+      
 
       {/* Demo CTA */}
       <section className="py-20 relative overflow-hidden">
@@ -250,11 +156,7 @@ Active Use in 10 Minutes</span>
                 <Play className="h-5 w-5 mr-2" />
                 Watch Demo Video
               </Button>
-              <a
-                href="https://my.trainu.us/claim"
-                target="_blank"
-                rel="noreferrer"
-              >
+              <a href="https://my.trainu.us/claim" target="_blank" rel="noreferrer">
                 <Button size="lg" className="shadow-glow">
                   Book Setup Call
                 </Button>
@@ -264,6 +166,5 @@ Active Use in 10 Minutes</span>
           </ScrollReveal>
         </div>
       </section>
-    </LandingLayout>
-  );
+    </LandingLayout>;
 }
