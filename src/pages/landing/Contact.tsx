@@ -130,7 +130,7 @@ export default function Contact() {
               {/* Form */}
               <ScrollReveal delay={100}>
               <div>
-                <h2 className="text-2xl font-bold mb-6">Send Us a Message</h2>
+                <h2 className="text-2xl font-bold mb-6">Book Your 15-Minute Setup Call</h2>
                 <Card className="p-6 hover:shadow-glow transition-all">
                 <form className="space-y-4">
                   <div>
@@ -144,25 +144,25 @@ export default function Contact() {
                   </div>
 
                   <div>
-                    <Label htmlFor="business">Business Type</Label>
-                    <select 
-                      id="business" 
-                      className="w-full mt-2 h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    >
-                      <option value="">Select one...</option>
-                      <option value="solo">Solo Trainer (1-15 clients)</option>
-                      <option value="growing">Growing Business (16-50 clients)</option>
-                      <option value="studio">Studio/Multi-Trainer (50+ clients)</option>
-                      <option value="ghl">GoHighLevel Agency</option>
-                      <option value="other">Other</option>
-                    </select>
+                    <Label htmlFor="phone">Phone Number</Label>
+                    <Input id="phone" type="tel" placeholder="(555) 123-4567" className="mt-2" />
                   </div>
 
                   <div>
-                    <Label htmlFor="message">Message</Label>
-                    <Textarea 
-                      id="message" 
-                      placeholder="Tell us what you need help with..." 
+                    <Label htmlFor="instagram">Instagram Handle</Label>
+                    <Input id="instagram" placeholder="@yourhandle" className="mt-2" />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="niche">Niche</Label>
+                    <Input id="niche" placeholder="Online fitness, yoga studio, etc." className="mt-2" />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="programs">Top Programs You Want to Sell</Label>
+                    <Textarea
+                      id="programs"
+                      placeholder="8-week shred, nutrition coaching, hybrid memberships, etc."
                       className="mt-2 min-h-[120px]"
                     />
                   </div>
@@ -195,7 +195,7 @@ export default function Contact() {
                   </div>
 
                   <Button type="submit" className="w-full shadow-glow">
-                    Send Message
+                    Book Your 15-Minute Setup Call
                   </Button>
 
                   {/* Privacy & Terms Links */}
