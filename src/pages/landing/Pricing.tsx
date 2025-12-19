@@ -20,61 +20,52 @@ const SETUP_CALL_URL = "https://my.trainu.us/claim";
 
 const tiers = [
   {
-    name: "Starter",
-    price: 79,
-    checkoutUrl: "https://buy.stripe.com/28E4gB5M31lP4eP8I2frW00",
-    tier: "starter",
-    description: "Core CRM & Communication Hub for solo trainers",
+    name: "Hosting",
+    price: 97,
+    checkoutUrl: "/contact?plan=hosting",
+    tier: "hosting",
+    description: "Launch your TrainU site with built-in lead capture",
     popular: false,
     features: [
-      { name: "GoHighLevel CRM integration", included: true },
-      { name: "Unified inbox (SMS, email, social)", included: true },
-      { name: "Up to 2 calendars", included: true },
-      { name: "Basic automations & workflows", included: true },
-      { name: "$10/mo messaging credit (rolls over)", included: true },
-      { name: "Automated onboarding included", included: true },
-      { name: "Unlimited contacts", included: false },
-      { name: "Advanced automations", included: false },
-      { name: "SaaS dashboard access", included: false },
+      { name: "Website hosting & templates", included: true },
+      { name: "Program listings", included: true },
+      { name: "Lead capture forms", included: true },
+      { name: "CRM access", included: false },
+      { name: "Advanced tools & automations", included: false },
     ],
-    roi: "Pays for itself in 3 clients saved",
+    roi: "Get online fast with lead-ready pages",
   },
   {
-    name: "Professional",
-    price: 99,
-    checkoutUrl: "https://buy.stripe.com/9B600lcarfcF8v5gaufrW01",
-    tier: "professional",
-    description: "Unlimited scale + SaaS access for growing studios",
+    name: "CRM Access",
+    price: 297,
+    checkoutUrl: "/contact?plan=crm",
+    tier: "crm",
+    description: "Full CRM + lead capture to run client operations",
     popular: true,
     features: [
-      { name: "Everything in Starter, plus:", included: true },
-      { name: "Unlimited contacts & users", included: true },
-      { name: "$25/mo messaging credit (rolls over)", included: true },
-      { name: "Advanced automations & campaigns", included: true },
-      { name: "Full SaaS product access", included: true },
-      { name: "Priority support", included: true },
-      { name: "Full GHL features", included: false },
-      { name: "1:1 onboarding session", included: false },
+      { name: "Everything in Hosting", included: true },
+      { name: "CRM access", included: true },
+      { name: "Unified inbox & contact management", included: true },
+      { name: "Automated onboarding", included: true },
+      { name: "Advanced tools & automations", included: false },
     ],
-    roi: "Pays for itself in 2 clients saved",
+    roi: "Centralize leads and clients in one place",
   },
   {
-    name: "Growth+",
+    name: "Pro Toolkit",
     price: 497,
-    checkoutUrl: "https://buy.stripe.com/00waEZ3DV0hL6mX2jEfrW02",
-    tier: "growth",
-    description: "Full GHL power + white-glove support",
+    checkoutUrl: "/contact?plan=pro",
+    tier: "pro",
+    description: "Advanced automations and tools for scaling teams",
     popular: false,
     features: [
-      { name: "Everything in Professional, plus:", included: true },
-      { name: "Full GoHighLevel suite access", included: true },
-      { name: "$100/mo messaging credit (rolls over)", included: true },
-      { name: "1:1 demo & onboarding session", included: true },
-      { name: "Campaign & ad management support", included: true },
-      { name: "Agency & affiliate tools", included: true },
-      { name: "White-label options", included: true },
+      { name: "Everything in CRM Access", included: true },
+      { name: "Advanced tools & automations", included: true },
+      { name: "Campaign management support", included: true },
+      { name: "White-glove onboarding", included: true },
+      { name: "Priority success access", included: true },
     ],
-    roi: "ROI-positive from day 1",
+    roi: "Unlock AI workflows and advanced growth tools",
   },
 ];
 
@@ -113,19 +104,19 @@ const faqs = [
   },
   {
     question: "How does automated onboarding work?",
-    answer: "After you select your plan and complete payment through our secure GHL checkout, our system automatically creates your sub-account, installs snapshots with pre-built automations and tags, sends you a welcome email/SMS with login credentials, and provisions all SaaS features. When you log in for the first time at app.trainu.us, you'll see an interactive walkthrough and setup checklist. Most trainers are fully operational in under 10 minutes with zero manual configuration required.",
+    answer: "After you submit the claim form and we activate your account, our system automatically creates your sub-account, installs snapshots with pre-built automations and tags, sends you a welcome email/SMS with login credentials, and provisions all SaaS features. When you log in for the first time at app.trainu.us, you'll see an interactive walkthrough and setup checklist. Most trainers are fully operational in under 10 minutes with zero manual configuration required.",
   },
   {
     question: "Is the GHL integration included in all plans?",
-    answer: "Yes! All plans include bi-directional sync with GoHighLevel. Your contacts, messages, and engagement data sync automatically. Professional and Growth+ plans unlock additional GHL features like advanced workflows and (Growth+ only) full GHL suite access including funnels, pipelines, and websites.",
+    answer: "Yes! All plans include bi-directional sync with GoHighLevel. Your contacts, messages, and engagement data sync automatically. CRM Access and Pro Toolkit unlock additional GHL features like advanced workflows and full suite access including funnels, pipelines, and websites.",
   },
   {
     question: "What's included in the messaging credits?",
-    answer: "Each plan includes monthly messaging credits that roll over for up to 3 months: Starter gets $10, Professional gets $25, and Growth+ gets $100. These credits cover SMS, MMS, email, and automations. Standard SMS costs ~$0.01-0.015 per message. Unused credits roll over, so you never lose value.",
+    answer: "Each plan includes messaging credits that roll over for up to 3 months. Hosting includes starter credits, CRM Access increases the allowance for active outreach, and Pro Toolkit adds the highest pool for automation-heavy teams. Standard SMS costs ~$0.01-0.015 per message. Unused credits roll over, so you never lose value.",
   },
   {
-    question: "How does the GHL checkout work?",
-    answer: "When you click 'Get Started,' you'll be redirected to our secure GHL order form where Stripe processes your payment. GHL automatically handles billing automation, failed payment recovery, and account lockouts if needed. After payment, our system provisions your account instantly and sends you login credentials.",
+    question: "What happens after I submit the claim form?",
+    answer: "You'll receive a confirmation email while our team reviews your details. Once approved, we provision your account, share credentials, and guide you through onboarding so you can launch without waiting on a billing setup page.",
   },
 ];
 
@@ -158,8 +149,8 @@ export default function Pricing() {
               <span>No long-term contracts</span>
             </div>
             <div className="flex items-center gap-2">
-              <Check className="h-4 w-4 text-success" />
-              <span>Cancel anytime</span>
+              <Zap className="h-4 w-4 text-primary" />
+              <span>Built for trainers</span>
             </div>
           </div>
           </ScrollReveal>
@@ -214,7 +205,7 @@ export default function Pricing() {
                   >
                     Book Setup Call
                   </Button>
-                </a>
+                </Link>
 
                 <ul className="space-y-3">
                   {tier.features.map((feature, index) => (
@@ -242,61 +233,35 @@ export default function Pricing() {
           {/* Feature Comparison Table */}
           <ScrollReveal className="mt-20">
             <h2 className="text-3xl font-bold text-center mb-12">Compare Plans</h2>
-            <ComparisonTable 
+            <ComparisonTable
               tiers={[
-                { name: "Starter", popular: false },
-                { name: "Professional", popular: true },
-                { name: "Growth+", popular: false }
+                { name: "Hosting", popular: false },
+                { name: "CRM Access", popular: true },
+                { name: "Pro Toolkit", popular: false }
               ]}
               features={[
                 {
                   category: "Core Features",
                   items: [
-                    { name: "GHL CRM Integration", tiers: [true, true, true] },
-                    { name: "Unified Inbox (SMS, Email, Social)", tiers: [true, true, true] },
-                    { name: "Automated Onboarding", tiers: [true, true, true] },
-                    { name: "Document & Media Vault", tiers: [true, true, true] },
+                    { name: "Website hosting & templates", tiers: [true, true, true] },
+                    { name: "Program listings", tiers: [true, true, true] },
+                    { name: "Lead capture forms", tiers: [true, true, true] },
                   ]
                 },
                 {
-                  category: "Scale & Capacity",
+                  category: "Operations",
                   items: [
-                    { name: "Contacts", tiers: [true, true, true] },
-                    { name: "Users/Trainers", tiers: [false, true, true] },
-                    { name: "Calendars", tiers: [false, true, true] },
+                    { name: "CRM access", tiers: [false, true, true] },
+                    { name: "Unified inbox", tiers: [false, true, true] },
+                    { name: "Automated onboarding", tiers: [false, true, true] },
                   ]
                 },
                 {
-                  category: "Messaging",
+                  category: "Growth Tools",
                   items: [
-                    { name: "Monthly Credit", tiers: [true, true, true] },
-                    { name: "Credit Rollover (3 months)", tiers: [true, true, true] },
-                  ]
-                },
-                {
-                  category: "Automations",
-                  items: [
-                    { name: "Basic Workflows", tiers: [true, true, true] },
-                    { name: "Advanced Campaigns", tiers: [false, true, true] },
-                    { name: "Full GHL Automation Suite", tiers: [false, false, true] },
-                  ]
-                },
-                {
-                  category: "Platform Access",
-                  items: [
-                    { name: "SaaS Dashboard", tiers: [false, true, true] },
-                    { name: "Full GHL Features", tiers: [false, false, true] },
-                    { name: "Funnels & Websites", tiers: [false, false, true] },
-                    { name: "Pipelines & Opportunities", tiers: [false, false, true] },
-                  ]
-                },
-                {
-                  category: "Support",
-                  items: [
-                    { name: "Email Support", tiers: [true, true, true] },
-                    { name: "Priority Support", tiers: [false, true, true] },
-                    { name: "1:1 Onboarding Session", tiers: [false, false, true] },
-                    { name: "Campaign Management Support", tiers: [false, false, true] },
+                    { name: "Advanced tools & automations", tiers: [false, false, true] },
+                    { name: "Campaign management support", tiers: [false, false, true] },
+                    { name: "White-glove onboarding", tiers: [false, false, true] },
                   ]
                 },
               ]}
@@ -402,15 +367,15 @@ export default function Pricing() {
                 <div className="flex items-start gap-4">
                   <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold flex-shrink-0">2</div>
                   <div>
-                    <h3 className="font-bold mb-1">Secure GHL Checkout (Stripe Payment)</h3>
-                    <p className="text-sm text-muted-foreground">Redirected to secure checkout, Stripe processes payment</p>
+                    <h3 className="font-bold mb-1">Submit the Claim Form</h3>
+                    <p className="text-sm text-muted-foreground">Tell us about your studio and the plan you want to activate</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
                   <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold flex-shrink-0">3</div>
                   <div>
-                    <h3 className="font-bold mb-1">Automated Provisioning</h3>
-                    <p className="text-sm text-muted-foreground">Sub-account created, snapshots installed, welcome messages sent</p>
+                    <h3 className="font-bold mb-1">Account Review & Activation</h3>
+                    <p className="text-sm text-muted-foreground">We verify your details, then provision your account automatically</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4">

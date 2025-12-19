@@ -30,18 +30,18 @@ export default function Home() {
                 </div>
                 
                 <h1 className="text-6xl md:text-7xl font-black mb-8 leading-[1.1]">
-                  Stop Losing Clients.{" "}
+                  Add an Online Revenue Stream.{" "}
                   <span className="relative inline-block">
                     <span className="bg-gradient-to-r from-primary via-primary-hover to-primary bg-clip-text text-transparent animate-gradient-shift" style={{
                     backgroundSize: '200% auto'
                   }}>
-                      Start Growing.
+                      In One Call.
                     </span>
                   </span>
                 </h1>
-                
+
                 <p className="text-2xl text-foreground/80 mb-10 leading-relaxed font-light">
-                  AI-powered CRM with unified client management, automated engagement, and zero setup time.
+                  Book a 15-minute setup call. We deliver your online offer draft within 24 hours and handle the launch playbook for you.
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-4 mb-8">
@@ -60,6 +60,33 @@ export default function Home() {
                       See How It Works
                     </Button>
                   </Link>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-12">
+                  {[{
+                    title: "Book",
+                    description: "15-minute setup call",
+                    icon: Clock
+                  }, {
+                    title: "Draft",
+                    description: "24-hour offer delivery",
+                    icon: Sparkles
+                  }, {
+                    title: "Go Live",
+                    description: "Launch playbook ready",
+                    icon: Zap
+                  }].map((step, index) => (
+                    <div key={step.title} className="p-4 rounded-2xl bg-card/50 border border-primary/20 backdrop-blur-sm">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
+                          {index + 1}
+                        </div>
+                        <step.icon className="h-5 w-5 text-primary" />
+                        <p className="text-lg font-semibold">{step.title}</p>
+                      </div>
+                      <p className="text-sm text-muted-foreground">{step.description}</p>
+                    </div>
+                  ))}
                 </div>
 
                 {/* Challenge CTA */}
@@ -111,34 +138,34 @@ export default function Home() {
                 <div className="relative rounded-3xl overflow-hidden border border-primary/30 shadow-2xl shadow-primary/20 backdrop-blur-xl bg-card/80">
                   <div className="p-8 space-y-4">
                     {/* Mock Dashboard with animated counters */}
-                    <div className="flex items-center justify-between p-5 rounded-xl bg-danger/10 backdrop-blur-sm border border-danger/30 hover:scale-[1.02] transition-transform duration-300">
-                      <div>
-                        <p className="text-sm text-muted-foreground font-medium mb-1">At-Risk Clients</p>
-                        <p className="text-4xl font-bold text-danger">
-                          <AnimatedCounter end={3} duration={1500} />
-                        </p>
-                      </div>
-                      <Target className="h-12 w-12 text-danger opacity-80" />
-                    </div>
-                    
                     <div className="flex items-center justify-between p-5 rounded-xl bg-primary/10 backdrop-blur-sm border border-primary/30 hover:scale-[1.02] transition-transform duration-300">
                       <div>
-                        <p className="text-sm text-muted-foreground font-medium mb-1">AI Messages Drafted</p>
+                        <p className="text-sm text-muted-foreground font-medium mb-1">Setup Call</p>
                         <p className="text-4xl font-bold text-primary">
-                          <AnimatedCounter end={24} duration={1500} />
+                          <AnimatedCounter end={15} suffix=" min" duration={1500} />
                         </p>
                       </div>
-                      <MessageSquare className="h-12 w-12 text-primary opacity-80" />
+                      <Clock className="h-12 w-12 text-primary opacity-80" />
                     </div>
-                    
+
                     <div className="flex items-center justify-between p-5 rounded-xl bg-success/10 backdrop-blur-sm border border-success/30 hover:scale-[1.02] transition-transform duration-300">
                       <div>
-                        <p className="text-sm text-muted-foreground font-medium mb-1">Retention Rate</p>
+                        <p className="text-sm text-muted-foreground font-medium mb-1">Offer Draft Delivered</p>
                         <p className="text-4xl font-bold text-success">
-                          <AnimatedCounter end={94} suffix="%" duration={1500} />
+                          <AnimatedCounter end={24} suffix="h" duration={1500} />
                         </p>
                       </div>
-                      <BarChart3 className="h-12 w-12 text-success opacity-80" />
+                      <Sparkles className="h-12 w-12 text-success opacity-80" />
+                    </div>
+
+                    <div className="flex items-center justify-between p-5 rounded-xl bg-primary/10 backdrop-blur-sm border border-primary/30 hover:scale-[1.02] transition-transform duration-300">
+                      <div>
+                        <p className="text-sm text-muted-foreground font-medium mb-1">Launch Checklist</p>
+                        <p className="text-4xl font-bold text-primary">
+                          <AnimatedCounter end={3} suffix=" steps" duration={1500} />
+                        </p>
+                      </div>
+                      <TrendingUp className="h-12 w-12 text-primary opacity-80" />
                     </div>
                   </div>
                 </div>

@@ -6,82 +6,55 @@ import { Zap, Settings, Brain, MessageSquare, TrendingUp, Play, Mail, Layout, Ro
 import { OnboardingTimeline } from "@/components/landing/OnboardingTimeline";
 import { CRMIntegrationFlow } from "@/components/landing/CRMIntegrationFlow";
 import { ScrollReveal } from "@/components/landing/ScrollReveal";
-import { AnimatedCounter } from "@/components/landing/AnimatedCounter";
-import trainerGroupImage from "@/assets/group-training-class.jpg";
+import {
+  Zap,
+  PhoneCall,
+  Upload,
+  Rocket,
+  ThumbsUp,
+  Play,
+  MessageSquare,
+  FileText,
+  Clock3
+} from "lucide-react";
 import gradientBg from "@/assets/gradient-mesh-bg.svg";
-const onboardingSteps = [{
-  number: 1,
-  title: "Subscribe & Automated Provisioning",
-  description: "Select your plan, complete GHL checkout, and our system instantly creates your sub-account with pre-configured automations, tags, pipelines, and calendar setups via snapshots.",
-  duration: "1-2 min",
-  icon: Zap
-}, {
-  number: 2,
-  title: "Welcome Message with Login Credentials",
-  description: "Receive a welcome email/SMS with your login link (app.trainu.us), credentials, and first-login setup checklist. No manual setup required.",
-  duration: "Instant",
-  icon: Mail
-}, {
-  number: 3,
-  title: "Dashboard Walkthrough & Setup Checklist",
-  description: "Log in for the first time and see an interactive walkthrough highlighting key features. Follow the optional setup checklist to customize your preferences.",
-  duration: "5 min",
-  icon: Layout
-}, {
-  number: 4,
-  title: "Start Using All Features Immediately",
-  description: "All SaaS features, CRM automations, and AI capabilities are ready to use. Connect your GHL account if desired, or start managing clients right away.",
-  duration: "Instant",
-  icon: Rocket
-}];
-const crmIntegrationSteps = [{
-  number: 1,
-  title: "OAuth Connection",
-  description: "Click 'Connect GHL' in settings, authorize TrainU in GHL, system verifies permissions.",
-  duration: "1 min",
-  icon: Zap
-}, {
-  number: 2,
-  title: "Automatic Contact Sync",
-  description: "Existing contacts imported instantly. Tags, notes, and history preserved. Real-time sync begins.",
-  duration: "Auto",
-  icon: Users
-}, {
-  number: 3,
-  title: "Unified Messaging",
-  description: "All GHL message history appears in TrainU. Send from either platform - stays synced. Complete conversation context.",
-  duration: "Instant",
-  icon: MessageSquare
-}, {
-  number: 4,
-  title: "Automated Tagging",
-  description: "AI applies engagement tags (at-risk, high-engagement). Tags sync back to GHL for workflows. No manual categorization needed.",
-  duration: "Ongoing",
-  icon: Tag
-}];
-const dailyWorkflow = [{
-  time: "8:00 AM",
-  event: "Check Today View",
-  description: "See at-risk clients, AI drafts ready for review, and today's session reminders.",
-  action: "Review 3 AI drafts"
-}, {
-  time: "8:05 AM",
-  event: "Approve Messages",
-  description: "Edit tone if needed, schedule send times, approve with one tap.",
-  action: "2 min total"
-}, {
-  time: "Throughout Day",
-  event: "AI Monitors Engagement",
-  description: "TrainU tracks client responses, session check-ins, and app activity in real-time.",
-  action: "No action needed"
-}, {
-  time: "6:00 PM",
-  event: "End-of-Day Insights",
-  description: "See who responded, who's trending at-risk, and tomorrow's priority clients.",
-  action: "1 min review"
-}];
+
+const steps = [
+  {
+    title: "Ad or lead opts in",
+    description: "Prospects claim the offer from your ad or funnel. We capture intent and route them instantly.",
+    duration: "Instant",
+    icon: Zap
+  },
+  {
+    title: "15-min setup call",
+    description: "We book a quick alignment call to lock messaging, offer positioning, and the follow-up plan.",
+    duration: "15 min",
+    icon: PhoneCall
+  },
+  {
+    title: "Upload your assets",
+    description: "Drop brand voice notes, testimonials, and offer details. We use them to personalize every touchpoint.",
+    duration: "Same day",
+    icon: Upload
+  },
+  {
+    title: "24-hour draft build",
+    description: "We draft the full outreach sequence (SMS, email, DMs) plus landing copy and automations within 24 hours.",
+    duration: "24 hours",
+    icon: Rocket
+  },
+  {
+    title: "Approve and launch",
+    description: "Review the draft, request tweaks, and go live. We handle sending, routing, and attribution tracking.",
+    duration: "Go live",
+    icon: ThumbsUp
+  }
+];
+
 export default function HowItWorks() {
-  return <LandingLayout>
+  return (
+    <LandingLayout>
       {/* Hero */}
       <section className="relative overflow-hidden py-20">
         <div className="absolute inset-0 opacity-30">
@@ -116,87 +89,64 @@ Active Use in 10 Minutes</span>
         </div>
       </section>
 
-      {/* Automated Onboarding Flow */}
-      <section className="py-20 bg-card/50">
+      {/* How it works steps */}
+      <section className="py-16 bg-card/50">
         <div className="container mx-auto px-4">
-          <ScrollReveal>
-            <h2 className="text-3xl font-bold text-center mb-4">
-              Automated Onboarding - How It Works
-            </h2>
-            <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
-              Every step is automated. No manual configuration. No waiting.
+          <ScrollReveal className="text-center max-w-2xl mx-auto mb-12">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-semibold mb-4">
+              <Clock3 className="h-4 w-4" />
+              24-hour build
+            </div>
+            <h2 className="text-3xl font-bold mb-3">The new launch flow</h2>
+            <p className="text-muted-foreground">
+              Simple, compressed, and fully managed. You stay in approvals; we handle execution.
             </p>
           </ScrollReveal>
 
-          <div className="max-w-4xl mx-auto">
-            <OnboardingTimeline steps={onboardingSteps} />
+          <div className="grid lg:grid-cols-5 gap-6">
+            {steps.map((step, index) => (
+              <ScrollReveal key={step.title} delay={index * 80}>
+                <Card className="p-5 h-full flex flex-col gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                      <step.icon className="h-5 w-5" />
+                    </div>
+                    <div className="text-sm font-semibold text-muted-foreground">Step {index + 1}</div>
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="font-semibold text-lg leading-tight">{step.title}</h3>
+                    <p className="text-sm text-muted-foreground">{step.description}</p>
+                  </div>
+                  <Badge variant="outline" className="w-fit text-xs">{step.duration}</Badge>
+                </Card>
+              </ScrollReveal>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* CRM Integration Section */}
-      
-
-      {/* Custom App/Layers Section */}
-      <section className="py-20 bg-card/50">
+      {/* Booking / VSL embed */}
+      <section id="booking" className="py-16">
         <div className="container mx-auto px-4">
-          <ScrollReveal>
-            <h2 className="text-3xl font-bold text-center mb-4">
-              Add Your Custom TrainU App Layers
-            </h2>
-            <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
-              Brand your client experience with custom menu links via GHL's SaaS Configurator
-            </p>
-          </ScrollReveal>
-
-          <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-8">
+          <div className="grid lg:grid-cols-2 gap-10 items-center">
             <ScrollReveal>
-              <Card className="p-8">
-                <h3 className="text-xl font-bold mb-4">Features</h3>
-                <ul className="space-y-3">
+              <div className="space-y-4">
+                <h2 className="text-3xl font-bold">Claim your setup call</h2>
+                <p className="text-muted-foreground text-lg">
+                  Pick a time for your 15-minute setup call or watch the VSL. We only need brand voice notes and your current offer to build the first draft.
+                </p>
+                <ul className="space-y-3 text-sm text-muted-foreground">
                   <li className="flex items-start gap-3">
-                    <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0" />
-                    <span className="text-sm">Custom menu links in left sidebar</span>
+                    <MessageSquare className="h-4 w-4 text-primary mt-0.5" />
+                    <span>Live walkthrough of the ad/lead handoff, follow-up script, and routing.</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0" />
-                    <span className="text-sm">Link to training videos, support, analytics</span>
+                    <FileText className="h-4 w-4 text-primary mt-0.5" />
+                    <span>Checklist of assets to drop (brand voice, offers, testimonials, calendar links).</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0" />
-                    <span className="text-sm">Open your proprietary features</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0" />
-                    <span className="text-sm">Maintain brand consistency</span>
-                  </li>
-                </ul>
-              </Card>
-            </ScrollReveal>
-
-            <ScrollReveal delay={100}>
-              <Card className="p-8">
-                <h3 className="text-xl font-bold mb-4">Use Cases</h3>
-                <ul className="space-y-3">
-                  <li className="flex items-start gap-3">
-                    <div className="w-2 h-2 rounded-full bg-success mt-2 flex-shrink-0" />
-                    <span className="text-sm">Training video libraries</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="w-2 h-2 rounded-full bg-success mt-2 flex-shrink-0" />
-                    <span className="text-sm">Custom analytics dashboards</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="w-2 h-2 rounded-full bg-success mt-2 flex-shrink-0" />
-                    <span className="text-sm">Support chat integrations</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="w-2 h-2 rounded-full bg-success mt-2 flex-shrink-0" />
-                    <span className="text-sm">Booking widgets</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="w-2 h-2 rounded-full bg-success mt-2 flex-shrink-0" />
-                    <span className="text-sm">Your own app features</span>
+                    <Rocket className="h-4 w-4 text-primary mt-0.5" />
+                    <span>24-hour draft promise with approval-ready copy for SMS, email, and DMs.</span>
                   </li>
                 </ul>
               </Card>
@@ -270,158 +220,14 @@ Active Use in 10 Minutes</span>
                   </div>
                 </div>
               </div>
-              <p className="text-xs text-center text-muted-foreground mt-8">
-                Powered by GHL SaaS Mode and TrainU's automated onboarding system
-              </p>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* Daily Workflow */}
-      <section className="py-20">
-        <div className="container mx-auto px-4">
-          <ScrollReveal>
-            <h2 className="text-3xl font-bold text-center mb-4">Your Daily Workflow</h2>
-            <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
-              See how TrainU fits seamlessly into your day - saving time while keeping clients engaged
-            </p>
-          </ScrollReveal>
-
-          <div className="max-w-4xl mx-auto">
-            <div className="grid md:grid-cols-2 gap-6">
-              {dailyWorkflow.map((item, index) => <ScrollReveal key={index} delay={index * 100}>
-                  <Card className="p-6">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="text-sm font-mono text-primary">{item.time}</div>
-                      <Badge variant="outline" className="text-xs">{item.action}</Badge>
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-bold mb-2">{item.event}</h3>
-                      <p className="text-sm text-muted-foreground mb-2">{item.description}</p>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-semibold text-primary">{item.action}</span>
-                        <Badge variant="outline" className="text-xs">All plans</Badge>
-                      </div>
-                    </div>
-                  </Card>
-                </ScrollReveal>)}
-            </div>
-
-            <ScrollReveal delay={200}>
-            <div className="mt-12 p-8 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-semibold mb-2">Total Time Investment</h3>
-                  <p className="text-muted-foreground">~10 minutes per day vs. 2+ hours manual follow-up</p>
-                </div>
-                <div className="text-right">
-                  <div className="text-4xl font-bold text-primary">
-                    <AnimatedCounter end={85} suffix="%" duration={1500} />
-                  </div>
-                  <div className="text-sm text-muted-foreground">Time Saved</div>
-                </div>
-              </div>
-            </div>
             </ScrollReveal>
-          </div>
-        </div>
-      </section>
 
-      {/* Feature Walkthrough */}
-      <section className="py-20 bg-card/50">
-        <div className="container mx-auto px-4">
-          <ScrollReveal>
-            <h2 className="text-3xl font-bold text-center mb-12">
-              How Each Feature Works
-            </h2>
-          </ScrollReveal>
-
-          <div className="max-w-4xl mx-auto space-y-12">
-            {/* AI Inbox */}
-            <ScrollReveal>
-              <div className="grid md:grid-cols-2 gap-8 items-center">
-                <div>
-                  <div className="space-y-4">
-                    <div className="flex items-start gap-3">
-                      <MessageSquare className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
-                      <div>
-                        <h4 className="font-semibold mb-1">AI Inbox</h4>
-                        <p className="text-sm text-muted-foreground mb-2">Review AI-drafted check-ins, approve with one tap, edit tone if needed.</p>
-                        <div className="flex flex-wrap gap-2 text-xs">
-                          <Badge variant="secondary">⏱️ Saves 10 hours/week</Badge>
-                          <Badge variant="secondary">💰 Worth $800/month</Badge>
-                          <Badge variant="secondary">📈 90% faster communication</Badge>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-3">
-                      <TrendingUp className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
-                      <div>
-                        <h4 className="font-semibold mb-1">Gamification</h4>
-                        <p className="text-sm text-muted-foreground mb-2">Clients see streaks, milestones, leaderboards. Friendly competition drives consistency.</p>
-                        <div className="flex flex-wrap gap-2 text-xs">
-                          <Badge variant="secondary">📊 43% longer tenure</Badge>
-                          <Badge variant="secondary">🎯 67% higher completion</Badge>
-                          <Badge variant="secondary">🏆 85% faster milestones</Badge>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-3">
-                      <Brain className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
-                      <div>
-                        <h4 className="font-semibold mb-1">Analytics</h4>
-                        <p className="text-sm text-muted-foreground mb-2">See at-risk clients before they cancel. Get AI recommendations to re-engage.</p>
-                        <div className="flex flex-wrap gap-2 text-xs">
-                          <Badge variant="secondary">⚠️ 70% fewer surprise cancellations</Badge>
-                          <Badge variant="secondary">📉 Proactive risk detection</Badge>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+            <ScrollReveal delay={150}>
+              <Card className="p-4 bg-muted/40 border-dashed h-full flex items-center justify-center">
+                <div className="w-full aspect-video rounded-lg bg-muted flex items-center justify-center text-muted-foreground text-sm text-center px-6">
+                  Embed your booking widget or VSL here (Calendly, GHL calendar, or video player)
                 </div>
-                <Card className="p-6 bg-card border-border">
-                  <h4 className="text-lg font-semibold mb-6 text-center">Feature Highlights</h4>
-                  <div className="space-y-6">
-                    <div className="p-4 rounded-lg bg-primary/5 border border-primary/10">
-                      <div className="flex items-center gap-3 mb-3">
-                        <MessageSquare className="h-5 w-5 text-primary" />
-                        <span className="font-semibold">AI Inbox</span>
-                      </div>
-                      <p className="text-sm text-muted-foreground mb-3">AI drafts personalized messages, you approve in seconds</p>
-                      <div className="flex flex-wrap gap-2">
-                        <Badge variant="secondary" className="text-xs">10 hrs saved/week</Badge>
-                        <Badge variant="secondary" className="text-xs">90% faster</Badge>
-                      </div>
-                    </div>
-
-                    <div className="p-4 rounded-lg bg-warning/5 border border-warning/10">
-                      <div className="flex items-center gap-3 mb-3">
-                        <TrendingUp className="h-5 w-5 text-warning" />
-                        <span className="font-semibold">Gamification</span>
-                      </div>
-                      <p className="text-sm text-muted-foreground mb-3">Streaks, badges, and leaderboards keep clients engaged</p>
-                      <div className="flex flex-wrap gap-2">
-                        <Badge variant="secondary" className="text-xs">43% longer tenure</Badge>
-                        <Badge variant="secondary" className="text-xs">67% completion</Badge>
-                      </div>
-                    </div>
-
-                    <div className="p-4 rounded-lg bg-info/5 border border-info/10">
-                      <div className="flex items-center gap-3 mb-3">
-                        <Brain className="h-5 w-5 text-info" />
-                        <span className="font-semibold">Analytics</span>
-                      </div>
-                      <p className="text-sm text-muted-foreground mb-3">Identify at-risk clients before they cancel</p>
-                      <div className="flex flex-wrap gap-2">
-                        <Badge variant="secondary" className="text-xs">70% fewer cancellations</Badge>
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-              </div>
+              </Card>
             </ScrollReveal>
           </div>
         </div>
