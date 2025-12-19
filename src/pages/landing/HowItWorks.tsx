@@ -2,7 +2,9 @@ import { LandingLayout } from "@/components/landing/LandingLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Link } from "react-router-dom";
+import { Zap, Settings, Brain, MessageSquare, TrendingUp, Play, Mail, Layout, Rocket, ArrowLeftRight, Tag, Users } from "lucide-react";
+import { OnboardingTimeline } from "@/components/landing/OnboardingTimeline";
+import { CRMIntegrationFlow } from "@/components/landing/CRMIntegrationFlow";
 import { ScrollReveal } from "@/components/landing/ScrollReveal";
 import {
   Zap,
@@ -61,22 +63,28 @@ export default function HowItWorks() {
         <div className="container mx-auto px-4 relative z-10">
           <ScrollReveal className="max-w-3xl mx-auto text-center">
             <h1 className="text-5xl font-bold mb-6">
-              From lead to launch in 24 hours
-            </h1>
-            <p className="text-xl text-muted-foreground mb-8">
-              We run the playbook for you: capture the lead, align on messaging in a 15-minute setup call, build the assets, and launch with approvals in under a day.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="#booking">
-                <Button size="lg" className="shadow-glow">
-                  Book Your Setup Call
-                </Button>
-              </Link>
-              <Button size="lg" variant="outline">
-                <Play className="h-5 w-5 mr-2" />
-                Watch 2-min overview
+            From Signup to{" "}
+            <span className="bg-gradient-to-r from-primary to-primary-hover bg-clip-text text-transparent">
+Active Use in 10 Minutes</span>
+          </h1>
+          <p className="text-xl text-muted-foreground mb-8">
+            Automated onboarding eliminates setup time. Our system handles account creation, configuration, and provisioning so you can start retaining clients immediately.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <a
+              href="https://my.trainu.us/claim"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <Button size="lg" className="shadow-glow">
+                Book Setup Call
               </Button>
-            </div>
+            </a>
+            <Button size="lg" variant="outline">
+              <Play className="h-5 w-5 mr-2" />
+              Watch Demo Video
+            </Button>
+          </div>
           </ScrollReveal>
         </div>
       </section>
@@ -141,12 +149,75 @@ export default function HowItWorks() {
                     <span>24-hour draft promise with approval-ready copy for SMS, email, and DMs.</span>
                   </li>
                 </ul>
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <Button size="lg">Book Your Setup Call</Button>
-                  <Button size="lg" variant="secondary">
-                    <Play className="h-4 w-4 mr-2" />
-                    Watch the VSL
-                  </Button>
+              </Card>
+            </ScrollReveal>
+          </div>
+        </div>
+      </section>
+
+      {/* Visual Reference Flow */}
+      <section className="py-20">
+        <div className="container mx-auto px-4">
+          <ScrollReveal>
+            <h2 className="text-3xl font-bold text-center mb-4">
+              The Complete Customer Journey
+            </h2>
+            <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
+              From landing page to active use - every step is automated
+            </p>
+          </ScrollReveal>
+
+          <div className="max-w-3xl mx-auto">
+            <Card className="p-8">
+              <div className="space-y-6">
+                <div className="flex items-start gap-4">
+                  <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold flex-shrink-0">1</div>
+                  <div>
+                    <h3 className="font-bold mb-1">Landing Page (trainu.us)</h3>
+                    <p className="text-sm text-muted-foreground">User browses pricing, features, and clicks "Book Setup Call" to schedule onboarding</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold flex-shrink-0">2</div>
+                  <div>
+                    <h3 className="font-bold mb-1">GHL Order Form / Checkout</h3>
+                    <p className="text-sm text-muted-foreground">Redirected to secure GHL funnel. Stripe processes payment. GHL receives order confirmation.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold flex-shrink-0">3</div>
+                  <div>
+                    <h3 className="font-bold mb-1">Automated Provisioning (GHL SaaS Mode)</h3>
+                    <p className="text-sm text-muted-foreground">New sub-account created automatically. Snapshots install best-practice automations. Tags, pipelines, calendars configured. Billing automation activated.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold flex-shrink-0">4</div>
+                  <div>
+                    <h3 className="font-bold mb-1">Welcome Messages</h3>
+                    <p className="text-sm text-muted-foreground">Email: Login link + credentials. SMS: Quick start guide. Both include app.trainu.us login URL.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold flex-shrink-0">5</div>
+                  <div>
+                    <h3 className="font-bold mb-1">First Login at app.trainu.us</h3>
+                    <p className="text-sm text-muted-foreground">Dashboard walkthrough appears. Setup checklist highlights key features. Optional GHL connection prompt.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-8 h-8 rounded-full bg-success text-success-foreground flex items-center justify-center font-bold flex-shrink-0">✓</div>
+                  <div>
+                    <h3 className="font-bold mb-1">Ready to Use</h3>
+                    <p className="text-sm text-muted-foreground">All SaaS features active. CRM automations running. AI learning client patterns. Support accessible via menu.</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-8 h-8 rounded-full bg-muted text-muted-foreground flex items-center justify-center font-bold flex-shrink-0">∞</div>
+                  <div>
+                    <h3 className="font-bold mb-1">Ongoing Operations</h3>
+                    <p className="text-sm text-muted-foreground">Billing automation handles renewals. Failed payment recovery (native to SaaS Mode). Account lockouts if needed. Custom menu links always accessible.</p>
+                  </div>
                 </div>
               </div>
             </ScrollReveal>
@@ -161,6 +232,37 @@ export default function HowItWorks() {
           </div>
         </div>
       </section>
-    </LandingLayout>
-  );
+
+      {/* Demo CTA */}
+      <section className="py-20 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-20">
+          <img src={trainerGroupImage} alt="" className="w-full h-full object-cover" />
+        </div>
+        <div className="container mx-auto px-4 relative z-10">
+          <ScrollReveal>
+          <div className="max-w-3xl mx-auto text-center p-12 rounded-2xl backdrop-blur-xl bg-card/90 border-primary/20 shadow-glow">
+            <h2 className="text-4xl font-bold mb-4">See It Live</h2>
+            <p className="text-xl text-muted-foreground mb-8">
+              Book a 15-minute walkthrough with our team and launch with a configured account
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button size="lg" variant="outline">
+                <Play className="h-5 w-5 mr-2" />
+                Watch Demo Video
+              </Button>
+              <a
+                href="https://my.trainu.us/claim"
+                target="_blank"
+                rel="noreferrer"
+              >
+                <Button size="lg" className="shadow-glow">
+                  Book Setup Call
+                </Button>
+              </a>
+            </div>
+          </div>
+          </ScrollReveal>
+        </div>
+      </section>
+    </LandingLayout>;
 }

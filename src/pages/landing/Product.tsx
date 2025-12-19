@@ -515,7 +515,7 @@ export default function Product() {
           <div className="max-w-3xl mx-auto text-center p-12 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
             <h2 className="text-4xl font-bold mb-4">Ready to See It in Action?</h2>
             <p className="text-xl text-muted-foreground mb-8">
-              Book a 15-minute demo or start your free trial today
+              Book a 15-minute setup call and we&apos;ll configure your workspace live.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/contact">
@@ -523,11 +523,15 @@ export default function Product() {
                   Book a Demo
                 </Button>
               </Link>
-              <Link to="/login">
+              <a
+                href="https://my.trainu.us/claim"
+                target="_blank"
+                rel="noreferrer"
+              >
                 <Button size="lg" className="shadow-glow">
-                  Start Free Trial
+                  Book Setup Call
                 </Button>
-              </Link>
+              </a>
             </div>
           </div>
         </div>

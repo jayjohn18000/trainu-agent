@@ -67,11 +67,15 @@ export function LandingNav() {
                 Sign In
               </Button>
             </Link>
-            <Link to="/pricing">
+            <a
+              href="https://my.trainu.us/claim"
+              target="_blank"
+              rel="noreferrer"
+            >
               <Button size="sm" className="shadow-glow">
-                Start Free Trial
+                Book Setup Call
               </Button>
-            </Link>
+            </a>
           </div>
 
           {/* Mobile Menu Button */}
@@ -105,11 +109,16 @@ export function LandingNav() {
                   Sign In
                 </Button>
               </Link>
-              <Link to="/pricing" className="block">
+              <a
+                href="https://my.trainu.us/claim"
+                target="_blank"
+                rel="noreferrer"
+                className="block"
+              >
                 <Button size="sm" className="w-full shadow-glow">
-                  Start Free Trial
+                  Book Setup Call
                 </Button>
-              </Link>
+              </a>
             </div>
           </div>
         )}

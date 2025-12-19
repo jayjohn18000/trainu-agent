@@ -16,6 +16,8 @@ import { ComparisonTable } from "@/components/landing/ComparisonTable";
 import trainerClientImage from "@/assets/trainer-client-gym.jpg";
 import gradientBg from "@/assets/gradient-mesh-bg.svg";
 
+const SETUP_CALL_URL = "https://my.trainu.us/claim";
+
 const tiers = [
   {
     name: "Hosting",
@@ -70,7 +72,7 @@ const tiers = [
 const faqs = [
   {
     question: "How does billing work?",
-    answer: "All plans are billed monthly with no long-term contracts. You can upgrade, downgrade, or cancel anytime. Submit the claim form to activate the right plan for your studio.",
+    answer: "All plans are billed monthly with no long-term contracts. You can upgrade, downgrade, or cancel anytime. New accounts start with a guided setup call to configure your workspace.",
   },
   {
     question: "What counts as an SMS message?",
@@ -139,12 +141,12 @@ export default function Pricing() {
             </p>
           <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
-              <Check className="h-4 w-4 text-success" />
-              <span>Cancel anytime</span>
+              <Zap className="h-4 w-4 text-primary" />
+              <span>Guided setup call included</span>
             </div>
             <div className="flex items-center gap-2">
               <Check className="h-4 w-4 text-success" />
-              <span>Fast onboarding</span>
+              <span>No long-term contracts</span>
             </div>
             <div className="flex items-center gap-2">
               <Zap className="h-4 w-4 text-primary" />
@@ -184,15 +186,24 @@ export default function Pricing() {
                     </span>
                     <span className="text-muted-foreground">/month</span>
                   </div>
+                  <Badge variant="secondary" className="mb-2">
+                    <Zap className="h-3 w-3 mr-1" />
+                    White-glove onboarding
+                  </Badge>
                   <p className="text-xs text-success">{tier.roi}</p>
                 </div>
 
-                <Link to={tier.checkoutUrl} className="block mb-6">
+                <a
+                  href={SETUP_CALL_URL}
+                  className="block mb-6"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <Button
                     className={`w-full ${tier.popular ? "shadow-glow" : ""}`}
                     variant={tier.popular ? "default" : "outline"}
                   >
-                    Claim This Plan
+                    Book Setup Call
                   </Button>
                 </Link>
 
@@ -416,11 +427,15 @@ export default function Pricing() {
                     Contact Sales
                   </Button>
                 </Link>
-                <Link to="/contact?plan=custom">
+                <a
+                  href={SETUP_CALL_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                >
                   <Button size="lg" className="shadow-glow">
-                    Claim Your Plan
+                    Book Setup Call
                   </Button>
-                </Link>
+                </a>
               </div>
             </div>
           </Card>

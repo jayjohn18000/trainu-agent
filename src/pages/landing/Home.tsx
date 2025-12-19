@@ -44,10 +44,15 @@ export default function Home() {
                   Book a 15-minute setup call. We deliver your online offer draft within 24 hours and handle the launch playbook for you.
                 </p>
 
-                <div className="flex flex-col sm:flex-row gap-4 mb-6">
-                  <a href="https://my.trainu.us/claim" target="_blank" rel="noreferrer">
+                <div className="flex flex-col sm:flex-row gap-4 mb-8">
+                  <a
+                    href="https://my.trainu.us/claim"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full sm:w-auto"
+                  >
                     <Button size="lg" className="shadow-glow hover:shadow-glow-intense w-full sm:w-auto text-lg px-8 py-6 transition-all duration-300 hover:scale-105">
-                      Book Your Setup Call
+                      Book Setup Call
                     </Button>
                   </a>
                   <Link to="/how-it-works">
@@ -643,13 +648,17 @@ export default function Home() {
                 Ready to Stop Losing Clients?
               </h2>
               <p className="text-2xl text-foreground/80 mb-12 leading-relaxed">
-                Start your 14-day free trial. No credit card required.
+                Book a setup call and we'll configure your account, integrations, and automations in minutes.
               </p>
-              <Link to="/login">
+              <a
+                href="https://my.trainu.us/claim"
+                target="_blank"
+                rel="noreferrer"
+              >
                 <Button size="lg" className="shadow-glow-intense hover:scale-105 transition-all duration-300 text-lg px-12 py-8">
-                  Start Free Trial
+                  Book Setup Call
                 </Button>
-              </Link>
+              </a>
               <p className="text-sm text-muted-foreground mt-8 flex items-center justify-center gap-2">
                 <Shield className="h-4 w-4" />
                 Setup takes 10 minutes • GHL integration included • TCPA compliant
