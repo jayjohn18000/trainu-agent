@@ -216,21 +216,17 @@ export default function Contact() {
 
             {/* Right Column */}
             <div className="space-y-8">
-              {/* Calendly Embed */}
+              {/* GHL Calendar Embed */}
               <ScrollReveal>
               <div>
                 <h2 className="text-2xl font-bold mb-6">Book a Demo</h2>
-                <Card className="p-6 hover:shadow-glow transition-all">
-                  <p className="text-muted-foreground mb-4">
-                    Schedule a 15-minute walkthrough with our team. We'll show you the platform live and answer your questions.
-                  </p>
-                  <Button 
-                    variant="outline" 
-                    className="w-full"
-                    onClick={() => window.open('https://api.leadconnectorhq.com/widget/booking/PPgbXZSX9ehklDQVyd8Q', '_blank')}
-                  >
-                    Schedule Demo
-                  </Button>
+                <Card className="p-0 overflow-hidden hover:shadow-glow transition-all">
+                  <iframe
+                    src="https://api.leadconnectorhq.com/widget/booking/PPgbXZSX9ehklDQVyd8Q"
+                    style={{ width: '100%', height: '700px', border: 'none' }}
+                    scrolling="no"
+                    title="Book a Demo"
+                  />
                 </Card>
               </div>
               </ScrollReveal>
