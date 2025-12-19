@@ -462,15 +462,7 @@ export default function Home() {
       {/* Custom App Integration Section */}
       
 
-      {/* ROI Calculator */}
-      <section className="relative py-24 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-card/30 to-transparent" />
-        <div className="container mx-auto px-4 relative z-10">
-          <ScrollReveal>
-            <ROICalculator />
-          </ScrollReveal>
-        </div>
-      </section>
+      {/* ROI Calculator - Hidden for new funnel */}
 
       {/* Testimonials - Feature Highlights */}
       <section className="py-24">
@@ -539,23 +531,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Competitor Table */}
-      <section className="py-24 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-card/30 to-transparent" />
-        <div className="container mx-auto px-4 relative z-10">
-          <ScrollReveal>
-            <h2 className="text-5xl font-bold text-center mb-6">
-              Why Trainers Choose TrainU
-            </h2>
-            <p className="text-center text-muted-foreground text-lg mb-16 max-w-2xl mx-auto">
-              The only platform built specifically for retention automation
-            </p>
-          </ScrollReveal>
-          <ScrollReveal delay={100}>
-            <CompetitorTable />
-          </ScrollReveal>
-        </div>
-      </section>
+      {/* Competitor Table - Hidden for new funnel */}
 
       {/* Pricing Preview Section */}
       <section className="py-24">
@@ -563,13 +539,13 @@ export default function Home() {
           <ScrollReveal>
             <div className="text-center mb-16">
               <h2 className="text-5xl font-bold mb-6">
-                Pricing That Pays for Itself
+                Simple, Transparent Pricing
               </h2>
               <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-4">
-                Choose the plan that fits your business. All plans include automated onboarding and CRM integration.
+                Choose your level of support. All plans include your custom website and CRM setup.
               </p>
               <p className="text-lg font-semibold text-primary">
-                Average trainer saves $2,400/month in retained revenue
+                Launch your online revenue stream in 24 hours
               </p>
             </div>
           </ScrollReveal>
@@ -577,32 +553,32 @@ export default function Home() {
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             <ScrollReveal delay={100}>
               <PricingPreviewCard tier={{
-              name: "Starter",
-              price: 79,
-              description: "Core CRM & Communication Hub",
-              roi: "Pays for itself in 3 clients saved",
-              highlights: ["Up to 2 calendars", "Basic automations", "$10/mo messaging credit", "GHL CRM integration"]
+              name: "Hosting",
+              price: 97,
+              description: "Website hosting & basic CRM",
+              roi: "Perfect for getting started",
+              highlights: ["Custom website hosted", "Basic CRM access", "Lead capture forms", "Email support"]
             }} />
             </ScrollReveal>
 
             <ScrollReveal delay={200}>
               <PricingPreviewCard tier={{
-              name: "Professional",
-              price: 99,
-              description: "Unlimited scale + SaaS access",
+              name: "CRM Access",
+              price: 297,
+              description: "Full CRM + automation tools",
               popular: true,
-              roi: "Pays for itself in 2 clients saved",
-              highlights: ["Unlimited contacts & users", "Advanced automations", "$25/mo messaging credit", "Full SaaS dashboard"]
+              roi: "Most popular choice",
+              highlights: ["Everything in Hosting", "Full GHL CRM access", "Automation workflows", "Priority support"]
             }} />
             </ScrollReveal>
 
             <ScrollReveal delay={300}>
               <PricingPreviewCard tier={{
-              name: "Growth+",
+              name: "Pro Toolkit",
               price: 497,
-              description: "Full GHL power + white-glove support",
-              roi: "ROI-positive from day 1",
-              highlights: ["Full GHL features suite", "$100/mo messaging credit", "1:1 demo & onboarding", "Campaign management support"]
+              description: "Done-for-you launch support",
+              roi: "Best for serious growth",
+              highlights: ["Everything in CRM Access", "1:1 launch coaching", "Custom automations built", "Dedicated account manager"]
             }} />
             </ScrollReveal>
           </div>
@@ -628,10 +604,10 @@ export default function Home() {
           <ScrollReveal>
             <div className="max-w-4xl mx-auto text-center p-16 rounded-3xl bg-gradient-to-br from-card/80 to-background/80 backdrop-blur-xl border border-primary/30 shadow-2xl shadow-primary/20">
               <h2 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
-                Ready to Stop Losing Clients?
+                Ready to Add Online Revenue?
               </h2>
               <p className="text-2xl text-foreground/80 mb-12 leading-relaxed">
-                Book a setup call and we'll configure your account, integrations, and automations in minutes.
+                Book a 15-minute call. We'll draft your offer and deliver your launch playbook in 24 hours.
               </p>
               <a
                 href="https://my.trainu.us/claim"
@@ -644,7 +620,7 @@ export default function Home() {
               </a>
               <p className="text-sm text-muted-foreground mt-8 flex items-center justify-center gap-2">
                 <Shield className="h-4 w-4" />
-                Setup takes 10 minutes • GHL integration included • TCPA compliant
+                15-minute call • Offer draft in 24h • Launch playbook included
               </p>
             </div>
           </ScrollReveal>
