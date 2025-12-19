@@ -29,11 +29,7 @@ export function LandingNav() {
 
   return (
     <>
-      <ChallengeBanner />
-      <nav className={cn(
-        "fixed left-0 right-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border shadow-sm transition-all duration-300",
-        isScrolled ? "top-0" : "top-12"
-      )}>
+      <nav className="fixed left-0 right-0 z-50 top-0 bg-card/80 backdrop-blur-xl border-b border-border shadow-sm transition-all duration-300">
         <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -62,11 +58,6 @@ export function LandingNav() {
 
           {/* CTA Buttons */}
           <div className="hidden md:flex items-center gap-3">
-            <Link to="/login">
-              <Button variant="ghost" size="sm">
-                Sign In
-              </Button>
-            </Link>
             <a
               href="https://my.trainu.us/claim"
               target="_blank"
@@ -104,11 +95,6 @@ export function LandingNav() {
               </Link>
             ))}
             <div className="px-4 pt-2 space-y-2">
-              <Link to="/login" className="block">
-                <Button variant="ghost" size="sm" className="w-full">
-                  Sign In
-                </Button>
-              </Link>
               <a
                 href="https://my.trainu.us/claim"
                 target="_blank"
