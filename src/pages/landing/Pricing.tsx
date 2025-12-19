@@ -205,7 +205,7 @@ export default function Pricing() {
                   >
                     Book Setup Call
                   </Button>
-                </Link>
+                </a>
 
                 <ul className="space-y-3">
                   {tier.features.map((feature, index) => (
