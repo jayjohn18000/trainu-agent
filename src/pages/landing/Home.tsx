@@ -45,11 +45,16 @@ export default function Home() {
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-4 mb-8">
-                  <Link to="/pricing">
+                  <a
+                    href="https://my.trainu.us/claim"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full sm:w-auto"
+                  >
                     <Button size="lg" className="shadow-glow hover:shadow-glow-intense w-full sm:w-auto text-lg px-8 py-6 transition-all duration-300 hover:scale-105">
-                      Start Free Trial
+                      Book Setup Call
                     </Button>
-                  </Link>
+                  </a>
                   <Link to="/how-it-works">
                     <Button size="lg" variant="outline" className="w-full sm:w-auto text-lg px-8 py-6 hover:bg-primary/10 transition-all duration-300">
                       See How It Works
@@ -616,13 +621,17 @@ export default function Home() {
                 Ready to Stop Losing Clients?
               </h2>
               <p className="text-2xl text-foreground/80 mb-12 leading-relaxed">
-                Start your 14-day free trial. No credit card required.
+                Book a setup call and we'll configure your account, integrations, and automations in minutes.
               </p>
-              <Link to="/login">
+              <a
+                href="https://my.trainu.us/claim"
+                target="_blank"
+                rel="noreferrer"
+              >
                 <Button size="lg" className="shadow-glow-intense hover:scale-105 transition-all duration-300 text-lg px-12 py-8">
-                  Start Free Trial
+                  Book Setup Call
                 </Button>
-              </Link>
+              </a>
               <p className="text-sm text-muted-foreground mt-8 flex items-center justify-center gap-2">
                 <Shield className="h-4 w-4" />
                 Setup takes 10 minutes • GHL integration included • TCPA compliant

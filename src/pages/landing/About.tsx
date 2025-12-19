@@ -2,7 +2,6 @@ import { LandingLayout } from "@/components/landing/LandingLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Link } from "react-router-dom";
 import { Target, Users, TrendingUp, Heart, Zap, Play, Sparkles } from "lucide-react";
 import { ScrollReveal } from "@/components/landing/ScrollReveal";
 import { AnimatedCounter } from "@/components/landing/AnimatedCounter";
@@ -282,14 +281,18 @@ export default function About() {
           <div className="max-w-3xl mx-auto text-center p-12 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
             <h2 className="text-4xl font-bold mb-4">Join the Movement</h2>
             <p className="text-xl text-muted-foreground mb-8">
-              Help us build the future of client retention. Start your free trial or join our team.
+              Help us build the future of client retention. Book a setup call or join our team.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/login">
+              <a
+                href="https://my.trainu.us/claim"
+                target="_blank"
+                rel="noreferrer"
+              >
                 <Button size="lg" className="shadow-glow">
-                  Start Free Trial
+                  Book Setup Call
                 </Button>
-              </Link>
+              </a>
               <Button size="lg" variant="outline">
                 <Users className="h-5 w-5 mr-2" />
                 We're Hiring

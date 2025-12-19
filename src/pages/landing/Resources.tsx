@@ -3,7 +3,6 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Link } from "react-router-dom";
 import { BookOpen, TrendingUp, Users, Brain, Download, Mail } from "lucide-react";
 import { ScrollReveal } from "@/components/landing/ScrollReveal";
 import { AnimatedCounter } from "@/components/landing/AnimatedCounter";
@@ -249,13 +248,17 @@ export default function Resources() {
           <div className="max-w-3xl mx-auto text-center">
             <h2 className="text-4xl font-bold mb-4">Ready to Implement These Strategies?</h2>
             <p className="text-xl text-muted-foreground mb-8">
-              TrainU automates everything you just read about. Start your 14-day free trial.
+              TrainU automates everything you just read about. Book a setup call and we&apos;ll configure it for you.
             </p>
-            <Link to="/login">
+            <a
+              href="https://my.trainu.us/claim"
+              target="_blank"
+              rel="noreferrer"
+            >
               <Button size="lg" className="shadow-glow">
-                Start Free Trial
+                Book Setup Call
               </Button>
-            </Link>
+            </a>
           </div>
         </div>
       </section>

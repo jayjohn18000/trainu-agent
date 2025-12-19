@@ -16,6 +16,8 @@ import { ComparisonTable } from "@/components/landing/ComparisonTable";
 import trainerClientImage from "@/assets/trainer-client-gym.jpg";
 import gradientBg from "@/assets/gradient-mesh-bg.svg";
 
+const SETUP_CALL_URL = "https://my.trainu.us/claim";
+
 const tiers = [
   {
     name: "Starter",
@@ -79,7 +81,7 @@ const tiers = [
 const faqs = [
   {
     question: "How does billing work?",
-    answer: "All plans are billed monthly with no long-term contracts. You can upgrade, downgrade, or cancel anytime. We offer a 14-day free trial on all plans with no credit card required.",
+    answer: "All plans are billed monthly with no long-term contracts. You can upgrade, downgrade, or cancel anytime. New accounts start with a guided setup call to configure your workspace.",
   },
   {
     question: "What counts as an SMS message?",
@@ -149,11 +151,11 @@ export default function Pricing() {
           <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <Zap className="h-4 w-4 text-primary" />
-              <span>14-day free trial</span>
+              <span>Guided setup call included</span>
             </div>
             <div className="flex items-center gap-2">
               <Check className="h-4 w-4 text-success" />
-              <span>No credit card required</span>
+              <span>No long-term contracts</span>
             </div>
             <div className="flex items-center gap-2">
               <Check className="h-4 w-4 text-success" />
@@ -195,13 +197,13 @@ export default function Pricing() {
                   </div>
                   <Badge variant="secondary" className="mb-2">
                     <Zap className="h-3 w-3 mr-1" />
-                    14-Day Free Trial
+                    White-glove onboarding
                   </Badge>
                   <p className="text-xs text-success">{tier.roi}</p>
                 </div>
 
-                <a 
-                  href={tier.checkoutUrl} 
+                <a
+                  href={SETUP_CALL_URL}
                   className="block mb-6"
                   target="_blank"
                   rel="noopener noreferrer"
@@ -210,7 +212,7 @@ export default function Pricing() {
                     className={`w-full ${tier.popular ? "shadow-glow" : ""}`}
                     variant={tier.popular ? "default" : "outline"}
                   >
-                    Start Free Trial
+                    Book Setup Call
                   </Button>
                 </a>
 
@@ -460,11 +462,15 @@ export default function Pricing() {
                     Contact Sales
                   </Button>
                 </Link>
-                <Link to="/login">
+                <a
+                  href={SETUP_CALL_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                >
                   <Button size="lg" className="shadow-glow">
-                    Start Free Trial
+                    Book Setup Call
                   </Button>
-                </Link>
+                </a>
               </div>
             </div>
           </Card>

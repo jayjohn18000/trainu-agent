@@ -2,7 +2,6 @@ import { LandingLayout } from "@/components/landing/LandingLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Link } from "react-router-dom";
 import { Zap, Settings, Brain, MessageSquare, TrendingUp, Play, Mail, Layout, Rocket, ArrowLeftRight, Tag, Users } from "lucide-react";
 import { OnboardingTimeline } from "@/components/landing/OnboardingTimeline";
 import { CRMIntegrationFlow } from "@/components/landing/CRMIntegrationFlow";
@@ -99,11 +98,15 @@ Active Use in 10 Minutes</span>
             Automated onboarding eliminates setup time. Our system handles account creation, configuration, and provisioning so you can start retaining clients immediately.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/login">
+            <a
+              href="https://my.trainu.us/claim"
+              target="_blank"
+              rel="noreferrer"
+            >
               <Button size="lg" className="shadow-glow">
-                Start Free Trial
+                Book Setup Call
               </Button>
-            </Link>
+            </a>
             <Button size="lg" variant="outline">
               <Play className="h-5 w-5 mr-2" />
               Watch Demo Video
@@ -221,7 +224,7 @@ Active Use in 10 Minutes</span>
                   <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold flex-shrink-0">1</div>
                   <div>
                     <h3 className="font-bold mb-1">Landing Page (trainu.us)</h3>
-                    <p className="text-sm text-muted-foreground">User browses pricing, features. Clicks "Start Free Trial" or "Subscribe"</p>
+                    <p className="text-sm text-muted-foreground">User browses pricing, features, and clicks "Book Setup Call" to schedule onboarding</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-4">
@@ -434,18 +437,22 @@ Active Use in 10 Minutes</span>
           <div className="max-w-3xl mx-auto text-center p-12 rounded-2xl backdrop-blur-xl bg-card/90 border-primary/20 shadow-glow">
             <h2 className="text-4xl font-bold mb-4">See It Live</h2>
             <p className="text-xl text-muted-foreground mb-8">
-              Book a 15-minute walkthrough with our team or dive in with a free trial
+              Book a 15-minute walkthrough with our team and launch with a configured account
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" variant="outline">
                 <Play className="h-5 w-5 mr-2" />
                 Watch Demo Video
               </Button>
-              <Link to="/login">
+              <a
+                href="https://my.trainu.us/claim"
+                target="_blank"
+                rel="noreferrer"
+              >
                 <Button size="lg" className="shadow-glow">
-                  Start Free Trial
+                  Book Setup Call
                 </Button>
-              </Link>
+              </a>
             </div>
           </div>
           </ScrollReveal>
