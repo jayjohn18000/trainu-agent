@@ -45,12 +45,7 @@ export default function Home() {
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-4 mb-8">
-                  <a
-                    href="https://my.trainu.us/claim"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="w-full sm:w-auto"
-                  >
+                  <a href="https://my.trainu.us/claim" target="_blank" rel="noreferrer" className="w-full sm:w-auto">
                     <Button size="lg" className="shadow-glow hover:shadow-glow-intense w-full sm:w-auto text-lg px-8 py-6 transition-all duration-300 hover:scale-105">
                       Book Setup Call
                     </Button>
@@ -64,19 +59,18 @@ export default function Home() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-12">
                   {[{
-                    title: "Book",
-                    description: "15-minute setup call",
-                    icon: Clock
-                  }, {
-                    title: "Draft",
-                    description: "24-hour offer delivery",
-                    icon: Sparkles
-                  }, {
-                    title: "Go Live",
-                    description: "Launch playbook ready",
-                    icon: Zap
-                  }].map((step, index) => (
-                    <div key={step.title} className="p-4 rounded-2xl bg-card/50 border border-primary/20 backdrop-blur-sm">
+                  title: "Book",
+                  description: "15-minute setup call",
+                  icon: Clock
+                }, {
+                  title: "Draft",
+                  description: "24-hour offer delivery",
+                  icon: Sparkles
+                }, {
+                  title: "Go Live",
+                  description: "Launch playbook ready",
+                  icon: Zap
+                }].map((step, index) => <div key={step.title} className="p-4 rounded-2xl bg-card/50 border border-primary/20 backdrop-blur-sm">
                       <div className="flex items-center gap-3 mb-2">
                         <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold">
                           {index + 1}
@@ -85,8 +79,7 @@ export default function Home() {
                         <p className="text-lg font-semibold">{step.title}</p>
                       </div>
                       <p className="text-sm text-muted-foreground">{step.description}</p>
-                    </div>
-                  ))}
+                    </div>)}
                 </div>
 
 
@@ -179,90 +172,7 @@ export default function Home() {
       </section>
 
       {/* CRM Section */}
-      <section className="py-24 bg-gradient-to-b from-card/30 to-transparent">
-        <div className="container mx-auto px-4">
-          <ScrollReveal>
-            <div className="text-center mb-16">
-              <h2 className="text-5xl font-bold mb-6">
-                Your CRM, Unified & Automated
-              </h2>
-              <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-                Manage SMS, email, and social media in one place. No data migration needed.
-              </p>
-            </div>
-          </ScrollReveal>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
-            <ScrollReveal delay={100}>
-              <div className="p-6 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all">
-                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                  <ArrowLeftRight className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="text-lg font-bold mb-2">Bi-Directional Sync</h3>
-                <p className="text-sm text-muted-foreground">
-                  Contacts and messages sync automatically. Real-time updates across platforms.
-                </p>
-              </div>
-            </ScrollReveal>
-
-            <ScrollReveal delay={200}>
-              <div className="p-6 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all">
-                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                  <MessageSquare className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="text-lg font-bold mb-2">Unified Inbox</h3>
-                <p className="text-sm text-muted-foreground">
-                  SMS, email, and social messages in one place. Complete conversation history.
-                </p>
-              </div>
-            </ScrollReveal>
-
-            <ScrollReveal delay={300}>
-              <div className="p-6 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all">
-                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                  <Tag className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="text-lg font-bold mb-2">Automated Tagging</h3>
-                <p className="text-sm text-muted-foreground">
-                  AI applies engagement tags automatically. Sync tags back for workflows.
-                </p>
-              </div>
-            </ScrollReveal>
-
-            <ScrollReveal delay={400}>
-              <div className="p-6 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all">
-                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                  <Users className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="text-lg font-bold mb-2">Contact Management</h3>
-                <p className="text-sm text-muted-foreground">
-                  Import existing contacts instantly. Update fields in either platform.
-                </p>
-              </div>
-            </ScrollReveal>
-          </div>
-
-          <ScrollReveal delay={500}>
-            <div className="flex items-center justify-center gap-8 p-8 rounded-2xl bg-gradient-to-r from-card/80 to-card/50 border border-primary/20">
-              <div className="text-center">
-                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg mb-2 mx-auto">
-                  <span className="text-2xl font-black text-white">GHL</span>
-                </div>
-                <p className="text-sm font-medium text-muted-foreground">GoHighLevel</p>
-              </div>
-              
-              <ArrowLeftRight className="h-10 w-10 text-primary animate-pulse" />
-              
-              <div className="text-center">
-                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary-hover flex items-center justify-center shadow-glow mb-2 mx-auto">
-                  <span className="text-2xl font-black text-primary-foreground">TU</span>
-                </div>
-                <p className="text-sm font-medium text-muted-foreground">TrainU</p>
-              </div>
-            </div>
-          </ScrollReveal>
-        </div>
-      </section>
+      
 
       {/* Pain Points Section */}
       <section className="relative py-24 overflow-hidden">
@@ -534,66 +444,7 @@ export default function Home() {
       {/* Competitor Table - Hidden for new funnel */}
 
       {/* Pricing Preview Section */}
-      <section className="py-24">
-        <div className="container mx-auto px-4">
-          <ScrollReveal>
-            <div className="text-center mb-16">
-              <h2 className="text-5xl font-bold mb-6">
-                Simple, Transparent Pricing
-              </h2>
-              <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-4">
-                Choose your level of support. All plans include your custom website and CRM setup.
-              </p>
-              <p className="text-lg font-semibold text-primary">
-                Launch your online revenue stream in 24 hours
-              </p>
-            </div>
-          </ScrollReveal>
-
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            <ScrollReveal delay={100}>
-              <PricingPreviewCard tier={{
-              name: "Hosting",
-              price: 97,
-              description: "Website hosting & basic CRM",
-              roi: "Perfect for getting started",
-              highlights: ["Custom website hosted", "Basic CRM access", "Lead capture forms", "Email support"]
-            }} />
-            </ScrollReveal>
-
-            <ScrollReveal delay={200}>
-              <PricingPreviewCard tier={{
-              name: "CRM Access",
-              price: 297,
-              description: "Full CRM + automation tools",
-              popular: true,
-              roi: "Most popular choice",
-              highlights: ["Everything in Hosting", "Full GHL CRM access", "Automation workflows", "Priority support"]
-            }} />
-            </ScrollReveal>
-
-            <ScrollReveal delay={300}>
-              <PricingPreviewCard tier={{
-              name: "Pro Toolkit",
-              price: 497,
-              description: "Done-for-you launch support",
-              roi: "Best for serious growth",
-              highlights: ["Everything in CRM Access", "1:1 launch coaching", "Custom automations built", "Dedicated account manager"]
-            }} />
-            </ScrollReveal>
-          </div>
-
-          <ScrollReveal delay={400}>
-            <div className="text-center mt-12">
-              <Link to="/pricing">
-                <Button size="lg" variant="outline" className="text-lg px-8 py-6">
-                  View Full Pricing Details
-                </Button>
-              </Link>
-            </div>
-          </ScrollReveal>
-        </div>
-      </section>
+      
 
       {/* Final CTA */}
       <section className="py-24 relative overflow-hidden">
@@ -609,11 +460,7 @@ export default function Home() {
               <p className="text-2xl text-foreground/80 mb-12 leading-relaxed">
                 Book a 15-minute call. We'll draft your offer and deliver your launch playbook in 24 hours.
               </p>
-              <a
-                href="https://my.trainu.us/claim"
-                target="_blank"
-                rel="noreferrer"
-              >
+              <a href="https://my.trainu.us/claim" target="_blank" rel="noreferrer">
                 <Button size="lg" className="shadow-glow-intense hover:scale-105 transition-all duration-300 text-lg px-12 py-8">
                   Book Setup Call
                 </Button>
