@@ -223,8 +223,8 @@ export default function Contact() {
                 <Card className="p-0 overflow-hidden hover:shadow-glow transition-all">
                   <iframe
                     src="https://api.leadconnectorhq.com/widget/booking/mtXIZ2paE6umxArw3BP1"
-                    style={{ width: '100%', height: '700px', border: 'none' }}
-                    scrolling="no"
+                    style={{ width: '100%', height: '800px', border: 'none' }}
+                    scrolling="yes"
                     title="Book a Demo"
                   />
                 </Card>
