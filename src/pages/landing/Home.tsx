@@ -26,7 +26,7 @@ export default function Home() {
               <div>
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 backdrop-blur-sm border border-primary/30 text-primary text-sm font-semibold mb-8 shadow-glow animate-pulse-glow">
                   <Sparkles className="h-4 w-4" />
-                  <span>Built for GHL Users</span>
+                  <span>Custom Built for You</span>
                 </div>
                 
                 <h1 className="text-6xl md:text-7xl font-black mb-8 leading-[1.1]">
@@ -47,7 +47,7 @@ export default function Home() {
                 <div className="flex flex-col sm:flex-row gap-4 mb-8">
                   <a href="https://my.trainu.us/claim" target="_blank" rel="noreferrer" className="w-full sm:w-auto">
                     <Button size="lg" className="shadow-glow hover:shadow-glow-intense w-full sm:w-auto text-lg px-8 py-6 transition-all duration-300 hover:scale-105">
-                      Book Setup Call
+                      Book Your Demo
                     </Button>
                   </a>
                   <Link to="/how-it-works">
@@ -87,9 +87,9 @@ export default function Home() {
                 <div className="grid grid-cols-3 gap-6">
                   <div className="text-center p-4 rounded-xl bg-card/50 backdrop-blur-sm border border-primary/20">
                     <div className="text-3xl font-bold text-primary mb-1">
-                      <AnimatedCounter end={100} suffix="+" />
+                      🚀
                     </div>
-                    <div className="text-xs text-muted-foreground">Active Trainers</div>
+                    <div className="text-xs text-muted-foreground">Growing community of trainers</div>
                   </div>
                   <div className="text-center p-4 rounded-xl bg-card/50 backdrop-blur-sm border border-success/20">
                     <div className="text-3xl font-bold text-success mb-1">
@@ -183,21 +183,21 @@ export default function Home() {
               The Problems Holding You Back
             </h2>
             <p className="text-center text-muted-foreground text-lg mb-16 max-w-2xl mx-auto">
-              Every trainer faces these challenges. TrainU eliminates them.
+              The tech is confusing. We handle it.
             </p>
           </ScrollReveal>
           
           <div className="grid md:grid-cols-3 gap-8">
             <ScrollReveal delay={100}>
-              <FeatureCard icon={<Clock className="h-14 w-14" />} title="Time Drain" description="15+ hours weekly on admin tasks instead of training clients." image={trainerClientGym} variant="hover-lift" className="border-warning/20 hover:border-warning/40" />
+              <FeatureCard icon={<Clock className="h-14 w-14" />} title="No Time to Build" description="15+ hours/week lost to admin." image={trainerClientGym} variant="hover-lift" className="border-warning/20 hover:border-warning/40" />
             </ScrollReveal>
             
             <ScrollReveal delay={200}>
-              <FeatureCard icon={<TrendingUp className="h-14 w-14 rotate-180" />} title="Silent Churn" description="Clients ghosting without warning. Too late when you notice." image={trainerHomeYoga} variant="hover-lift" className="border-danger/20 hover:border-danger/40" />
+              <FeatureCard icon={<TrendingUp className="h-14 w-14 rotate-180" />} title="Clients Ghost" description="You find out too late." image={trainerHomeYoga} variant="hover-lift" className="border-danger/20 hover:border-danger/40" />
             </ScrollReveal>
             
             <ScrollReveal delay={300}>
-              <FeatureCard icon={<Users className="h-14 w-14" />} title="Onboarding Chaos" description="New clients falling through the cracks in first 30 days." image={groupTraining} variant="hover-lift" className="border-warning/20 hover:border-warning/40" />
+              <FeatureCard icon={<Users className="h-14 w-14" />} title="Leads Slip Away" description="New clients fall through the cracks." image={groupTraining} variant="hover-lift" className="border-warning/20 hover:border-warning/40" />
             </ScrollReveal>
           </div>
         </div>
@@ -208,161 +208,55 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <ScrollReveal>
             <h2 className="text-5xl font-bold text-center mb-6">
-              How TrainU Solves It
+              What We Build for You
             </h2>
             <p className="text-center text-muted-foreground text-lg mb-20 max-w-3xl mx-auto">
-              Three powerful pillars working together to keep your clients engaged and your business growing.
+              No tech headaches. We set it all up.
             </p>
           </ScrollReveal>
 
-          <div className="space-y-32">
-            {/* AI Inbox */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {/* Done-for-you Site */}
             <ScrollReveal delay={100}>
-              <div className="grid lg:grid-cols-2 gap-16 items-center">
-                <div>
-                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 backdrop-blur-sm border border-primary/30 text-primary text-sm font-semibold mb-6">
-                    <Brain className="h-5 w-5" />
-                    <span>AI-Powered Retention</span>
-                  </div>
-                  <h3 className="text-4xl font-bold mb-6 leading-tight">Save 10+ Hours Per Week</h3>
-                  <p className="text-lg text-foreground/80 mb-8 leading-relaxed">
-                    AI drafts personalized check-ins so you spend time training, not typing. Review and send in 30 seconds.
-                  </p>
-                  <ul className="space-y-4">
-                    {["Predictive at-risk alerts 7 days before churn", "Context-aware message drafts using client history", "Trainers report 90% less time on client messaging"].map((item, i) => <li key={i} className="flex items-start gap-4">
-                        <div className="h-8 w-8 rounded-full bg-success/10 flex items-center justify-center flex-shrink-0 mt-1">
-                          <Check className="h-5 w-5 text-success" />
-                        </div>
-                        <span className="text-foreground/80 text-lg">{item}</span>
-                      </li>)}
-                  </ul>
+              <div className="p-8 rounded-3xl bg-gradient-to-br from-card/80 to-background/80 backdrop-blur-xl border border-primary/30 shadow-xl hover:shadow-2xl hover:border-primary/50 transition-all duration-300 h-full">
+                <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-6">
+                  <Zap className="h-7 w-7 text-primary" />
                 </div>
-                <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent rounded-3xl blur-3xl" />
-                  <div className="relative p-8 rounded-3xl bg-gradient-to-br from-card/80 to-background/80 backdrop-blur-xl border border-primary/30 shadow-2xl">
-                    <div className="space-y-4">
-                      <div className="p-5 rounded-xl bg-warning/10 backdrop-blur-sm border border-warning/30 hover:scale-[1.02] transition-transform">
-                        <div className="flex items-center gap-2 mb-3">
-                          <div className="h-3 w-3 bg-warning rounded-full animate-pulse" />
-                          <p className="text-sm font-bold text-warning">High Priority</p>
-                        </div>
-                        <p className="text-sm text-foreground font-medium">Ben Lopez - No response in 5 days</p>
-                      </div>
-                      <div className="p-5 rounded-xl bg-background/50 backdrop-blur-sm border border-border">
-                        <p className="text-xs text-muted-foreground mb-3 font-semibold">AI DRAFT:</p>
-                        <p className="text-sm italic leading-relaxed text-foreground/90">
-                          "Hey Ben! Noticed you've been quiet. Everything OK? Want to jump on a quick call this week?"
-                        </p>
-                        <div className="mt-4 flex gap-2">
-                          <div className="flex-1 p-2 rounded-lg bg-primary/10 text-center text-xs text-primary font-medium">
-                            Edit
-                          </div>
-                          <div className="flex-1 p-2 rounded-lg bg-success/10 text-center text-xs text-success font-medium">
-                            Send
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <h3 className="text-2xl font-bold mb-3">We Build Your Site</h3>
+                <p className="text-muted-foreground">Launch-ready. No design or dev work.</p>
               </div>
             </ScrollReveal>
 
-            {/* Gamification */}
-            <ScrollReveal delay={100}>
-              <div className="grid lg:grid-cols-2 gap-16 items-center">
-                <div className="order-2 lg:order-1 relative">
-                  <div className="absolute inset-0 bg-gradient-to-br from-warning/20 to-transparent rounded-3xl blur-3xl" />
-                  <div className="relative aspect-[4/5] rounded-3xl overflow-hidden border border-primary/30 shadow-2xl">
-                    <img src={trainerOverhead} alt="Personal Training Session" className="h-full w-full object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
-                    <div className="absolute bottom-0 left-0 right-0 p-8">
-                      <div className="text-center space-y-4 backdrop-blur-xl bg-card/80 p-8 rounded-2xl border border-primary/30">
-                        <div className="text-7xl mb-2">🔥</div>
-                        <p className="text-5xl font-bold text-primary mb-2">
-                          <AnimatedCounter end={5} /> Week Streak
-                        </p>
-                        <p className="text-muted-foreground text-sm">Keep going to unlock Gold Badge!</p>
-                      </div>
-                    </div>
-                  </div>
+            {/* Program Catalog */}
+            <ScrollReveal delay={200}>
+              <div className="p-8 rounded-3xl bg-gradient-to-br from-card/80 to-background/80 backdrop-blur-xl border border-success/30 shadow-xl hover:shadow-2xl hover:border-success/50 transition-all duration-300 h-full">
+                <div className="h-14 w-14 rounded-2xl bg-success/10 flex items-center justify-center mb-6">
+                  <Target className="h-7 w-7 text-success" />
                 </div>
-                <div className="order-1 lg:order-2">
-                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-warning/10 backdrop-blur-sm border border-warning/30 text-warning text-sm font-semibold mb-6">
-                    <Target className="h-5 w-5" />
-                    <span>Client Engagement</span>
-                  </div>
-                  <h3 className="text-4xl font-bold mb-6 leading-tight">Keep Clients Engaged Longer</h3>
-                  <p className="text-lg text-foreground/80 mb-8 leading-relaxed">
-                    Clients stay motivated with streaks, challenges, and leaderboards. They compete, you retain.
-                  </p>
-                  <ul className="space-y-4">
-                    {["43% longer average client tenure", "Community challenges create accountability", "85% of clients hit milestones faster"].map((item, i) => <li key={i} className="flex items-start gap-4">
-                        <div className="h-8 w-8 rounded-full bg-success/10 flex items-center justify-center flex-shrink-0 mt-1">
-                          <Check className="h-5 w-5 text-success" />
-                        </div>
-                        <span className="text-foreground/80 text-lg">{item}</span>
-                      </li>)}
-                  </ul>
-                </div>
+                <h3 className="text-2xl font-bold mb-3">We Set Up Your Offers</h3>
+                <p className="text-muted-foreground">Courses, memberships, 1:1s—ready to sell.</p>
               </div>
             </ScrollReveal>
 
-            {/* Analytics */}
-            <ScrollReveal delay={100}>
-              <div className="grid lg:grid-cols-2 gap-16 items-center">
-                <div>
-                  <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-info/10 backdrop-blur-sm border border-info/30 text-info text-sm font-semibold mb-6">
-                    <BarChart3 className="h-5 w-5" />
-                    <span>Data-Driven Insights</span>
-                  </div>
-                  <h3 className="text-4xl font-bold mb-6 leading-tight">Know Before They Churn</h3>
-                  <p className="text-lg text-foreground/80 mb-8 leading-relaxed">
-                    See at-risk clients before they cancel. Get AI recommendations to re-engage them automatically.
-                  </p>
-                  <ul className="space-y-4">
-                    {["70% reduction in surprise cancellations", "Response rate tracking across all channels", "Real-time insights optimize your approach"].map((item, i) => <li key={i} className="flex items-start gap-4">
-                        <div className="h-8 w-8 rounded-full bg-success/10 flex items-center justify-center flex-shrink-0 mt-1">
-                          <Check className="h-5 w-5 text-success" />
-                        </div>
-                        <span className="text-foreground/80 text-lg">{item}</span>
-                      </li>)}
-                  </ul>
+            {/* Lead Capture */}
+            <ScrollReveal delay={300}>
+              <div className="p-8 rounded-3xl bg-gradient-to-br from-card/80 to-background/80 backdrop-blur-xl border border-warning/30 shadow-xl hover:shadow-2xl hover:border-warning/50 transition-all duration-300 h-full">
+                <div className="h-14 w-14 rounded-2xl bg-warning/10 flex items-center justify-center mb-6">
+                  <Users className="h-7 w-7 text-warning" />
                 </div>
-                <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-br from-success/20 to-transparent rounded-3xl blur-3xl" />
-                  <div className="relative p-8 rounded-3xl bg-gradient-to-br from-card/80 to-background/80 backdrop-blur-xl border border-primary/30 shadow-2xl">
-                    <div className="space-y-6">
-                      <div>
-                        <div className="flex justify-between items-center mb-3">
-                          <span className="text-sm text-muted-foreground font-medium">Retention Rate</span>
-                          <span className="text-3xl font-bold text-success">
-                            <AnimatedCounter end={94} suffix="%" />
-                          </span>
-                        </div>
-                        <div className="h-3 rounded-full bg-success/20 overflow-hidden">
-                          <div className="h-full rounded-full bg-gradient-to-r from-success to-success/80 transition-all duration-1000 ease-out" style={{
-                          width: '94%'
-                        }} />
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <div className="flex justify-between items-center mb-3">
-                          <span className="text-sm text-muted-foreground font-medium">Response Rate</span>
-                          <span className="text-3xl font-bold text-primary">
-                            <AnimatedCounter end={87} suffix="%" />
-                          </span>
-                        </div>
-                        <div className="h-3 rounded-full bg-primary/20 overflow-hidden">
-                          <div className="h-full rounded-full bg-gradient-to-r from-primary to-primary-hover transition-all duration-1000 ease-out delay-200" style={{
-                          width: '87%'
-                        }} />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                <h3 className="text-2xl font-bold mb-3">We Capture Your Leads</h3>
+                <p className="text-muted-foreground">Forms, follow-up, and booking built in.</p>
+              </div>
+            </ScrollReveal>
+
+            {/* Booking & Payments */}
+            <ScrollReveal delay={400}>
+              <div className="p-8 rounded-3xl bg-gradient-to-br from-card/80 to-background/80 backdrop-blur-xl border border-info/30 shadow-xl hover:shadow-2xl hover:border-info/50 transition-all duration-300 h-full">
+                <div className="h-14 w-14 rounded-2xl bg-info/10 flex items-center justify-center mb-6">
+                  <BarChart3 className="h-7 w-7 text-info" />
                 </div>
+                <h3 className="text-2xl font-bold mb-3">We Handle Payments</h3>
+                <p className="text-muted-foreground">Calendar + checkout. Done.</p>
               </div>
             </ScrollReveal>
           </div>
@@ -382,7 +276,7 @@ export default function Home() {
               Built for Real Trainers
             </h2>
             <p className="text-center text-muted-foreground text-lg mb-16 max-w-2xl mx-auto">
-              Join 100+ trainers who've transformed their client retention
+              Join a growing community of trainers who've transformed their client retention
             </p>
           </ScrollReveal>
           
