@@ -1,12 +1,6 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
 import { LandingLayout } from "@/components/landing/LandingLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Mail, MessageSquare, Phone, MapPin, Instagram, Facebook } from "lucide-react";
 import { FaXTwitter, FaTiktok } from "react-icons/fa6";
 import {
@@ -42,9 +36,6 @@ const faqs = [
 ];
 
 export default function Contact() {
-  const [transactionalConsent, setTransactionalConsent] = useState(false);
-  const [marketingConsent, setMarketingConsent] = useState(false);
-
   return (
     <LandingLayout>
       {/* Hero */}
@@ -81,6 +72,24 @@ export default function Contact() {
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-2 gap-12 max-w-6xl mx-auto">
             {/* Left Column */}
+            <div className="space-y-8">
+              {/* GHL Calendar Embed */}
+              <ScrollReveal>
+              <div>
+                <h2 className="text-2xl font-bold mb-6">Book Your Demo</h2>
+                <Card className="p-0 overflow-hidden hover:shadow-glow transition-all">
+                  <iframe
+                    src="https://api.leadconnectorhq.com/widget/booking/mtXIZ2paE6umxArw3BP1"
+                    style={{ width: '100%', height: '800px', border: 'none' }}
+                    scrolling="yes"
+                    title="Book Your Demo"
+                  />
+                </Card>
+              </div>
+              </ScrollReveal>
+            </div>
+
+            {/* Right Column */}
             <div className="space-y-8">
               {/* Connect With Us */}
               <ScrollReveal>
@@ -125,110 +134,6 @@ export default function Contact() {
                     </Button>
                   </div>
                 </Card>
-              </ScrollReveal>
-
-              {/* Form */}
-              <ScrollReveal delay={100}>
-              <div>
-                <h2 className="text-2xl font-bold mb-6">Book Your 15-Minute Setup Call</h2>
-                <Card className="p-6 hover:shadow-glow transition-all">
-                <form className="space-y-4">
-                  <div>
-                    <Label htmlFor="name">Full Name</Label>
-                    <Input id="name" placeholder="Sarah Mitchell" className="mt-2" />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" placeholder="sarah@example.com" className="mt-2" />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="phone">Phone Number</Label>
-                    <Input id="phone" type="tel" placeholder="(555) 123-4567" className="mt-2" />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="instagram">Instagram Handle</Label>
-                    <Input id="instagram" placeholder="@yourhandle" className="mt-2" />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="niche">Niche</Label>
-                    <Input id="niche" placeholder="Online fitness, yoga studio, etc." className="mt-2" />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="programs">Top Programs You Want to Sell</Label>
-                    <Textarea
-                      id="programs"
-                      placeholder="8-week shred, nutrition coaching, hybrid memberships, etc."
-                      className="mt-2 min-h-[120px]"
-                    />
-                  </div>
-
-                  {/* Consent Checkboxes */}
-                  <div className="space-y-3">
-                    <div className="flex items-start gap-3">
-                      <Checkbox 
-                        id="transactional" 
-                        checked={transactionalConsent}
-                        onCheckedChange={(checked) => setTransactionalConsent(checked as boolean)}
-                        className="mt-1"
-                      />
-                      <Label htmlFor="transactional" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
-                        By checking this box, I consent to receive transactional messages related to my account, orders, or services I have requested. These messages may include appointment reminders, order confirmations, and account notifications among others. Message frequency may vary. Message & Data rates may apply. Reply HELP for help or STOP to opt-out.
-                      </Label>
-                    </div>
-
-                    <div className="flex items-start gap-3">
-                      <Checkbox 
-                        id="marketing" 
-                        checked={marketingConsent}
-                        onCheckedChange={(checked) => setMarketingConsent(checked as boolean)}
-                        className="mt-1"
-                      />
-                      <Label htmlFor="marketing" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
-                        By checking this box, I consent to receive marketing and promotional messages, including special offers, discounts, new product updates among others. Message frequency may vary. Message & Data rates may apply. Reply HELP for help or STOP to opt-out.
-                      </Label>
-                    </div>
-                  </div>
-
-                  <Button type="submit" className="w-full shadow-glow">
-                    Book Your 15-Minute Setup Call
-                  </Button>
-
-                  {/* Privacy & Terms Links */}
-                  <p className="text-xs text-muted-foreground text-center">
-                    <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>
-                    {" | "}
-                    <Link to="/terms" className="text-primary hover:underline">Terms of Service</Link>
-                  </p>
-
-                  <p className="text-xs text-muted-foreground text-center">
-                    We typically respond within 24 hours during business days
-                  </p>
-                </form>
-              </Card>
-              </div>
-              </ScrollReveal>
-            </div>
-
-            {/* Right Column */}
-            <div className="space-y-8">
-              {/* GHL Calendar Embed */}
-              <ScrollReveal>
-              <div>
-                <h2 className="text-2xl font-bold mb-6">Book a Demo</h2>
-                <Card className="p-0 overflow-hidden hover:shadow-glow transition-all">
-                  <iframe
-                    src="https://api.leadconnectorhq.com/widget/booking/mtXIZ2paE6umxArw3BP1"
-                    style={{ width: '100%', height: '800px', border: 'none' }}
-                    scrolling="yes"
-                    title="Book a Demo"
-                  />
-                </Card>
-              </div>
               </ScrollReveal>
 
               {/* Contact Info */}
