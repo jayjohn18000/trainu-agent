@@ -57,15 +57,11 @@ export function LandingNav() {
 
           {/* CTA Buttons */}
           <div className="hidden md:flex items-center gap-3">
-            <a
-              href="https://my.trainu.us/claim"
-              target="_blank"
-              rel="noreferrer"
-            >
+            <Link to="/contact">
               <Button size="sm" className="shadow-glow">
-                Book Setup Call
+                Book Your Demo
               </Button>
-            </a>
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -94,16 +90,11 @@ export function LandingNav() {
               </Link>
             ))}
             <div className="px-4 pt-2 space-y-2">
-              <a
-                href="https://my.trainu.us/claim"
-                target="_blank"
-                rel="noreferrer"
-                className="block"
-              >
+              <Link to="/contact" className="block">
                 <Button size="sm" className="w-full shadow-glow">
-                  Book Setup Call
+                  Book Your Demo
                 </Button>
-              </a>
+              </Link>
             </div>
           </div>
         )}

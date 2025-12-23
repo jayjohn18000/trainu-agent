@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { LandingLayout } from "@/components/landing/LandingLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -42,24 +43,23 @@ export default function HowItWorks() {
         <div className="container mx-auto px-4 relative z-10">
           <ScrollReveal className="max-w-3xl mx-auto text-center">
             <h1 className="text-5xl font-bold mb-6">
-            From Signup to{" "}
-            <span className="bg-gradient-to-r from-primary to-primary-hover bg-clip-text text-transparent">
-Active Use in 10 Minutes</span>
-          </h1>
-          <p className="text-xl text-muted-foreground mb-8">
-            Automated onboarding eliminates setup time. Our system handles account creation, configuration, and provisioning so you can start retaining clients immediately.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="https://my.trainu.us/claim" target="_blank" rel="noreferrer">
-              <Button size="lg" className="shadow-glow">
-                Book Setup Call
+              From Signup to{" "}
+              <span className="text-primary">Active Use in 10 Minutes</span>
+            </h1>
+            <p className="text-xl text-muted-foreground mb-8">
+              Automated onboarding eliminates setup time. Our system handles account creation, configuration, and provisioning so you can start retaining clients immediately.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link to="/contact">
+                <Button size="lg" className="shadow-glow">
+                  Book Your Demo
+                </Button>
+              </Link>
+              <Button size="lg" variant="outline">
+                <Play className="h-5 w-5 mr-2" />
+                Watch Demo Video
               </Button>
-            </a>
-            <Button size="lg" variant="outline">
-              <Play className="h-5 w-5 mr-2" />
-              Watch Demo Video
-            </Button>
-          </div>
+            </div>
           </ScrollReveal>
         </div>
       </section>
@@ -156,11 +156,11 @@ Active Use in 10 Minutes</span>
                 <Play className="h-5 w-5 mr-2" />
                 Watch Demo Video
               </Button>
-              <a href="https://my.trainu.us/claim" target="_blank" rel="noreferrer">
+              <Link to="/contact">
                 <Button size="lg" className="shadow-glow">
-                  Book Setup Call
+                  Book Your Demo
                 </Button>
-              </a>
+              </Link>
             </div>
           </div>
           </ScrollReveal>
