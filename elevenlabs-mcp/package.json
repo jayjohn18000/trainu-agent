@@ -1,0 +1,24 @@
+{
+  "name": "elevenlabs-mcp-service",
+  "version": "1.0.0",
+  "description": "Minimal MCP-style proxy for ElevenLabs Text-to-Speech",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "elevenlabs",
+    "tts",
+    "express",
+    "mcp",
+    "proxy"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "node-fetch": "^3.3.2"
+  }
+}
