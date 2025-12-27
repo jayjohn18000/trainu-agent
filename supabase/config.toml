@@ -1,5 +1,8 @@
 project_id = "sakksoxuanyimicevljq"
 
+[functions.elevenlabs-tts]
+verify_jwt = false
+
 [functions.ghl-sync]
 verify_jwt = false
 
